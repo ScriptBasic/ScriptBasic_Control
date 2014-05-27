@@ -8,6 +8,7 @@
 #include "basext.h"
 #include "scriba.h" 
 
+
 void main(int argc, char *argv[]){
   
   int iError;
@@ -18,7 +19,7 @@ void main(int argc, char *argv[]){
   char* CmdLinBuffer = "";
 
   pSbProgram pProgram;
-  pProgram = scriba_new(malloc,free);
+  pProgram = scriba_new(NULL,NULL);
   scriba_LoadConfiguration(pProgram,"C:\\scriptbasic\\bin\\scriba.conf");
   scriba_SetFileName(pProgram,"C:\\scriptbasic\\examples\\ntexamples\\hello.sb");
 
@@ -35,7 +36,7 @@ void main(int argc, char *argv[]){
     exit(0);
   }*/
  
-  iError = scriba_LoadInternalPreprocessor(pProgram, &ppszPreprocessorName);
+  //iError = scriba_LoadInternalPreprocessor(pProgram, &ppszPreprocessorName);
 
   if( scriba_LoadSourceProgram(pProgram) ){
 	  printf("failed to load source program!");

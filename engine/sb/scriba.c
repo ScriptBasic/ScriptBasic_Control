@@ -144,6 +144,9 @@ SCRIBA_MAIN_LIBSPEC pSbProgram scriba_new( void  * (*maf)(size_t),
 CUT*/
   pSbProgram pProgram;
   void *p;
+  
+  if(maf==0) maf = malloc;
+  if(mrf==0) mrf = free;
 
   p = alloc_InitSegment(maf,mrf);
   if( p == NULL )return NULL;
