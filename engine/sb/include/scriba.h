@@ -89,6 +89,7 @@ typedef struct _SbData {
 #define CONFIG_FILE  "/etc/scriba/basic.conf"
 #endif
 
+//dz- changing these to stdcall probably wacks the _SupportTable function pointers..modules use..
 #if (defined(_WIN32) || defined(__MACOS__) || defined(WIN32))
 # ifdef __cplusplus
 #  define SCRIBA_MAIN_LIBSPEC extern "C" __stdcall __declspec(dllexport) 

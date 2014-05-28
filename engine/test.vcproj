@@ -276,10 +276,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\sb\debug.c"
-					>
-				</File>
-				<File
 					RelativePath=".\sb\dynlolib.c"
 					>
 				</File>
@@ -360,19 +356,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\sb\mynotimp.c"
-					>
-				</File>
-				<File
-					RelativePath=".\sb\notimp.c"
-					>
-				</File>
-				<File
 					RelativePath=".\sb\options.c"
-					>
-				</File>
-				<File
-					RelativePath=".\sb\prepext.c"
 					>
 				</File>
 				<File
@@ -385,10 +369,6 @@
 				</File>
 				<File
 					RelativePath=".\sb\scriba.c"
-					>
-				</File>
-				<File
-					RelativePath=".\sb\stndlone.c"
 					>
 				</File>
 				<File
@@ -550,10 +530,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\sb\include\stndlone.h"
-					>
-				</File>
-				<File
 					RelativePath=".\sb\include\sym.h"
 					>
 				</File>
@@ -588,6 +564,30 @@
 				<File
 					RelativePath=".\sb\dbg\interface.c"
 					>
+				</File>
+			</Filter>
+			<Filter
+				Name="extensions"
+				>
+				<File
+					RelativePath=".\extensions\trial.c"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="scripts"
+				>
+				<File
+					RelativePath=".\scripts\hello.sb"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
 				</File>
 			</Filter>
 		</Filter>

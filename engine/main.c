@@ -10,6 +10,11 @@
 
 extern dbg_preproc;
 
+MODLIST StaticallyLinkedModules[] ={
+  { NULL, NULL },
+};
+
+
 void main(int argc, char *argv[]){
   
   int iError;
@@ -30,7 +35,7 @@ void main(int argc, char *argv[]){
 
   pProgram = scriba_new(NULL,NULL);
   //scriba_LoadConfiguration(pProgram, cfg); //optional
-  scriba_SetFileName(pProgram,"C:\\scriptbasic\\examples\\ntexamples\\hello.sb");
+  scriba_SetFileName(pProgram,"./scripts/hello.sb");
 
   /*
   if( scriba_UseCacheFile(pProgram) == SCRIBA_ERROR_SUCCESS ){
@@ -59,7 +64,7 @@ void main(int argc, char *argv[]){
 	  exit(0);
   }
 
-  //scriba_SaveCacheFile(pProgram);
+  //scriba_SaveCacheFile(pProgram); //save the "compiled" binary form of the program to config.cache dir as md5(filename)
    
   if( iError=scriba_Run(pProgram,CmdLinBuffer) ){
 	report_report(stderr,"",0,iError,REPORT_ERROR,&iErrorCounter,NULL,&fErrorFlags);

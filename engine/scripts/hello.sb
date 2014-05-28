@@ -1,0 +1,7 @@
+declare sub trial alias "trial" lib "test.exe"
+
+print "Hello World!"
+print
+call trial()
+print "Press ENTER..."
+line input a

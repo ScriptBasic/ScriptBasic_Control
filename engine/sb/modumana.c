@@ -531,7 +531,7 @@ CUT*/
       *s = (char)0;
       if( strlen(sData) + strlen((*ThisModule)->pszModuleName) + cbDllExtension > FNLEN )break;
       strcpy(s,(*ThisModule)->pszModuleName);
-      strcat(s,pszDllExtension);
+      //strcat(s,pszDllExtension); //dz 5.28.14 -disabled auto appending extension onto declare imports (so we can import from hosting exe)
       (*ThisModule)->ModulePointer = dynlolib_LoadLibrary( sData );
       if( (*ThisModule)->ModulePointer != NULL )break;
       /* c:\ScriptBasic\bin\scriba.exe */
