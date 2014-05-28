@@ -8,6 +8,7 @@
 #include "basext.h"
 #include "scriba.h" 
 
+extern dbg_preproc;
 
 void main(int argc, char *argv[]){
   
@@ -48,7 +49,10 @@ void main(int argc, char *argv[]){
   //iError = scriba_LoadInternalPreprocessor(pProgram, &ppszPreprocessorName);
 
   //this one can be used without a config file loading a dll path explicitly..
-  iError = scriba_LoadInternalPreprocessorByPath(pProgram, "dbg", "C:\\scriptbasic\\modules\\dbg.dll");
+  //iError = scriba_LoadInternalPreprocessorByPath(pProgram, "dbg", "C:\\scriptbasic\\modules\\dbg.dll");
+
+  //and this one allows you to compile in preprocessors without external dll
+  iError = scriba_LoadInternalPreprocessorByFunction(pProgram, "dbg", &dbg_preproc);
 
   if( scriba_LoadSourceProgram(pProgram) ){
 	  printf("failed to load source program!");

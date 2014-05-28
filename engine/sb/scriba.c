@@ -1222,7 +1222,29 @@ SCRIBA_MAIN_LIBSPEC int scriba_LoadInternalPreprocessorByPath(pSbProgram pProgra
                    pProgram->pPREP, pPreprocessorName, pDllPath) ) return iError;
 
   return COMMAND_ERROR_SUCCESS;
+}
+
+SCRIBA_MAIN_LIBSPEC int scriba_LoadInternalPreprocessorByFunction(pSbProgram pProgram, char *pPreprocessorName, void* lpFnPreProc)
+{
+//The return value is zero or the error code.
+  int iError,i;
+
+  /* if the program object does not have a PreprocObject then create it */
+  if( pProgram->pPREP == NULL ){
+    pProgram->pPREP = alloc_Alloc( sizeof(PreprocObject) , pProgram->pMEM );
+    if( pProgram->pPREP == NULL )return SCRIBA_ERROR_MEMORY_LOW;
+    ipreproc_InitStructure(pProgram->pPREP);
+    pProgram->pPREP->pMemorySegment = alloc_InitSegment(pProgram->maf,
+                                                        pProgram->mrf);
+    if( pProgram->pPREP->pMemorySegment == NULL )return SCRIBA_ERROR_MEMORY_LOW;
+    pProgram->pPREP->pSB = pProgram;
   }
+
+  if( iError = ipreproc_LoadInternalPreprocessorByFunction(
+                   pProgram->pPREP, pPreprocessorName, lpFnPreProc) ) return iError;
+
+  return COMMAND_ERROR_SUCCESS;
+}
 
 
 /*POD

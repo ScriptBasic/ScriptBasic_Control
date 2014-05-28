@@ -570,6 +570,26 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="dbg"
+				>
+				<File
+					RelativePath=".\sb\dbg\dbg.h"
+					>
+				</File>
+				<File
+					RelativePath=".\sb\dbg\dbg_comm.h"
+					>
+				</File>
+				<File
+					RelativePath=".\sb\dbg\dbg_con.c"
+					>
+				</File>
+				<File
+					RelativePath=".\sb\dbg\interface.c"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

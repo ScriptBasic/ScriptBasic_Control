@@ -56,6 +56,7 @@ void ipreproc_DeletePreprocessor(pPreprocObject pPre,
 
 //dz 5.27.14
 int ipreproc_LoadInternalPreprocessorByFilePath(pPreprocObject pPre, char* pszPreprocessorName, char *pszFilePath);
+int ipreproc_LoadInternalPreprocessorByFunction(pPreprocObject pPre, char* pszPreprocessorName, void* lpfnPreProc);
 
 int ipreproc_LoadInternalPreprocessor(pPreprocObject pPre,
                                       char *pszPreprocessorName);

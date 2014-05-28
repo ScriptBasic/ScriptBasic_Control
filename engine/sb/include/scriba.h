@@ -187,9 +187,10 @@ SCRIBA_MAIN_LIBSPEC int scriba_SetFileName(pSbProgram pProgram,
 /*FEDNUF*/
 /*FUNDEF*/
 
-//next two added by dz 5.27.14
+//next 3 added by dz 5.27.14
 SCRIBA_MAIN_LIBSPEC int scriba_CompileConfig(char* szInputFile, char* szBinaryOutPath);
 SCRIBA_MAIN_LIBSPEC int scriba_LoadInternalPreprocessorByPath(pSbProgram pProgram, char *pPreprocessorName, char*pDllPath);
+SCRIBA_MAIN_LIBSPEC int scriba_LoadInternalPreprocessorByFunction(pSbProgram pProgram, char *pPreprocessorName, void* lpFnPreProc);
 
 SCRIBA_MAIN_LIBSPEC int scriba_LoadConfiguration(pSbProgram pProgram,
                              char *pszForcedConfigurationFileName);
