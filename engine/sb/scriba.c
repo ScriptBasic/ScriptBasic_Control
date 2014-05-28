@@ -360,6 +360,76 @@ CUT*/
   return p;
   }
 
+//added from scribacmda.c by dz 5.27.14
+SCRIBA_MAIN_LIBSPEC int scriba_CompileConfig(char* szInputFile, char* szBinaryOutPath){
+
+	int retVal = 0;
+	int iError;
+	int iErrorCounter;
+    unsigned long fErrorFlags;
+
+	pSbProgram pProgram;
+	pProgram = scriba_new(NULL,NULL);
+    
+	if( pProgram == NULL ){
+		printf("Failed to create program instance\n");
+		goto errExit;
+	}
+
+    pProgram->pCONF = alloc_Alloc(sizeof(tConfigTree),pProgram->pMEM);
+    if( pProgram->pCONF == NULL ){
+      iError = COMMAND_ERROR_MEMORY_LOW;
+      report_report(stderr,"",0,iError,REPORT_ERROR,&iErrorCounter,NULL,&fErrorFlags);
+      goto errExit;
+    }
+
+    iError = cft_init(pProgram->pCONF,NULL,NULL,NULL);
+    if( iError ){
+      report_report(stderr,"",0,iError,REPORT_ERROR,&iErrorCounter,NULL,&fErrorFlags);
+      goto errExit;
+    }
+    
+	if( szInputFile == NULL ){
+      report_report(stderr,"",0,iError,REPORT_ERROR,&iErrorCounter,NULL,&fErrorFlags);
+      goto errExit;
+    }
+
+    iError = cft_ReadTextConfig(pProgram->pCONF,szInputFile);
+    switch( iError ){
+      case CFT_ERROR_FILE:
+        printf(stderr,"The file %s can not be read.\n",szInputFile);
+        goto errExit;
+      case CFT_ERROR_EMPTY:
+        printf(stderr,"The file %s contains no configuration information.\n",szInputFile);
+        goto errExit;
+      case CFT_ERROR_SYNTAX:
+        printf(stderr,"The file %s has syntax error in it.\n",szInputFile);
+        goto errExit;
+      case CFT_ERROR_MEMORY:
+        printf(stderr,"Memory exhausted while processing the file %s\n",szInputFile);
+        goto errExit;
+    }
+
+    iError = cft_WriteConfig(pProgram->pCONF, szBinaryOutPath);
+    switch( iError ){
+      case CFT_ERROR_FILE:
+        printf(stderr,"The file %s can not be written\n",szBinaryOutPath);
+        goto errExit;
+      case CFT_ERROR_MEMORY:
+        printf(stderr,"Memory exhausted while writing the file %s\n",szBinaryOutPath);
+        goto errExit;
+    }
+
+    printf(stderr,"The configuration file '%s' was created.\n",szBinaryOutPath);
+    retVal = 1;
+
+errExit:
+	scriba_destroy(pProgram);
+	return retVal;
+}
+
+
+
 
 /*POD
 =H scriba_NewSbString()
@@ -1130,6 +1200,28 @@ CUT*/
   pProgram->pBUILD->report   = pProgram->fpReportFunction;
   pProgram->pBUILD->fErrorFlags = pProgram->fErrorFlags;
   return SCRIBA_ERROR_SUCCESS;
+  }
+
+SCRIBA_MAIN_LIBSPEC int scriba_LoadInternalPreprocessorByPath(pSbProgram pProgram, char *pPreprocessorName, char*pDllPath)
+{
+//The return value is zero or the error code.
+  int iError,i;
+
+  /* if the program object does not have a PreprocObject then create it */
+  if( pProgram->pPREP == NULL ){
+    pProgram->pPREP = alloc_Alloc( sizeof(PreprocObject) , pProgram->pMEM );
+    if( pProgram->pPREP == NULL )return SCRIBA_ERROR_MEMORY_LOW;
+    ipreproc_InitStructure(pProgram->pPREP);
+    pProgram->pPREP->pMemorySegment = alloc_InitSegment(pProgram->maf,
+                                                        pProgram->mrf);
+    if( pProgram->pPREP->pMemorySegment == NULL )return SCRIBA_ERROR_MEMORY_LOW;
+    pProgram->pPREP->pSB = pProgram;
+  }
+
+  if( iError = ipreproc_LoadInternalPreprocessorByFilePath(
+                   pProgram->pPREP, pPreprocessorName, pDllPath) ) return iError;
+
+  return COMMAND_ERROR_SUCCESS;
   }
 
 

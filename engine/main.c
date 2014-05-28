@@ -17,10 +17,18 @@ void main(int argc, char *argv[]){
 
   char *ppszPreprocessorName[] = {"sdbg", NULL};
   char* CmdLinBuffer = "";
-
+  char* cfg = "config.bin"; //loaded from solution directory
   pSbProgram pProgram;
+
+  /*iError = scriba_CompileConfig("config.txt", cfg);
+
+  if(iError==0){
+	  printf("Failed to compile text configuration\n");
+	  exit(0);
+  }*/
+
   pProgram = scriba_new(NULL,NULL);
-  scriba_LoadConfiguration(pProgram,"C:\\scriptbasic\\bin\\scriba.conf");
+  //scriba_LoadConfiguration(pProgram, cfg); //optional
   scriba_SetFileName(pProgram,"C:\\scriptbasic\\examples\\ntexamples\\hello.sb");
 
   /*
@@ -36,7 +44,11 @@ void main(int argc, char *argv[]){
     exit(0);
   }*/
  
+  //this requires a binary config file loaded to set name=path
   //iError = scriba_LoadInternalPreprocessor(pProgram, &ppszPreprocessorName);
+
+  //this one can be used without a config file loading a dll path explicitly..
+  iError = scriba_LoadInternalPreprocessorByPath(pProgram, "dbg", "C:\\scriptbasic\\modules\\dbg.dll");
 
   if( scriba_LoadSourceProgram(pProgram) ){
 	  printf("failed to load source program!");

@@ -1,0 +1,16 @@
+;must be compiled to binary form before use
+
+module "c:\\scriptbasic\\modules\\"
+include "c:\\scriptbasic\\include\\"
+
+maxinclude 100
+maxlevel 3000
+maxstep 0
+maxlocalstep 0
+maxmem 0
+
+preproc (
+  internal (
+    dbg "c:\\scriptbasic\\modules\\dbg.dll"
+    )
+)

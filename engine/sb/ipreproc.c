@@ -229,6 +229,72 @@ CUT*/
   alloc_Free(pOld,pPre->pMemorySegment);
   }
 
+//dz 5.27.14
+int ipreproc_LoadInternalPreprocessorByFilePath(pPreprocObject pPre, char* pszPreprocessorName, char *pszFilePath)
+{
+//The return value is zero or the error code.
+#define FNLEN 1024
+  char szBuffer[FNLEN];
+  char *s;
+  void *pDllHandle = NULL,*pFunction=NULL;
+  int (*preproc)(void *,long *,void *);
+  pSbProgram pProgram;
+  int iError;
+  pPreprocessor pThisPre;
+  long lCommand;
+  int bFirst;
+#define PREFLEN 17
+  char *pszDllExtension;
+  unsigned int cbDllExtension;
+
+  pProgram = pPre->pSB;
+
+  /* check that the preprocessor was not loaded yet */
+  for( pThisPre = pPre->pFirst ; pThisPre ; pThisPre = pThisPre->next )
+    if( !strcmp(pThisPre->pszPreprocessorName,pszPreprocessorName) )return COMMAND_ERROR_SUCCESS;
+
+  pDllHandle = dynlolib_LoadLibrary( pszFilePath );         
+  if( pDllHandle == NULL )return READER_ERROR_PREPROC_NOTAVA;
+
+  pFunction = dynlolib_GetFunctionByName(pDllHandle,"preproc");
+  if( pFunction == NULL )return READER_ERROR_PREPROC_NOTVAL;
+
+  bFirst = (pPre->pFirst == NULL);
+  pThisPre = ipreproc_InsertPreprocessor(pPre);
+  if( pThisPre == NULL  )return COMMAND_ERROR_MEMORY_LOW;
+  pThisPre->pszPreprocessorName = alloc_Alloc(strlen(pszPreprocessorName)+1,pPre->pMemorySegment);
+  if( pThisPre->pszPreprocessorName == NULL )return COMMAND_ERROR_MEMORY_LOW;
+
+  strcpy(pThisPre->pszPreprocessorName,pszPreprocessorName);
+  pThisPre->pDllHandle = pDllHandle;
+  pThisPre->pFunction = pFunction;
+  pThisPre->pEXT.lVersion = IP_INTERFACE_VERSION;
+  pThisPre->pEXT.pPointer = NULL;
+  pThisPre->pEXT.pMemorySegment = alloc_InitSegment(pPre->pSB->maf,pPre->pSB->mrf);
+  if( pThisPre->pEXT.pMemorySegment == NULL )return COMMAND_ERROR_MEMORY_LOW;
+
+  /* if this is the first preprocessor loaded then init the support function table*/
+  if( bFirst ){
+    pPre->EXE.pMemorySegment = pPre->pMemorySegment;
+    modu_Init(&(pPre->EXE),0);
+    pPre->EXE.pST->pEo = &(pPre->EXE);
+    pThisPre->pEXT.pST = pPre->EXE.pST;
+  }
+
+  preproc = pFunction;
+  lCommand = PreprocessorLoad;
+  iError = preproc(&(pThisPre->pEXT),&lCommand,NULL);
+  if( lCommand == PreprocessorUnload ){
+    /* unload the current preprocessor */
+    pDllHandle = pThisPre->pDllHandle;
+    ipreproc_DeletePreprocessor(pPre,pThisPre);
+    /* this may happen if the preprocessor is statically linked */
+    if( pDllHandle )
+      dynlolib_FreeLibrary(pDllHandle);
+    }
+  return iError;
+}
+
 /*POD
 =section LoadInternalPreprocessor
 =H Load an internal preprocessor
