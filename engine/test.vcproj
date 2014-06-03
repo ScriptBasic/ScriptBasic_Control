@@ -574,6 +574,18 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath=".\scripts\com_voice_test.sb"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath=".\devguide.chm"
 					>
 					<FileConfiguration

@@ -1,0 +1,30 @@
+declare sub CreateObject alias "CreateObject" lib "test.exe"
+declare sub CallByName alias "CallByName" lib "test.exe"
+declare sub ReleaseObject alias "ReleaseObject" lib "test.exe"
+
+const VbGet = 2
+const VbLet = 4
+const VbMethod = 1
+const VbSet = 8
+
+obj = CreateObject("SAPI.SpVoice")
+
+if obj = 0 then 
+	print "CreateObject failed!\n"
+else
+	CallByName(obj, "rate", VbLet, 2)
+	CallByName(obj, "volume", VbLet, 60)
+	CallByName(obj, "speak", VbMethod, "This is my test")
+	ReleaseObject(obj)
+	print "Release called obj reference is now: ", obj, "\n"
+end if 
+
+print "\n\nPress ENTER..."
+line input a
+
+'in vbscript this would be:
+'----------------------------------------
+'Set voice = CreateObject("SAPI.SpVoice")
+'voice.Rate = 8
+'voice.Volume = 60
+'voice.Speak "Hello, world!"

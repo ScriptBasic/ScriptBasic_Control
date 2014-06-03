@@ -1,9 +1,18 @@
 declare sub CreateObject alias "CreateObject" lib "test.exe"
+declare sub CallByName alias "CallByName" lib "test.exe"
 
 print "calling CreateObject\n"
 obj = CreateObject("Project1.Class1")
 
-print "return value was = ", obj
+if obj = 0 then 
+	print "CreateObject failed!\n"
+else
+	print "CreateObject return val = ", obj
+	rv = CallByName(obj, "callMe2", 1, 21)
+	print "CallByName returned: ", rv
+end if 
+
+
 
 print "\n\nPress ENTER..."
 line input a
