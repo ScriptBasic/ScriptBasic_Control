@@ -1,3 +1,5 @@
+#pragma warning( disable : 4996)
+
 /*
 FILE:   interface.c
 HEADER: sdbg.h
@@ -111,7 +113,7 @@ typedef struct _DebuggerObject {
 /* Push the item on the debugger stack when entering the function
    starting at the node Node
 */
-static void PushStackItem(pDebuggerObject pDO,
+static void sdbg_PushStackItem(pDebuggerObject pDO,
                           long Node
   ){
   pDebugCallStack_t p;
@@ -137,7 +139,7 @@ static void PushStackItem(pDebuggerObject pDO,
   }
 
 /* return from a function and pop off the item from the stack */
-static void PopStackItem(pDebuggerObject pDO
+static void sdbg_PopStackItem(pDebuggerObject pDO
   ){
   pDebugCallStack_t p;
 
@@ -157,14 +159,14 @@ static char hexi(unsigned int x ){
   }
 
 /*POD
-=section SPrintVariable
+=section sdbg_SPrintVariable
 =H Print the value of a variable into a string
 
 This function should be used to get the textual representation of a
 ScriptBasic T<VARIABLE>.
 
 /*FUNCTION*/
-int SPrintVariable(pDebuggerObject pDO,
+int sdbg_SPrintVariable(pDebuggerObject pDO,
                    VARIABLE v,
                    char *pszBuffer,
                    unsigned long *cbBuffer
@@ -335,14 +337,14 @@ CUT*/
   }
 
 /*POD
-=section SPrintVarByName
+=section sdbg_SPrintVarByName
 =H Print the value of a variable into a string
 
 This fucntion prints a variable string representation into a buffer.
 The name of the variable is given in the variable T<pszName>.
 
 The fucntion first searches the variable and then calls the function
-R<SPrintVariable> to print the value.
+R<sdbg_SPrintVariable> to print the value.
 
 The fucntion first tries to locate the variable as local variable.
 For this not the normal debug stack pointer is used, but rather the
@@ -350,10 +352,10 @@ T<StackListPointer>. This allows the client to print local
 variables levels higher than the bottom of the stack.
 
 If the function succeeds finding the variable it returns the return value of the
-function R<SPrintVariable>. If the variable is not found it returns 2.
+function R<sdbg_SPrintVariable>. If the variable is not found it returns 2.
 
 /*FUNCTION*/
-int SPrintVarByName(pDebuggerObject pDO,
+int sdbg_SPrintVarByName(pDebuggerObject pDO,
                     pExecuteObject pEo,
                     char *pszName,
                     char *pszBuffer,
@@ -380,13 +382,13 @@ CUT*/
     pUF = pDO->StackListPointer->pUF;
     for( i=0 ; i < pUF->cLocalVariables ; i++ ){
       if( !strcmp(pUF->ppszLocalVariables[i],pszName) )
-        return SPrintVariable(pDO,ARRAYVALUE(pDO->StackListPointer->LocalVariables,i+1),pszBuffer,cbBuffer);
+        return sdbg_SPrintVariable(pDO,ARRAYVALUE(pDO->StackListPointer->LocalVariables,i+1),pszBuffer,cbBuffer);
       }
     }
   for( i=0 ; i < pDO->cGlobalVariables ; i++ ){
      if( pDO->ppszGlobalVariables[i] && !strcmp(pDO->ppszGlobalVariables[i],pszName) ){
        if( pEo->GlobalVariables )
-         return SPrintVariable(pDO,ARRAYVALUE(pEo->GlobalVariables,i+1),pszBuffer,cbBuffer);
+         return sdbg_SPrintVariable(pDO,ARRAYVALUE(pEo->GlobalVariables,i+1),pszBuffer,cbBuffer);
        }
      }
 
@@ -394,24 +396,24 @@ CUT*/
     pUF = pDO->StackListPointer->pUF;
     for( i=0 ; i < pUF->cLocalVariables ; i++ ){
       if( !strncmp(pUF->ppszLocalVariables[i],"main::",6) && !strcmp(pUF->ppszLocalVariables[i]+6,pszName) )
-        return SPrintVariable(pDO,ARRAYVALUE(pDO->StackListPointer->LocalVariables,i+1),pszBuffer,cbBuffer);
+        return sdbg_SPrintVariable(pDO,ARRAYVALUE(pDO->StackListPointer->LocalVariables,i+1),pszBuffer,cbBuffer);
       }
     }
   for( i=0 ; i < pDO->cGlobalVariables ; i++ ){
      if( pDO->ppszGlobalVariables[i] && !strncmp(pDO->ppszGlobalVariables[i],"main::",6) && !strcmp(pDO->ppszGlobalVariables[i]+6,pszName) ){
        if( pEo->GlobalVariables )
-         return SPrintVariable(pDO,ARRAYVALUE(pEo->GlobalVariables,i+1),pszBuffer,cbBuffer);
+         return sdbg_SPrintVariable(pDO,ARRAYVALUE(pEo->GlobalVariables,i+1),pszBuffer,cbBuffer);
        }
      }
   return 2;
   }
 
 /*POD
-=section GetSourceLineNumber
+=section sdbg_GetSourceLineNumber
 =H Get the source line number for a given node
 
 /*FUNCTION*/
-long GetSourceLineNumber(pDebuggerObject pDO,
+long sdbg_GetSourceLineNumber(pDebuggerObject pDO,
                          long PC
   ){
 /*noverbatim
@@ -441,19 +443,19 @@ CUT*/
   }
 
 /*FUNCTION*/
-long GetCurrentDebugLine(pDebuggerObject pDO
+long sdbg_GetCurrentDebugLine(pDebuggerObject pDO
   ){
 
   if( pDO->StackListPointer == NULL && pDO->StackTop )
-     return GetSourceLineNumber(pDO,pDO->StackTop->Node);
+     return sdbg_GetSourceLineNumber(pDO,pDO->StackTop->Node);
 
   if( pDO->StackListPointer == NULL || pDO->StackListPointer->down == NULL )
-    return GetSourceLineNumber(pDO,pDO->pEo->ProgramCounter);
+    return sdbg_GetSourceLineNumber(pDO,pDO->pEo->ProgramCounter);
 
-  return GetSourceLineNumber(pDO,pDO->StackListPointer->down->Node);
+  return sdbg_GetSourceLineNumber(pDO,pDO->StackListPointer->down->Node);
   }
 
-int MyExecBefore(pExecuteObject pEo){
+int sdbg_MyExecBefore(pExecuteObject pEo){
   long i,j,lThisLine;
   pPrepext pEXT;
   pDebuggerObject pDO;
@@ -468,7 +470,7 @@ int MyExecBefore(pExecuteObject pEo){
   pDO->lPC = pEo->ProgramCounter;
   if( pDO->DbgStack )pDO->DbgStack->LocalVariables = pEo->LocalVariables;
 
-  lThisLine = GetSourceLineNumber(pDO,pEo->ProgramCounter);
+  lThisLine = sdbg_GetSourceLineNumber(pDO,pEo->ProgramCounter);
 
   if( pDO->SourceLines[lThisLine].BreakPoint == 0 ){
     /* if we are executing some step over function */
@@ -476,24 +478,24 @@ int MyExecBefore(pExecuteObject pEo){
     if( pDO->Run2Line && pDO->Nodes[pDO->lPC-1].lSourceLine != pDO->Run2Line )return 0;
     }
 
-  comm_WeAreAt(pDO,lThisLine);
+  scomm_WeAreAt(pDO,lThisLine);
 
   pDO->StackListPointer = pDO->DbgStack;
   while(1){
-    cmd = comm_GetCommand(pDO,lbuf,80);
+    cmd = scomm_GetCommand(pDO,lbuf,80);  // ------------> gets the command from teh user
 
 
     switch( cmd ){
 
       case 'D':/* step the stack list pointer to the bottom */
          pDO->StackListPointer = pDO->DbgStack;
-         comm_Message(pDO,"done");
+         scomm_Message(pDO,"done");
          continue;
       case 'u':/* step the stack list pointer up */
         if( pDO->StackListPointer ){
           pDO->StackListPointer = pDO->StackListPointer->up;
-          comm_Message(pDO,"done");
-          }else comm_Message(pDO,"No way up more");
+          scomm_Message(pDO,"done");
+          }else scomm_Message(pDO,"No way up more");
         continue;
       case 'd':/* step the stack list pointer down */
         if( pDO->StackListPointer && pDO->StackListPointer->down )
@@ -501,21 +503,21 @@ int MyExecBefore(pExecuteObject pEo){
         else
           pDO->StackListPointer = pDO->StackTop;
         if( pDO->StackListPointer )
-          comm_Message(pDO,"done");
+          scomm_Message(pDO,"done");
         else
-          comm_Message(pDO,"No way down more");
+          scomm_Message(pDO,"No way down more");
         continue;
       case 'b': /* set break point at a line */
         if( ! *lbuf )/* set it at the current line */
-          i = GetCurrentDebugLine(pDO)+1;
+          i = sdbg_GetCurrentDebugLine(pDO)+1;
         else
           GetRange(lbuf,&i,&j);
         if( i < 1 || i > pDO->cSourceLines ){
-          comm_Message(pDO,"invalid line number");
+          scomm_Message(pDO,"invalid line number");
           continue;
           }
         pDO->SourceLines[i-1].BreakPoint = 1;
-        comm_Message(pDO,"done");
+        scomm_Message(pDO,"done");
         continue;
       case 'B':/* remove breakpoint from line(s) */
         if( ! *lbuf )/* remove all */
@@ -523,7 +525,7 @@ int MyExecBefore(pExecuteObject pEo){
         else
           GetRange(lbuf,&i,&j);
         if( i < 1 || i >= pDO->cSourceLines ){
-          comm_Message(pDO,"invalid line number");
+          scomm_Message(pDO,"invalid line number");
           continue;
           }
         if( j == 0 )j = i;
@@ -532,10 +534,10 @@ int MyExecBefore(pExecuteObject pEo){
           pDO->SourceLines[i-1].BreakPoint = 0;
           i++;
           }
-        comm_Message(pDO,"done");
+        scomm_Message(pDO,"done");
         continue;
       case 'q':/* quit the program execution */
-        comm_Message(pDO,"Ok... you have said that... quitting...");
+        scomm_Message(pDO,"Ok... you have said that... quitting...");
         pEo->pszModuleError = "Debugger Operator Forced Exit.";
         return COMMAND_ERROR_PREPROCESSOR_ABORT;
 
@@ -573,7 +575,7 @@ int MyExecBefore(pExecuteObject pEo){
     }
   return 0;
   }
-int MyExecAfter(pExecuteObject pEo){
+int sdbg_MyExecAfter(pExecuteObject pEo){
   pPrepext pEXT;
   pDebuggerObject pDO;
 
@@ -583,7 +585,7 @@ int MyExecAfter(pExecuteObject pEo){
 
   return 0;
   }
-int MyExecCall(pExecuteObject pEo){
+int sdbg_MyExecCall(pExecuteObject pEo){
   pPrepext pEXT;
   pDebuggerObject pDO;
 
@@ -591,11 +593,11 @@ int MyExecCall(pExecuteObject pEo){
   pDO  = pEXT->pPointer;
   pDO->pEo = pEo;
 
-  PushStackItem(pDO,pEo->ProgramCounter);
+  sdbg_PushStackItem(pDO,pEo->ProgramCounter);
   
   return 0;
   }
-int MyExecReturn(pExecuteObject pEo){
+int sdbg_MyExecReturn(pExecuteObject pEo){
   pPrepext pEXT;
   pDebuggerObject pDO;
 
@@ -603,12 +605,12 @@ int MyExecReturn(pExecuteObject pEo){
   pDO  = pEXT->pPointer;
   pDO->pEo = pEo;
 
-  PopStackItem(pDO);
+  sdbg_PopStackItem(pDO);
 
   return 0;
   }
 
-static pDebuggerObject new_DebuggerObject(pPrepext pEXT){
+static pDebuggerObject sdbg_new_DebuggerObject(pPrepext pEXT){
   pDebuggerObject pDO;
 
   pDO = pEXT->pST->Alloc(sizeof(DebuggerObject),pEXT->pMemorySegment);
@@ -645,7 +647,7 @@ preprocessor memory segment.
 In case the name was already used then returns the pointer to
 the already allocated file name.
 */
-static char *AllocFileName(pPrepext pEXT,
+static char *sdbg_AllocFileName(pPrepext pEXT,
                            char *pszFileName
   ){
   long i;
@@ -669,7 +671,7 @@ static char *AllocFileName(pPrepext pEXT,
   return pDO->ppszFileNames[pDO->cFileNames-1];
   }
 
-static pUserFunction_t AllocUserFunction(pPrepext pEXT,
+static pUserFunction_t sdbg_AllocUserFunction(pPrepext pEXT,
                                          char *pszUserFunction
   ){
   pDebuggerObject pDO = pEXT->pPointer;
@@ -691,7 +693,7 @@ static pUserFunction_t AllocUserFunction(pPrepext pEXT,
   return &(pDO->pUserFunctions[pDO->cUserFunctions-1]);
   }
 
-void CBF_ListLocalVars(char *pszName,
+void sdbg_CBF_ListLocalVars(char *pszName,
                        void *pSymbol,
                        void **pv){
   pSymbolVAR pVAR = pSymbol;
@@ -703,7 +705,7 @@ void CBF_ListLocalVars(char *pszName,
   strcpy(pUF->ppszLocalVariables[pVAR->Serial-1],pszName);
   }
 
-void CBF_ListGlobalVars(char *pszName,
+void sdbg_CBF_ListGlobalVars(char *pszName,
                        void *pSymbol,
                        void *pv){
   pSymbolVAR pVAR = pSymbol;
@@ -716,7 +718,7 @@ void CBF_ListGlobalVars(char *pszName,
 
 
 
-int dbg_preproc(pPrepext pEXT,long *pCmd, void *p)
+int sdbg_preproc(pPrepext pEXT,long *pCmd, void *p)
 {
   char *s;
 
@@ -777,7 +779,7 @@ int dbg_preproc(pPrepext pEXT,long *pCmd, void *p)
             pDO->iPort = atoi(s); /* convert the string to int */
             }
         }while(0);
-        pDO->SourceLines[i].szFileName = AllocFileName(pEXT,Result->szFileName);
+        pDO->SourceLines[i].szFileName = sdbg_AllocFileName(pEXT,Result->szFileName);
         pDO->SourceLines[i].lLineNumber = Result->lLineNumber;
         pDO->SourceLines[i].BreakPoint = 0;
         i++;
@@ -795,7 +797,7 @@ int dbg_preproc(pPrepext pEXT,long *pCmd, void *p)
         return 0;
         }
 
-      pDO = new_DebuggerObject(pEXT);
+      pDO = sdbg_new_DebuggerObject(pEXT);
       *pCmd = PreprocessorUnload;
       if( pDO == NULL )return 1;
 
@@ -822,7 +824,7 @@ int dbg_preproc(pPrepext pEXT,long *pCmd, void *p)
         pDO->Nodes[i].lSourceLine = 0;
         }
       while( Result ){
-        pDO->Nodes[Result->NodeId-1].pszFileName = AllocFileName(pEXT,Result->szFileName);
+        pDO->Nodes[Result->NodeId-1].pszFileName = sdbg_AllocFileName(pEXT,Result->szFileName);
         pDO->Nodes[Result->NodeId-1].lLineNumber = Result->lLineNumber;
         Result = Result->rest;
         }
@@ -833,7 +835,7 @@ int dbg_preproc(pPrepext pEXT,long *pCmd, void *p)
         *pCmd = PreprocessorUnload;
         return 1;
         }
-      pEXT->pST->TraverseSymbolTable(pEx->GlobalVariables,CBF_ListGlobalVars,pDO);
+      pEXT->pST->TraverseSymbolTable(pEx->GlobalVariables,sdbg_CBF_ListGlobalVars,pDO);
       *pCmd = PreprocessorContinue;
       return 0;
       }
@@ -864,7 +866,7 @@ int dbg_preproc(pPrepext pEXT,long *pCmd, void *p)
 
       *pCmd = PreprocessorContinue;
       if( pEx->ThisFunction == NULL )return 0;/* may happen if syntax error in the BASIC program */
-      pUF = AllocUserFunction(pEXT,pEx->ThisFunction->FunctionName);
+      pUF = sdbg_AllocUserFunction(pEXT,pEx->ThisFunction->FunctionName);
       pUF->cLocalVariables = pEx->cLocalVariables;
       if( pUF->cLocalVariables )
         pUF->ppszLocalVariables = pEXT->pST->Alloc( sizeof(char *)*pUF->cLocalVariables,pEXT->pMemorySegment);
@@ -875,7 +877,7 @@ int dbg_preproc(pPrepext pEXT,long *pCmd, void *p)
       if( pUF->cLocalVariables && pUF->ppszLocalVariables == NULL )return 1;
       pv[0] = pUF;
       pv[1] = pEXT;
-      pEXT->pST->TraverseSymbolTable(pEx->LocalVariables,(void *)CBF_ListLocalVars,pv);
+      pEXT->pST->TraverseSymbolTable(pEx->LocalVariables,(void *)sdbg_CBF_ListLocalVars,pv);
       *pCmd = PreprocessorContinue;
       return 0;
       }
@@ -887,12 +889,12 @@ int dbg_preproc(pPrepext pEXT,long *pCmd, void *p)
       pDO->CallStackDepth = 0;
       pDO->DbgStack = NULL;
       pDO->StackTop = NULL;
-      pEo->pHookers->HOOK_ExecBefore = MyExecBefore;
-      pEo->pHookers->HOOK_ExecAfter = MyExecAfter;
-      pEo->pHookers->HOOK_ExecCall = MyExecCall;
-      pEo->pHookers->HOOK_ExecReturn = MyExecReturn;
-      GetSourceLineNumber(pDO,1);/* to calculate all the node numbers for each lines (or the other way around?) */
-      comm_Init(pDO);
+      pEo->pHookers->HOOK_ExecBefore = sdbg_MyExecBefore;
+      pEo->pHookers->HOOK_ExecAfter = sdbg_MyExecAfter;
+      pEo->pHookers->HOOK_ExecCall = sdbg_MyExecCall;
+      pEo->pHookers->HOOK_ExecReturn = sdbg_MyExecReturn;
+      sdbg_GetSourceLineNumber(pDO,1);/* to calculate all the node numbers for each lines (or the other way around?) */
+      scomm_Init(pDO);
       *pCmd = PreprocessorContinue;
       return 0;
       }

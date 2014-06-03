@@ -1,3 +1,6 @@
+//sprintf may be unsafe..
+#pragma warning( disable : 4996)
+
 /*
 FILE: sdbg_con.c
 HEADER: dbg_comm.h
@@ -58,7 +61,7 @@ This function has to set up the debugger environment with the client. Connecting
 the listening socket, clearing screen and so on.
 
 /*FUNCTION*/
-void comm_Init(pDebuggerObject pDO
+void scomm_Init(pDebuggerObject pDO
   ){
 /*noverbatim
 CUT*/
@@ -80,7 +83,7 @@ CUT*/
   i = bind(pDO->listen_socket,(struct sockaddr *)&SA,sizeof(SA));
   if( i ) i = WSAGetLastError();
   listen(pDO->listen_socket,1);
-  pDO->socket = accept(pDO->listen_socket,NULL,NULL);
+  pDO->socket = accept(pDO->listen_socket,NULL,NULL);                  //--------> hangs here until connection made
   sprintf(cBuffer,"Application: sbdbg 1.0\r\nVersion: 1.0\r\n");
   SEND2CLIENT;
   sprintf(cBuffer,"Source-File-Count: %u\r\n",pDO->cFileNames);
@@ -100,7 +103,7 @@ a BASIC line. This function can be used to give some information to the
 client, displaying lines around the actual one, values of variables and so on.
 
 /*FUNCTION*/
-void comm_WeAreAt(pDebuggerObject pDO,
+void scomm_WeAreAt(pDebuggerObject pDO,
                   long i
   ){
 /*noverbatim
@@ -122,7 +125,7 @@ The optional T<lThis> may show the caret where the actual execution
 context is.
 
 /*FUNCTION*/
-void comm_List(pDebuggerObject pDO,
+void scomm_List(pDebuggerObject pDO,
                long lStart,
                long lEnd,
                long lThis
@@ -166,7 +169,8 @@ be set to zero.
 
 Finally if there are no numbers on the command line then bot variables are set zero.
 /*FUNCTION*/
-void GetRange(char *pszBuffer,
+
+/*void GetRange(char *pszBuffer,
               long *plStart,
               long *plEnd
   ){
@@ -177,7 +181,7 @@ Arguments:
 =item T<plStart> pointer to the long that will hold the value of the first number
 =item T<plEnd> pointer to the long that will hold the value of the second number following the dash character
 =noitemize
-CUT*/
+CUT* /
   *plStart = *plEnd = 0;
   while( isspace(*pszBuffer) )pszBuffer++;
   if( !*pszBuffer )return;
@@ -186,13 +190,14 @@ CUT*/
   while( isspace(*pszBuffer) )pszBuffer++;
   if( *pszBuffer == '-' ){
     pszBuffer++;
-    *plEnd = 999999999;/* something large, very large */
+    *plEnd = 999999999;/* something large, very large * /
     }
   while( isspace(*pszBuffer) )pszBuffer++;
   if( !*pszBuffer )return;
   *plEnd = atol(pszBuffer);
   return;
-  }
+  }*/
+
 /*
 static void print_help(){
   printf(
@@ -226,7 +231,7 @@ The message is an informal message to the client that either tells that the
 command was executed successfully or that the command failed and why.
 
 /*FUNCTION*/
-void comm_Message(pDebuggerObject pDO,
+void scomm_Message(pDebuggerObject pDO,
                   char *pszMessage
   ){
 /*noverbatim
@@ -247,7 +252,7 @@ command what the debugger is supposed to do and the possible string argument
 in T<pszBuffer>. The available space for the argument is given T<cbBuffer>.
 
 /*FUNCTION*/
-int comm_GetCommand(pDebuggerObject pDO,
+int scomm_GetCommand(pDebuggerObject pDO,
                     char *pszBuffer,
                     long dwBuffer
   ){
@@ -271,8 +276,8 @@ CUT*/
   pEo = pDO->pEo;
   while( 1 ){
     lThis = GetCurrentDebugLine(pDO);
-    comm_WeAreAt(pDO,lThis);
-    send(pDO->socket,".\r\n",3,0);
+    scomm_WeAreAt(pDO,lThis);
+    send(pDO->socket,".\r\n",3,0);                 //--------> blocks while waiting to receive a command
     cbBuffer = recv(pDO->socket,cBuffer,1024,0);
     cmd = *cBuffer;
 	while( ('\r' == cBuffer[cbBuffer-1] || '\n' == cBuffer[cbBuffer-1]) && cbBuffer  ){
@@ -285,8 +290,8 @@ CUT*/
 
         if( cbBuffer > 2 ){/*if there are arguments: 1 command char, 2 new line */
           GetRange(cBuffer+1,&lStart,&lEnd);
-          comm_List(pDO,lStart,lEnd,lThis);
-          }else comm_WeAreAt(pDO,lThis);
+          scomm_List(pDO,lStart,lEnd,lThis);
+          }else scomm_WeAreAt(pDO,lThis);
 
         continue;
       case '?':
@@ -294,10 +299,10 @@ CUT*/
         i = SPrintVarByName(pDO,pDO->pEo,cBuffer+1,pszPrintBuff,&cbPrintBuff);
         switch( i ){
           case 1:
-            comm_Message(pDO,"variable is too long to print");
+            scomm_Message(pDO,"variable is too long to print");
             continue;
           case 2:
-            comm_Message(pDO,"variable is non-existent");
+            scomm_Message(pDO,"variable is non-existent");
             continue;
           default:
 			sprintf(cBuffer,"Value: %s\r\n",pszPrintBuff);
@@ -307,7 +312,7 @@ CUT*/
     case 'L': /* list local variables */
       if( pDO->StackListPointer == NULL || pDO->StackListPointer->pUF == NULL ){
 		  /* pUF is NULL when the subroutine is external implemented in a DLL */
-        comm_Message(pDO,"program is not local");
+        scomm_Message(pDO,"program is not local");
         continue;
         }
 	  StackListPointer = pDO->StackListPointer;
@@ -316,7 +321,7 @@ CUT*/
 		   but the LocalVariables still hold the value of the caller local variables.
 		*/
 		if( pDO->StackListPointer->up == NULL || pDO->StackListPointer->up->pUF == NULL ){
-          comm_Message(pDO,"program is not local");
+          scomm_Message(pDO,"program is not local");
           continue;
 		  }
 		StackListPointer = StackListPointer->up;
@@ -332,10 +337,10 @@ CUT*/
           j = SPrintVariable(pDO,ARRAYVALUE(pDO->StackListPointer->LocalVariables,i),pszPrintBuff,&cbPrintBuff);
           switch( j ){
 			case 1:
-				comm_Message(pDO,"variable is too long to print");
+				scomm_Message(pDO,"variable is too long to print");
 				continue;
 			case 2:
-				comm_Message(pDO,"variable is non-existent");
+				scomm_Message(pDO,"variable is non-existent");
 				continue;
 			default:
 				sprintf(cBuffer,"Local-Variable-Value: %s\r\n",pszPrintBuff);
@@ -356,10 +361,10 @@ CUT*/
           j = SPrintVariable(pDO,ARRAYVALUE(pEo->GlobalVariables,i+1),pszPrintBuff,&cbPrintBuff);
           switch( j ){
 			case 1:
-				comm_Message(pDO,"variable is too long to print");
+				scomm_Message(pDO,"variable is too long to print");
 				continue;
 			case 2:
-				comm_Message(pDO,"variable is non-existent");
+				scomm_Message(pDO,"variable is non-existent");
 				continue;
 			default:
 				sprintf(cBuffer,"Global-Variable-Value: %s\r\n",pszPrintBuff);

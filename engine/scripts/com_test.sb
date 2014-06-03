@@ -1,0 +1,9 @@
+declare sub CreateObject alias "CreateObject" lib "test.exe"
+
+print "calling CreateObject\n"
+obj = CreateObject("Project1.Class1")
+
+print "return value was = ", obj
+
+print "\n\nPress ENTER..."
+line input a

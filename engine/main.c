@@ -8,7 +8,8 @@
 #include "basext.h"
 #include "scriba.h" 
 
-extern dbg_preproc;
+extern dbg_preproc;  //for console based debugger preprocessor
+extern sdbg_preproc; //for the socket based debugger preprocessor
 
 MODLIST StaticallyLinkedModules[] ={
   { NULL, NULL },
@@ -35,7 +36,8 @@ void main(int argc, char *argv[]){
 
   pProgram = scriba_new(NULL,NULL);
   //scriba_LoadConfiguration(pProgram, cfg); //optional
-  scriba_SetFileName(pProgram,"./scripts/hello.sb");
+  //scriba_SetFileName(pProgram,"./scripts/hello.sb");
+  scriba_SetFileName(pProgram,"./scripts/com_test.sb");
 
   /*
   if( scriba_UseCacheFile(pProgram) == SCRIBA_ERROR_SUCCESS ){
@@ -57,10 +59,13 @@ void main(int argc, char *argv[]){
   //iError = scriba_LoadInternalPreprocessorByPath(pProgram, "dbg", "C:\\scriptbasic\\modules\\dbg.dll");
 
   //and this one allows you to compile in preprocessors without external dll
-  iError = scriba_LoadInternalPreprocessorByFunction(pProgram, "dbg", &dbg_preproc);
+  //iError = scriba_LoadInternalPreprocessorByFunction(pProgram, "dbg", &dbg_preproc);
+
+  //iError = scriba_LoadInternalPreprocessorByFunction(pProgram, "sdbg", &sdbg_preproc);
 
   if( scriba_LoadSourceProgram(pProgram) ){
 	  printf("failed to load source program!");
+	  getch();
 	  exit(0);
   }
 
@@ -68,7 +73,8 @@ void main(int argc, char *argv[]){
    
   if( iError=scriba_Run(pProgram,CmdLinBuffer) ){
 	report_report(stderr,"",0,iError,REPORT_ERROR,&iErrorCounter,NULL,&fErrorFlags);
-    exit(0);
+    getch();
+	exit(0);
   }
  
   scriba_destroy(pProgram);

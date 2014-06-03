@@ -81,22 +81,40 @@ T<iff.bas>. This function evaluates the first argument and if that is true retur
 otherwise it returns the third argument.
 
 If the function T<iff> was implemented as a command and declared accordingly using the
-command T<DECLARE COMMAND> and if that module function evaluates only one of the second and third arguments then the global variable T<b> remains unchanged.
+command T<DECLARE COMMAND> and if that module function evaluates only one of the second and third 
+arguments then the global variable T<b> remains unchanged.
 
 If the function T<iff> was implemented as a function and declared accordingly using the
 command T<DECLARE SUB> and then the global variable T<b> is increased.
 
 =details
 
-Declare a function implemented in an external library. Note that library and the function implemented in it should be specifically written for ScriptBasic. This command is not able to declare and call just any library function.
+Declare a function implemented in an external library. Note that library and the function implemented 
+in it should be specifically written for ScriptBasic. This command is not able to declare and call 
+just any library function.
 
-The command has three arguments. The argument T<function> is a symbol (a case insensitive string without any space, containing only alphanumeric characters and without double quotes) , the name of the function as it is going to be used in the BASIC program. The BASIC programmer is free to choose this function name. The function later can be used as if it was a BASIC user defined function.
+The command has three arguments. The argument T<function> is a symbol (a case insensitive string 
+without any space, containing only alphanumeric characters and without double quotes) , the name 
+of the function as it is going to be used in the BASIC program. The BASIC programmer is free to 
+choose this function name. The function later can be used as if it was a BASIC user defined function.
 
-The argument T<cfun> has to be the name of the function as it is defined in the library. This has to be a constant string value. You can not use any expression here only a constant string. This is usually the same as the name of the interface function in the C source file. The programmer writing the module in C has to know this name. If for some reason you do not happen to know it, but you need to declare the function you may be lucky using the name that stands in the C source file between parentheses after the macro T<besFUNCTION>.
+The argument T<cfun> has to be the name of the function as it is defined in the library. This has 
+to be a constant string value. You can not use any expression here only a constant string. This 
+is usually the same as the name of the interface function in the C source file. The programmer 
+writing the module in C has to know this name. If for some reason you do not happen to know it, 
+but you need to declare the function you may be lucky using the name that stands in the C source 
+file between parentheses after the macro T<besFUNCTION>.
 
-The last argument is the name of the library. This also has to be a constant string value. You can not use any expression here but a constant string. This argument has to specify the name of the library file without the extension and the path where the library is located. The extension will automatically be appended to the file name and the path will automatically be prepended to it. The actual extension and the path to be searched for the library is defined in the ScriptBasic configuration file.
+The last argument is the name of the library. This also has to be a constant string value. You can 
+not use any expression here but a constant string. This argument has to specify the name of the 
+library file without the extension and the path where the library is located. The extension 
+will automatically be appended to the file name and the path will automatically be prepended 
+to it. The actual extension and the path to be searched for the library is defined in the 
+ScriptBasic configuration file.
 
-You can also specify the full file name containing the full path to the library as well as the file extension. In this case the ScriptBasic configuration file data for the module path and extension is ignored.
+You can also specify the full file name containing the full path to the library as well as the 
+file extension. In this case the ScriptBasic configuration file data for the module path and 
+extension is ignored.
 
 
 DEVELOPER DETAILS!
@@ -109,11 +127,19 @@ The dynamically loaded modules are implemented in ScriptBasic via an ordinary co
 'declare' 'sub' * function 'alias' string 'lib' string nl
 =noverbatim
 
-For the compiler it generates a user defined function, which is defined on the line that contains the declare statement. The execution system will call itself recursively to execute lines starting at the line where the T<declare> statement is. The command implemented in this file is executed and unlike the T<FUNCTION> or T<SUB> it immediately tells the execution system to return after the line was executed.
+For the compiler it generates a user defined function, which is defined on the line that contains the declare statement. 
+The execution system will call itself recursively to execute lines starting at the line where the T<declare> statement is. 
+The command implemented in this file is executed and unlike the T<FUNCTION> or T<SUB> it immediately tells the 
+execution system to return after the line was executed.
 
-This command first checks if the line was already executed. On the first execution it loads the module and gets the address of the function named in the alias string. This entry point is stored in a T<struct> and next time the function is called by the basic pointer it does not need to search for the function and for the module. If a function of an already loaded module is called the program does not reload the module. The program maintains a linked list with the names of the loaded modules and loads modules only when they are first referenced.
+This command first checks if the line was already executed. On the first execution it loads the module and gets 
+the address of the function named in the alias string. This entry point is stored in a T<struct> and next time 
+the function is called by the basic pointer it does not need to search for the function and for the module. If 
+a function of an already loaded module is called the program does not reload the module. The program maintains 
+a linked list with the names of the loaded modules and loads modules only when they are first referenced.
 
-The modules are loaded using the operating system T<dll> loading function T<dlopen> or T<LoadLibrary>. These functions search several locations for libraries in case the library is specified without absolute path name.
+The modules are loaded using the operating system T<dll> loading function T<dlopen> or T<LoadLibrary>. 
+These functions search several locations for libraries in case the library is specified without absolute path name.
 
 The module loader can be fouled if the same library is defined with full path and with single name in the basic code.
 
@@ -126,18 +152,43 @@ declare sub fun3 alias "youfun" lib "/usr/lib/scriba/libobas.so"
 
 refer to the same module, the code implemented here thinks that they are different libraries.
 
-When the module is loaded the code tries to get the function named T<versmodu> and calls it. This function gets three arguments. The first argument is the interface version that ScriptBasic supports for the external modules. 
-The second argument is a pointer to a ZCHAR terminated string that contains the variation of the calling interpreter. Note that this has to be an 8-character (+1 ZCHAR) string. The third argument is a pointer to a T<NULL> initialized T<void *> pointer, which is the module pointer. This pointer is stored by ScriptBasic, and it is guaranteed not been modified. The modules can store "global" variable information using this pointer. Usually this pointer is not used in this function, especially because there are no "safe" memory allocation functions available at this point of execution.
+When the module is loaded the code tries to get the function named T<versmodu> and calls it. 
+This function gets three arguments. The first argument is the interface version that 
+ScriptBasic supports for the external modules. 
 
-The module should examine the version it gets and it should decide if the interface version is OK for the module. If the interface version is not known the function should return 0 and ScriptBasic will interpret this value as a failure to load the module. If the module does not know if the interface version is good or not it can return the interface version that it can handle. In this case it is the duty of the interpreter to decide if the interface version can be provided or not. ScriptBasic will examine the version and in case it can not handle the version it will generate an error.
+The second argument is a pointer to a ZCHAR terminated string that contains the variation 
+of the calling interpreter. Note that this has to be an 8-character (+1 ZCHAR) string. The 
+third argument is a pointer to a T<NULL> initialized T<void *> pointer, which is the module 
+pointer. This pointer is stored by ScriptBasic, and it is guaranteed not been modified. 
+The modules can store "global" variable information using this pointer. Usually this pointer 
+is not used in this function, especially because there are no "safe" memory allocation 
+functions available at this point of execution.
 
-This methodology will allow either ScriptBasic to revert its functionality to earlier interface versions in case the higher version interface not only extends the lower version but is incompatible with the former version. On the other hand a module designed for a higher version may be loaded and executed by a lower version of ScriptBasic in case the module is ready to use the lower interface version.
+The module should examine the version it gets and it should decide if the interface version 
+is OK for the module. If the interface version is not known the function should return 0 
+and ScriptBasic will interpret this value as a failure to load the module. If the module 
+does not know if the interface version is good or not it can return the interface version 
+that it can handle. In this case it is the duty of the interpreter to decide if the interface 
+version can be provided or not. ScriptBasic will examine the version and in case it can not 
+handle the version it will generate an error.
 
-If the function T<versmodu> can not be found in the DLL then ScriptBasic assumes that the module is ready to accept the current interface version. However such a module should not generally be written.
+This methodology will allow either ScriptBasic to revert its functionality to earlier interface 
+versions in case the higher version interface not only extends the lower version but is incompatible 
+with the former version. On the other hand a module designed for a higher version may be loaded 
+and executed by a lower version of ScriptBasic in case the module is ready to use the lower 
+interface version.
 
-Note that the version we are talking about here is neither the version of ScriptBasic nor the version of the module. This is the version of the interface between the module and ScriptBasic.
+If the function T<versmodu> can not be found in the DLL then ScriptBasic assumes that the module is 
+ready to accept the current interface version. However such a module should not generally be written.
 
-After the version negotiation has been successfully done ScriptBasic tries to get the address of the function named T<bootmodu>. If this function exists it is started. This function can perform all the initializations needed for the module. This function gets all the parameters that a usual module implemented function except that there are no parameters and the function should not try to set a result value, because both of these arguments are T<NULL>.
+Note that the version we are talking about here is neither the version of ScriptBasic nor the version of 
+the module. This is the version of the interface between the module and ScriptBasic.
+
+After the version negotiation has been successfully done ScriptBasic tries to get the address of the 
+function named T<bootmodu>. If this function exists it is started. This function can perform all the 
+initializations needed for the module. This function gets all the parameters that a usual module 
+implemented function except that there are no parameters and the function should not try to set a 
+result value, because both of these arguments are T<NULL>.
 
 A module function (including T<bootmodu>) is called with four arguments. The four arguments are four pointers.
 
@@ -148,25 +199,52 @@ int my_module_function(pSupportTable pSt,
                        pFixSizeMemoryObject *pReturnValue) // NULL for bootmodu
 =noverbatim
 
-The parameter T<pSt> points to a T<struct> that holds the function pointers that the function can call to reach ScriptBasic functionality. These functions are needed to access the arguments and to return a value.
+The parameter T<pSt> points to a T<struct> that holds the function pointers that the function can call to 
+reach ScriptBasic functionality. These functions are needed to access the arguments and to return a value.
 
-The parameter T<ppModuleInternal> is a pointer pointing to a T<NULL> initialized pointer. This pointer belongs to the module. ScriptBasic guarantees that the value is not modified during the execution (unless the module itself modifies it). This pointer can be used to remember the address space allocated by the module for itself. To store permanent values to remember the state of the module you can either use static variables or this pointer. However using this pointer and allocating memory to store the values is the preferred method. The reason for preferring this method is that global variables are global in the whole process. On the other hand ScriptBasic may run in several threads in a single process executing several different basic programs. This T<ppModuleInternal> pointer will be unique for each thread.
+The parameter T<ppModuleInternal> is a pointer pointing to a T<NULL> initialized pointer. This pointer 
+belongs to the module. ScriptBasic guarantees that the value is not modified during the execution 
+(unless the module itself modifies it). This pointer can be used to remember the address space 
+allocated by the module for itself. To store permanent values to remember the state of the module 
+you can either use static variables or this pointer. However using this pointer and allocating memory 
+to store the values is the preferred method. The reason for preferring this method is that global 
+variables are global in the whole process. On the other hand ScriptBasic may run in several threads 
+in a single process executing several different basic programs. This T<ppModuleInternal> pointer 
+will be unique for each thread.
 
-Here is the point to discuss a bit the role of T<bootmodu>. Why not to use T<DllMain> under Windows NT? The reason is in the possibility of threaded execution. T<DllMain> is executed when the process loads the T<dll>. T<bootmodu> is executed when the basic executor loads the module. If there are more threads running then T<DllMain> is not started again. Use T<DllMain> or a similar function under UNIX if you want to initialize some process level data. Use T<bootmodu> to initialize basic program specific data.
+Here is the point to discuss a bit the role of T<bootmodu>. Why not to use T<DllMain> under Windows 
+NT? The reason is in the possibility of threaded execution. T<DllMain> is executed when the 
+process loads the T<dll>. T<bootmodu> is executed when the basic executor loads the module. 
+If there are more threads running then T<DllMain> is not started again. Use T<DllMain> or a 
+similar function under UNIX if you want to initialize some process level data. Use T<bootmodu> 
+to initialize basic program specific data.
 
-The parameter T<pParameters> is a ScriptBasic array containing the values of the arguments. There is no run-time checking about the number of arguments. This is up to the module function.
+The parameter T<pParameters> is a ScriptBasic array containing the values of the arguments. There is 
+no run-time checking about the number of arguments. This is up to the module function.
 
-The last parameter is a pointer to a ScriptBasic variable. The initial value of the pointed pointer is T<NULL>, meaning T<undef> return value. The final return value should be allocated using the macros defined in T<basext.h> and this pointer should be set to point to the value. Note however that T<bootmodu> and T<finimodu> should not to try to dereference this variable, because for both of them the value is T<NULL>.
+The last parameter is a pointer to a ScriptBasic variable. The initial value of the pointed pointer 
+is T<NULL>, meaning T<undef> return value. The final return value should be allocated using the macros 
+defined in T<basext.h> and this pointer should be set to point to the value. Note however that 
+T<bootmodu> and T<finimodu> should not to try to dereference this variable, because for both 
+of them the value is T<NULL>.
 
-For further information on how to write module extension functions read the on-line documentation of T<basext.c> in this source documentation.
+For further information on how to write module extension functions read the on-line documentation of 
+T<basext.c> in this source documentation.
 
-A module is unloaded when the basic program execution is finished. There is no basic code to unload a module. (Why?)
+A module is unloaded when the basic program execution is finished. There is no basic code to unload 
+a module. (Why?)
 
-Before the module is unloaded calling one of the operating system functions T<dlclose> or T<FreeLibrary> the program calls the module function T<finimodu> if it exists. This function gets all the four pointers (the last two are T<NULL>s) and it can perform all the tasks that the module has to do clean up.
+Before the module is unloaded calling one of the operating system functions T<dlclose> or 
+T<FreeLibrary> the program calls the module function T<finimodu> if it exists. This function 
+gets all the four pointers (the last two are T<NULL>s) and it can perform all the tasks that 
+the module has to do clean up.
 
-Note however that the module need not release the memory it allocated using the T<besALLOCATE> macro defined in the file T<basext.h> (which is generated using T<headerer.pl> from T<basext.c>). The memory is going to be released afterwards by ScriptBasic automatically.
+Note however that the module need not release the memory it allocated using the T<besALLOCATE> 
+macro defined in the file T<basext.h> (which is generated using T<headerer.pl> from T<basext.c>). 
+The memory is going to be released afterwards by ScriptBasic automatically.
 
-You can have a look at the source code of modules provided by ScriptBasic, for example MySQL module, Berkeley DB module, HASH module, MT module and so on.
+You can have a look at the source code of modules provided by ScriptBasic, for example MySQL 
+module, Berkeley DB module, HASH module, MT module and so on.
 
 */
 void COMMAND_EXTERNAL(pExecuteObject pEo){
@@ -340,19 +418,30 @@ developed an external module for ScriptBasic programs in C.
 
 =details
 
-Declare a command implemented in an external library. Note that library and the command implemented in it should be specifically written for ScriptBasic. This command is not able to declare and call just any library function.
+Declare a command implemented in an external library. Note that library and the command implemented 
+in it should be specifically written for ScriptBasic. This command is not able to declare 
+and call just any library function.
 
-The arguments are similar to that of the command T<DECLARE SUB> and the same restrictions and conditions apply. Look at the documentation of the command R<DECLARESUB>.
+The arguments are similar to that of the command T<DECLARE SUB> and the same restrictions and 
+conditions apply. Look at the documentation of the command R<DECLARESUB>.
 
 DEVELOPER DETAILS!
 
-This command is used to start an external command defined in a dynamic load library. Please read the details of the command T<DECLARE SUB> if you did not do up to know before reading the details of this command.
+This command is used to start an external command defined in a dynamic load library. Please read 
+the details of the command T<DECLARE SUB> if you did not do up to know before reading the details 
+of this command.
 
-The major difference between an external function and an external command is that arguments are passed after they are evaluated to external functions, while arguments are not evaluated for external commands.
+The major difference between an external function and an external command is that arguments are 
+passed after they are evaluated to external functions, while arguments are not evaluated for 
+external commands.
 
-External commands are a bit more tedious to implement. On the other hand external commands have more freedom handling their arguments. A command is allowed to evaluate or not to evaluate some of its arguments. It can examine the structure of the expression passed as argument and evaluate it partially at its wish.
+External commands are a bit more tedious to implement. On the other hand external commands have 
+more freedom handling their arguments. A command is allowed to evaluate or not to evaluate some of 
+its arguments. It can examine the structure of the expression passed as argument and evaluate it 
+partially at its wish.
 
-From the BASIC programmer point of view external commands are called the same way as user defined functions or external functions.
+From the BASIC programmer point of view external commands are called the same way as user defined 
+functions or external functions.
 */
 
 void COMMAND_EXTERNAM(pExecuteObject pEo){

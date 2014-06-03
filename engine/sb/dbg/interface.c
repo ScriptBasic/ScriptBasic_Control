@@ -709,6 +709,7 @@ int  /*DLL_EXPORT*/  dbg_preproc(pPrepext pEXT,
 
   switch( *pCmd ){
 
+	 //reader has done all reading tasks, processed and linked the include files
     case PreprocessorReadDone3:{
       pReadObject pRo = p;
       pDebuggerObject pDO = pEXT->pPointer;
@@ -742,6 +743,8 @@ int  /*DLL_EXPORT*/  dbg_preproc(pPrepext pEXT,
       return 0;
       }
 
+    //this is the very first call to the function within the actual interpreter thread.
+    //entry point is used when the preprocessor is loaded
     case PreprocessorLoad:{
       pDebuggerObject pDO;
 
@@ -759,6 +762,8 @@ int  /*DLL_EXPORT*/  dbg_preproc(pPrepext pEXT,
       return 0;
       }
 
+  //called from scriba_DoSyntaxAnalysis, syntax analyzer has finished
+  //peXobject->pCommandList points to the list of nodes. 
   case PreprocessorExFinish:{
       peXobject pEx = p;
       pDebuggerObject pDO = pEXT->pPointer;
@@ -791,6 +796,8 @@ int  /*DLL_EXPORT*/  dbg_preproc(pPrepext pEXT,
       *pCmd = PreprocessorContinue;
       return 0;
       }
+
+  //when the syntax analyzer starts a new local scope. This is when a function or a sub starts
   case PreprocessorExStartLocal:{
       peXobject pEx = p;
       pDebuggerObject pDO = pEXT->pPointer;
@@ -799,6 +806,8 @@ int  /*DLL_EXPORT*/  dbg_preproc(pPrepext pEXT,
       *pCmd = PreprocessorContinue;
       return 0;
       }
+
+  //when the syntax analyzer creates a new node for a basic program line. 
   case PreprocessorExLineNode:{
       peXobject pEx = p;
       pDebuggerObject pDO = pEXT->pPointer;
@@ -810,6 +819,8 @@ int  /*DLL_EXPORT*/  dbg_preproc(pPrepext pEXT,
       *pCmd = PreprocessorContinue;
       return 0;
       }
+
+  //syntax analyzer exists a local scope. This is when a function or a sub ends. 
   case PreprocessorExEndLocal:{
       peXobject pEx = p;
       pUserFunction_t pUF;
@@ -834,6 +845,7 @@ int  /*DLL_EXPORT*/  dbg_preproc(pPrepext pEXT,
       return 0;
       }
 
+  //entry point from scriba_Run, before the execution of the basic program starts
   case PreprocessorExeStart:
     { pExecuteObject pEo = p;
       pDebuggerObject pDO = pEXT->pPointer;
@@ -841,10 +853,10 @@ int  /*DLL_EXPORT*/  dbg_preproc(pPrepext pEXT,
       pDO->CallStackDepth = 0;
       pDO->DbgStack = NULL;
       pDO->StackTop = NULL;
-      pEo->pHookers->HOOK_ExecBefore = MyExecBefore;
-      pEo->pHookers->HOOK_ExecAfter = MyExecAfter;
-      pEo->pHookers->HOOK_ExecCall = MyExecCall;
-      pEo->pHookers->HOOK_ExecReturn = MyExecReturn;
+      pEo->pHookers->HOOK_ExecBefore = MyExecBefore; /* called before executing a command       */
+      pEo->pHookers->HOOK_ExecAfter = MyExecAfter;   /* called after executing a command        */
+      pEo->pHookers->HOOK_ExecCall = MyExecCall;     /* executed when calling a function        */
+      pEo->pHookers->HOOK_ExecReturn = MyExecReturn; /* executed when returning from a function */
       GetSourceLineNumber(pDO,1);/* to calculate all the node numbers for each lines (or the other way around?) */
       comm_Init(pDO);
       *pCmd = PreprocessorContinue;

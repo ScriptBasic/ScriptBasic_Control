@@ -92,7 +92,7 @@ typedef struct _SbData {
 //dz- changing these to stdcall probably wacks the _SupportTable function pointers..modules use..
 #if (defined(_WIN32) || defined(__MACOS__) || defined(WIN32))
 # ifdef __cplusplus
-#  define SCRIBA_MAIN_LIBSPEC extern "C" __stdcall __declspec(dllexport) 
+#  define SCRIBA_MAIN_LIBSPEC extern "C" __declspec(dllexport) 
 # else
 #  define SCRIBA_MAIN_LIBSPEC __declspec(dllexport) 
 # endif

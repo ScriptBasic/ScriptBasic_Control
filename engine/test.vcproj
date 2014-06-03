@@ -300,10 +300,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\sb\getopt.c"
-					>
-				</File>
-				<File
 					RelativePath=".\sb\hndlptr.c"
 					>
 				</File>
@@ -446,10 +442,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\sb\include\getopt.h"
-					>
-				</File>
-				<File
 					RelativePath=".\sb\include\hndlptr.h"
 					>
 				</File>
@@ -547,28 +539,20 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="dbg"
-				>
-				<File
-					RelativePath=".\sb\dbg\dbg.h"
-					>
-				</File>
-				<File
-					RelativePath=".\sb\dbg\dbg_comm.h"
-					>
-				</File>
-				<File
-					RelativePath=".\sb\dbg\dbg_con.c"
-					>
-				</File>
-				<File
-					RelativePath=".\sb\dbg\interface.c"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="extensions"
 				>
+				<File
+					RelativePath=".\extensions\COM.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+				</File>
 				<File
 					RelativePath=".\extensions\trial.c"
 					>
@@ -577,6 +561,30 @@
 			<Filter
 				Name="scripts"
 				>
+				<File
+					RelativePath=".\scripts\com_test.sb"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\devguide.chm"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+				</File>
 				<File
 					RelativePath=".\scripts\hello.sb"
 					>
@@ -589,6 +597,50 @@
 						/>
 					</FileConfiguration>
 				</File>
+			</Filter>
+			<Filter
+				Name="preprocessors"
+				>
+				<Filter
+					Name="sdbg"
+					>
+					<File
+						RelativePath=".\sb\sdbg\sdbg.h"
+						>
+					</File>
+					<File
+						RelativePath=".\sb\sdbg\sdbg_comm.h"
+						>
+					</File>
+					<File
+						RelativePath=".\sb\sdbg\sdbg_con.c"
+						>
+					</File>
+					<File
+						RelativePath=".\sb\sdbg\sdbg_interface.c"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="dbg"
+					>
+					<File
+						RelativePath=".\sb\dbg\dbg.h"
+						>
+					</File>
+					<File
+						RelativePath=".\sb\dbg\dbg_comm.h"
+						>
+					</File>
+					<File
+						RelativePath=".\sb\dbg\dbg_con.c"
+						>
+					</File>
+					<File
+						RelativePath=".\sb\dbg\interface.c"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 	</Files>
