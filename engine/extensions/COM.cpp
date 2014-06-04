@@ -1,5 +1,40 @@
+/* 
+ Author:  David Zimmer <dzzie@yahoo.com>
+ Site:    http://sandsprite.com
+
+ Notes: Not all COM types are currently handled, but enough to be useful
+        this is still a bit of work in progress. I will make additions as
+        I use it and find it necessary.
+
+ Script Basic Declarations to use this extension:
+
+		declare sub CreateObject alias "CreateObject" lib "test.exe"
+		declare sub CallByName alias "CallByName" lib "test.exe"
+		declare sub ReleaseObject alias "ReleaseObject" lib "test.exe"
+
+		const VbGet = 2
+		const VbLet = 4
+		const VbMethod = 1
+		const VbSet = 8
+
+ Example:
+
+		obj = CreateObject("SAPI.SpVoice")
+
+		if obj = 0 then 
+			print "CreateObject failed!\n"
+		else
+			CallByName(obj, "rate", VbLet, 2)
+			CallByName(obj, "volume", VbLet, 60)
+			CallByName(obj, "speak", VbMethod, "This is my test")
+			ReleaseObject(obj)
+		end if 
+
+*/
 
 #include <stdio.h>
+#include <list>
+#include <string>
 
 #include "basext.h"
 
@@ -10,6 +45,7 @@ int initilized=0;
 enum vbCallType{ VbGet = 2, VbLet = 4, VbMethod = 1, VbSet = 8 };
 enum colors{ mwhite=15, mgreen=10, mred=12, myellow=14, mblue=9, mpurple=5, mgrey=7, mdkgrey=8 };
 
+//char* to wide string
 LPWSTR __C2W(char *szString){
 	DWORD n;
 	char *sz = NULL;
@@ -41,7 +77,7 @@ char* __B2C(BSTR bString)
 	return sz;
 }
 
-
+//script basic STRING type to char*
 char* GetCString(VARIABLE v){
   
 	int slen;
@@ -50,7 +86,6 @@ char* GetCString(VARIABLE v){
 
 	s = STRINGVALUE(v);
 	slen = STRLEN(v);
-  
 	if(slen==0) return 0;
 
 	myCopy = (char*)malloc(slen+1);
@@ -85,49 +120,10 @@ void color_printf(colors c, const char *format, ...)
 }
 
 //note the braces..required so if(x)RETURN0(msg) uses the whole blob 
+//should this be goto cleanup instead of return 0? 
 #define RETURN0(msg) {if(com_dbg) color_printf(colors::mred, "%s\n", msg); \
 	                 LONGVALUE(besRETURNVALUE) = 0; \
 					 return 0;}
-
-
-/* 
-   besVERSION_NEGOTIATE, besSUB_START, besSUB_FINISH are optional
-   
-   since they are called via exports..they will cause a problem if we include
-   multiple extensions compiled directly into the embedded intrepreter instance (same name in each)
-   commands themselves will each have a unique name so they should be safe..and because they are compiled
-   in, version_negotiate should not be needed..lack of a sub_start/finish of module load/unload may need
-   to be comprensated for depending on extension. (check load flag per module and init if 0 etc)
-
-   compiling extensions directly into the intrepreter was not an original design consideration and is more of
-   a hack.. -dz
-
-
-besVERSION_NEGOTIATE
-
-  printf("The function bootmodu was started and the requested version is %d\n",Version);
-  printf("The variation is: %s\n",pszVariation);
-  printf("We are returning accepted version %d\n",(int)INTERFACE_VERSION);
-  return (int)INTERFACE_VERSION;
-
-besEND
-
-besSUB_START
-  long *pL;
-
-  besMODULEPOINTER = besALLOC(sizeof(long));
-  if( besMODULEPOINTER == NULL )return 0;
-  pL = (long *)besMODULEPOINTER;
-  *pL = 0L;
-
-  printf("The function bootmodu was started.\n");
-
-besEND
-
-besSUB_FINISH
-  printf("The function finimodu was started.\n");
-besEND
-*/
 
 //ReleaseObject(obj)
 besFUNCTION(ReleaseObject)
@@ -205,17 +201,58 @@ besFUNCTION(CreateObject)
 
   if ( hr != S_OK ) RETURN0("CoCreateInstance failed does object support IDispatch?")
 
-  //todo: keep track of valid objects we create for release/sanity check latter?
+  //todo: keep track of valid objects we create for release/call sanity check latter?
+  //	  tracking would break operation though if an embedded host used setvariable to add an obj reference..
+  //      unless it used an AddObject(name,pointer) method to add it to the tracker..
+  //      how else can we know if a random number is a valid com object other than tracking?
   LONGVALUE(besRETURNVALUE) = (int)IDisp;    
 
 besEND
 
 
+// the idea behind this one is that we can use a string to embed a type specifier
+// to explicitly declare and cast a variable to the type we want such as "VT_I2:2"
+//
+// in testing with VB6 however, if we pass .vt = VT_I4 when vb6 expects a VT_I1 (char)
+// it works as long as the value is < 255, also works with VT_BOOL
+//
+// do we really need this function ? I prefer less complexity if possible.
+//
+// Note: there are many COM types, I have no plans to cover them all
+
+bool HandleSpecial(VARIANTARG* va, char* str){
+
+	return false; //disabled for now see notes above..
+
+	if(str==0) return false;
+
+	std::string s = str;
+	 
+	if(s.length() < 3) return false;
+	if(s.substr(0,3) != "VT_") return false;
+	
+	int pos = s.find(":",0);
+	if(pos < 1) return false;
+
+	std::string cmd = s.substr(0,pos);
+	if(s.length() < pos+2) return false;
+
+	s = s.substr(pos+1);
+
+	//todo implement handling of these types (there are many more than this)
+	if(cmd == "VT_I1"){
+	}else if(cmd == "VT_I2"){
+	}else if(cmd == "VT_I8"){
+    }else if(cmd == "VT_BOOL"){
+	}
+	
+	return true;
+}
+
 /*
-	callbyname object, "procname", [vbcalltype = VbMethod], [args() as variant]
+    arguments in [] are optional, default calltype = method
+	callbyname object, "procname", [vbcalltype = VbMethod], [arg0], [arg1] ...
 */	
-
-
 
 besFUNCTION(CallByName)
 
@@ -223,13 +260,16 @@ besFUNCTION(CallByName)
   int slen;
   char *s;
   char* myCopy = NULL;
+  LPWSTR wMethodName = NULL;
   vbCallType CallType = VbMethod;
+  std::list<BSTR> bstrs;
 
   VARIABLE arg_obj;
   VARIABLE arg_procName;
   VARIABLE arg_CallType;
 
   besRETURNVALUE = besNEWMORTALLONG;
+  LONGVALUE(besRETURNVALUE) = 0;
 
   if(com_dbg) color_printf(colors::myellow,"CallByName %ld args\n",besARGNR);
   
@@ -250,27 +290,14 @@ besFUNCTION(CallByName)
     besDEREFERENCE(arg_CallType);
 	CallType = (vbCallType)LONGVALUE(arg_CallType);
   }
-
-  s = STRINGVALUE(arg_procName);
-  slen = STRLEN(arg_procName);
   
-  if(slen==0) RETURN0("string can not be 0 length") 
-   
-  myCopy = (char*)malloc(slen+1);
+  if( LONGVALUE(arg_obj) == 0) RETURN0("CallByName(NULL) called")
+
+  myCopy = GetCString(arg_procName);
   if(myCopy==0) RETURN0("malloc failed low mem")
 
-  memcpy(myCopy,s, slen);
-  myCopy[slen]=0;
-
-  if(com_dbg) color_printf(colors::myellow,"CallByName(%x, %s, %d)\n", LONGVALUE(arg_obj), myCopy, CallType);
-  
-  LPWSTR wMethodName = __C2W(myCopy);
-  free(myCopy);
-
+  wMethodName = __C2W(myCopy);
   if(wMethodName==0) RETURN0("unicode conversion failed")
-
-  //todo: sanity check somehow?	  
-  if( LONGVALUE(arg_obj) == 0) RETURN0("CallByName(NULL) called")
 
   IDispatch* IDisp = (IDispatch*)LONGVALUE(arg_obj);
   DISPID  dispid; // long integer containing the dispatch ID
@@ -282,11 +309,12 @@ besFUNCTION(CallByName)
   VARIANT    retVal;
   VARIANTARG* pvarg = NULL;
   DISPPARAMS dispparams;
+  memset(&dispparams, 0, sizeof(dispparams));
 
   int com_args = besARGNR - 3;
   if(com_args < 0) com_args = 0;
    
-  memset(&dispparams, 0, sizeof(dispparams));
+  if(com_dbg) color_printf(colors::myellow,"CallByName(obj=%x, method='%s', calltype=%d , comArgs=%d)\n", LONGVALUE(arg_obj), myCopy, CallType, com_args);
 
   // Allocate memory for all VARIANTARG parameters.
   if(com_args > 0){
@@ -300,70 +328,106 @@ besFUNCTION(CallByName)
   dispparams.cArgs = com_args;  // num of args function takes
   dispparams.cNamedArgs = 0;
 
-  for(int i=0; i< com_args; i++){
-	  /* map in argument values and types */
+  /* map in argument values and types    ->[ IN REVERSE ORDER ]<-    */
+  for(int i=0; i < com_args; i++){
 	  VARIABLE arg_x;		
-	  arg_x = besARGUMENT(i + 4);
+	  arg_x = besARGUMENT(3 + com_args - i);
 	  besDEREFERENCE(arg_x);
 
 		switch( TYPE(arg_x) ){
 
 			  case VTYPE_DOUBLE:
 			  case VTYPE_ARRAY:
-				RETURN0("Arguments of type double and array not currently supported as arguments")
+			  case VTYPE_REF:
+				RETURN0("Arguments of script basic types [double, ref, array] not supported")
 				break;
 
 			  case VTYPE_LONG:
-				//printf("This is a long: %ld\n",LONGVALUE(Argument));
 				pvarg[i].vt = VT_I4;
 				pvarg[i].lVal = LONGVALUE(arg_x);
 				break;
 			  
 			  case VTYPE_STRING:
 				char* myStr = GetCString(arg_x);
-				LPWSTR wStr = __C2W(myStr);
-				BSTR bstr = SysAllocString(wStr); //track these to free after call to prevent leak ?
-				free(myStr);
-				free(wStr);
-				pvarg[i].vt = VT_BSTR;
-				pvarg[i].bstrVal = bstr;
+				
+				//peek at data and see if an explicit VT_ type was specified.. scriptbasic only supports a few types
+				if( !HandleSpecial(&pvarg[i], myStr) ){
+					//nope its just a standard string type
+					LPWSTR wStr = __C2W(myStr);
+					BSTR bstr = SysAllocString(wStr); 
+					bstrs.push_back(bstr); //track these to free after call to prevent leak
+					pvarg[i].vt = VT_BSTR;
+					pvarg[i].bstrVal = bstr;
+					free(myStr);
+					free(wStr);
+				}
+
 				break;			  
 				
 	  }
 
   }
    
-  // and invoke the method
+  //property put gets special handling..
   if(CallType == VbLet){
 	    DISPID mydispid = DISPID_PROPERTYPUT;
         dispparams.rgdispidNamedArgs = &mydispid;
 		dispparams.cNamedArgs = 1;
 		hr=IDisp->Invoke( dispid, IID_NULL, LOCALE_USER_DEFAULT, CallType, &dispparams, NULL, NULL, NULL); //no return value arg
 		if( FAILED(hr) ) RETURN0("Invoke failed")
-		return 0;
+		goto cleanup;
   }
 
   hr=IDisp->Invoke( dispid, IID_NULL, LOCALE_USER_DEFAULT, CallType, &dispparams, &retVal, NULL, NULL);
    
   if( FAILED(hr) ) RETURN0("Invoke failed")
 
+  char* cstr = 0;
   //map in return value to scriptbasic return val
-  if(retVal.vt == VT_BSTR){
-	    char* cstr = __B2C(retVal.bstrVal);
+  switch(retVal.vt)
+  {
+	case VT_EMPTY: break;
+
+	case VT_BSTR:
+
+	    cstr = __B2C(retVal.bstrVal);
 		slen = strlen(cstr);
 		if(com_dbg) color_printf(colors::myellow,"return value from COM function was string: %s\n", cstr);
 		besALLOC_RETURN_STRING(slen);
 		memcpy(STRINGVALUE(besRETURNVALUE),cstr,slen);
 		free(cstr);
+		break;
 
-  }else if(retVal.vt == VT_I4){
-		if(com_dbg) color_printf(colors::myellow,"return value from COM function was: %d\n", retVal.lVal);
+	case VT_I4:  /* this might be being really lazy but at least with VB6 it works ok.. */
+	case VT_I2: 
+	case VT_I1: 
+    case VT_BOOL:
+	case VT_UI1:
+	case VT_UI2:
+	case VT_UI4:
+	case VT_I8:
+	case VT_UI8:
+	case VT_INT:
+	case VT_UINT:
+
+		if(com_dbg) color_printf(colors::myellow,"return value from COM function was numeric: %d\n", retVal.lVal);
         LONGVALUE(besRETURNVALUE) = retVal.lVal;
+		break;
 
-  }else{
+	default:
 		color_printf(colors::mred,"currently unsupported VT return type: %x\n", retVal.vt);
+		break;
   }
  
+
+cleanup:
+
+  for (std::list<BSTR>::iterator it=bstrs.begin(); it != bstrs.end(); ++it){
+    SysFreeString(*it);
+  }
+
+  if(wMethodName) free(wMethodName); //return0 maybe should goto cleanup cause these would leak 
+  if(myCopy)      free(myCopy);
   return 0;
 
 besEND
@@ -371,143 +435,3 @@ besEND
 
 
 
-/*
-besFUNCTION(set1)
-  VARIABLE Argument;
-  LEFTVALUE Lval;
-  int i;
-  unsigned long __refcount_;
-
-  for( i=1 ; i <= besARGNR ; i++ ){
-    Argument = besARGUMENT(i);
-
-    besLEFTVALUE(Argument,Lval);
-    if( Lval ){
-      besRELEASE(*Lval);
-      *Lval = besNEWLONG;
-      if( *Lval )
-        LONGVALUE(*Lval) = 1;
-      }
-    }
-
-besEND
-
-besFUNCTION(arbdata)
-  VARIABLE Argument;
-  LEFTVALUE Lval;
-  static char buffer[1024];
-  char *p;
-  unsigned long __refcount_;
-
-  p = buffer;
-  sprintf(buffer,"%s","hohohoho\n");
-  Argument = besARGUMENT(1);
-
-  besLEFTVALUE(Argument,Lval);
-  if( Lval ){
-    besRELEASE(*Lval);
-    *Lval = besNEWSTRING(sizeof(char*));
-    memcpy(STRINGVALUE(*Lval),&p,sizeof(p));
-    }
-
-besEND
-
-besFUNCTION(pzchar)
-  int i;
-  VARIABLE Argument;
-  char *p;
-
-  for( i=1 ; i <= besARGNR ; i++ ){
-    Argument = besARGUMENT(i);
-    besDEREFERENCE(Argument);
-    memcpy(&p,STRINGVALUE(Argument),sizeof(p));
-    printf("%s\n",p);
-    }
-besEND
-
-
-besFUNCTION(trial)
-
-  printf("Function trial was started...\n");
-
-  besRETURNVALUE = besNEWMORTALLONG;
-  LONGVALUE(besRETURNVALUE) = g_modVal++;
-
-/*printf("Module directory is %s\n",besCONFIG("module"));
-  printf("dll extension is %s\n",besCONFIG("dll"));
-  printf("include directory is %s\n",besCONFIG("include"));
-* /
-
-besEND
-
-besFUNCTION(myicall)
-  VARIABLE Argument;
-  VARIABLE pArgument;
-  VARIABLE FunctionResult;
-  unsigned long ulEntryPoint;
-  unsigned long i;
-
-  Argument = besARGUMENT(1);
-  besDEREFERENCE(Argument);
-  ulEntryPoint = LONGVALUE(Argument);
-
-  pArgument = besNEWARRAY(0,besARGNR-2);
-  for( i=2 ; i <= (unsigned)besARGNR ; i++ ){
-     pArgument->Value.aValue[i-2] = besARGUMENT(i);
-     }
-
-  besHOOK_CALLSCRIBAFUNCTION(ulEntryPoint,
-                             pArgument->Value.aValue,
-                             besARGNR-1,
-                             &FunctionResult);
-
-  for( i=2 ; i <= (unsigned)besARGNR ; i++ ){
-     pArgument->Value.aValue[i-2] = NULL;
-     }
-  besRELEASE(pArgument);
-  besRELEASE(FunctionResult);
-besEND
-
-besSUB_AUTO
-  printf("autoloading %s\n",pszFunction);
-  *ppFunction = (void *)trial;
-besEND
-
-besCOMMAND(iff)
-  NODE nItem;
-  VARIABLE Op1;
-  long ConditionValue;
-
-  /* this is an operator and not a command, therefore we do not have our own mortal list * /
-  USE_CALLER_MORTALS;
-
-  /* evaluate the parameter * /
-  nItem = besPARAMETERLIST;
-  if( ! nItem ){
-    RESULT = NULL;
-    RETURN;
-    }
-  Op1 = besEVALUATEEXPRESSION(CAR(nItem));
-  ASSERTOKE;
-
-  if( Op1 == NULL )ConditionValue = 0;
-  else{
-    Op1 = besCONVERT2LONG(Op1);
-    ConditionValue = LONGVALUE(Op1);
-    }
-
-  if( ! ConditionValue )
-    nItem = CDR(nItem);
-
-  if( ! nItem ){
-    RESULT = NULL;
-    RETURN;
-    }
-  nItem = CDR(nItem);
-
-  RESULT = besEVALUATEEXPRESSION(CAR(nItem));
-  ASSERTOKE;
-  
-  RETURN;
-besEND_COMMAND
-*/

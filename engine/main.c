@@ -37,7 +37,7 @@ void main(int argc, char *argv[]){
   pProgram = scriba_new(NULL,NULL);
   //scriba_LoadConfiguration(pProgram, cfg); //optional
   //scriba_SetFileName(pProgram,"./scripts/hello.sb");
-  scriba_SetFileName(pProgram,"./scripts/com_voice_test.sb");
+  scriba_SetFileName(pProgram,"./scripts/com_test.sb");
 
   /*
   if( scriba_UseCacheFile(pProgram) == SCRIBA_ERROR_SUCCESS ){

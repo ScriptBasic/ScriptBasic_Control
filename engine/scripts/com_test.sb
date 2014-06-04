@@ -7,9 +7,11 @@ obj = CreateObject("Project1.Class1")
 if obj = 0 then 
 	print "CreateObject failed!\n"
 else
-	print "CreateObject return val = ", obj
-	rv = CallByName(obj, "callMe2", 1, 21)
-	print "CallByName returned: ", rv
+	print "CreateObject return val = ", obj, "\n"
+	'rv = CallByName(obj, "callInt", 1, "VT_BOOL:-1")
+	'rv = CallByName(obj, "callMe", 1)
+	rv = CallByName(obj, "callMe2", 1, 22, "blahblahblah")
+	print "CallByName returned: ", rv, "\n"
 end if 
 
 
