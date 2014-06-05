@@ -19,7 +19,9 @@
 
  Example:
 
-		obj = CreateObject("SAPI.SpVoice")
+		'you can load objects either by ProgID or CLSID
+		'obj = CreateObject("SAPI.SpVoice") 
+		obj = CreateObject("{96749377-3391-11D2-9EE3-00C04F797396}")
 
 		if obj = 0 then 
 			print "CreateObject failed!\n"
@@ -35,6 +37,7 @@
 #include <stdio.h>
 #include <list>
 #include <string>
+#include <excpt.h>
 
 #include "basext.h"
 
@@ -86,7 +89,7 @@ char* GetCString(VARIABLE v){
 
 	s = STRINGVALUE(v);
 	slen = STRLEN(v);
-	if(slen==0) return 0;
+	if(slen==0) return strdup("");
 
 	myCopy = (char*)malloc(slen+1);
 	if(myCopy==0) return 0;
@@ -123,7 +126,7 @@ void color_printf(colors c, const char *format, ...)
 //should this be goto cleanup instead of return 0? 
 #define RETURN0(msg) {if(com_dbg) color_printf(colors::mred, "%s\n", msg); \
 	                 LONGVALUE(besRETURNVALUE) = 0; \
-					 return 0;}
+					 goto cleanup;}
 
 //ReleaseObject(obj)
 besFUNCTION(ReleaseObject)
@@ -144,6 +147,7 @@ besFUNCTION(ReleaseObject)
 	IDisp->Release();
 	Argument->Value.lValue = 0;
 
+cleanup:
 	return 0;
 
 besEND
@@ -154,11 +158,12 @@ besFUNCTION(CreateObject)
   int slen;
   char *s;
   char* myCopy = NULL;
+  LPWSTR wStr = NULL;
   VARIABLE Argument;
   besRETURNVALUE = besNEWMORTALLONG;
   CLSID     clsid;
   HRESULT	hr;
-  IDispatch *IDisp;
+  IDispatch *IDisp = NULL;
 
   if(com_dbg) color_printf(colors::myellow, "The number of arguments is: %ld\n",besARGNR);
   
@@ -169,43 +174,42 @@ besFUNCTION(CreateObject)
   
   if( TYPE(Argument) != VTYPE_STRING) RETURN0("CreateObject requires a string argument")
 
-  s = STRINGVALUE(Argument);
-  slen = STRLEN(Argument);
-  
-  if(slen==0) RETURN0("string can not be 0 length") 
-   
   if(!initilized){
 	  hr = CoInitialize(NULL);
 	  if( hr != S_OK  ) RETURN0("CoInitialize failed")
 	  initilized = 1;
   }
 
-  myCopy = (char*)malloc(slen+1);
+  myCopy = GetCString(Argument);
   if(myCopy==0) RETURN0("malloc failed low mem")
 
-  memcpy(myCopy,s, slen);
-  myCopy[slen]=0;
-
-  if(com_dbg) color_printf(colors::myellow,"CreateObject(%s)\n", myCopy);
-  
-  LPWSTR wStr = __C2W(myCopy);
-  free(myCopy);
-
+  wStr = __C2W(myCopy);
   if(wStr==0) RETURN0("unicode conversion failed")
 
-  hr = CLSIDFromProgID( wStr , &clsid);
-  if( hr != S_OK  ) RETURN0("malloc failed low mem")
-  free(wStr);
+  if(com_dbg) color_printf(colors::myellow,"CreateObject(%s)\n", myCopy);
 
+  if(myCopy[0] == '{'){ 
+	hr = CLSIDFromString( wStr , &clsid); //its a string CLSID directly
+  }else{
+	hr = CLSIDFromProgID( wStr , &clsid); //its a progid
+  }
+
+  if( hr != S_OK  ) RETURN0("Failed to get clsid")
+  
   hr =  CoCreateInstance( clsid, NULL, CLSCTX_INPROC_SERVER, IID_IDispatch,(void**)&IDisp);
-
   if ( hr != S_OK ) RETURN0("CoCreateInstance failed does object support IDispatch?")
 
   //todo: keep track of valid objects we create for release/call sanity check latter?
   //	  tracking would break operation though if an embedded host used setvariable to add an obj reference..
   //      unless it used an AddObject(name,pointer) method to add it to the tracker..
   //      how else can we know if a random number is a valid com object other than tracking?
-  LONGVALUE(besRETURNVALUE) = (int)IDisp;    
+  //      handled with a try/catch block in CallByName right now
+
+cleanup:
+	LONGVALUE(besRETURNVALUE) = (int)IDisp;    
+	if(myCopy) free(myCopy);
+	if(wStr)   free(wStr);
+	return 0;
 
 besEND
 
@@ -259,10 +263,12 @@ besFUNCTION(CallByName)
   int i;
   int slen;
   char *s;
+  int com_args = 0;
   char* myCopy = NULL;
   LPWSTR wMethodName = NULL;
   vbCallType CallType = VbMethod;
   std::list<BSTR> bstrs;
+  VARIANTARG* pvarg = NULL;
 
   VARIABLE arg_obj;
   VARIABLE arg_procName;
@@ -290,8 +296,6 @@ besFUNCTION(CallByName)
     besDEREFERENCE(arg_CallType);
 	CallType = (vbCallType)LONGVALUE(arg_CallType);
   }
-  
-  if( LONGVALUE(arg_obj) == 0) RETURN0("CallByName(NULL) called")
 
   myCopy = GetCString(arg_procName);
   if(myCopy==0) RETURN0("malloc failed low mem")
@@ -299,19 +303,26 @@ besFUNCTION(CallByName)
   wMethodName = __C2W(myCopy);
   if(wMethodName==0) RETURN0("unicode conversion failed")
 
+  if( LONGVALUE(arg_obj) == 0) RETURN0("CallByName(NULL) called")
   IDispatch* IDisp = (IDispatch*)LONGVALUE(arg_obj);
   DISPID  dispid; // long integer containing the dispatch ID
+  HRESULT hr;
 
-  // Get the Dispatch ID for the method name
-  HRESULT hr=IDisp->GetIDsOfNames(IID_NULL, &wMethodName, 1, LOCALE_USER_DEFAULT, &dispid);
-  if( FAILED(hr) ) RETURN0("GetIDsOfNames failed")
+  // Get the Dispatch ID for the method name, 
+  // try block is in case client passed in an invalid pointer
+  try{
+	  hr = IDisp->GetIDsOfNames(IID_NULL, &wMethodName, 1, LOCALE_USER_DEFAULT, &dispid);
+	  if( FAILED(hr) ) RETURN0("GetIDsOfNames failed")
+  }
+  catch(...){
+	  RETURN0("Invalid IDisp pointer?")
+  }
 	 
   VARIANT    retVal;
-  VARIANTARG* pvarg = NULL;
   DISPPARAMS dispparams;
   memset(&dispparams, 0, sizeof(dispparams));
 
-  int com_args = besARGNR - 3;
+  com_args = besARGNR - 3;
   if(com_args < 0) com_args = 0;
    
   if(com_dbg) color_printf(colors::myellow,"CallByName(obj=%x, method='%s', calltype=%d , comArgs=%d)\n", LONGVALUE(arg_obj), myCopy, CallType, com_args);
@@ -334,7 +345,7 @@ besFUNCTION(CallByName)
 	  arg_x = besARGUMENT(3 + com_args - i);
 	  besDEREFERENCE(arg_x);
 
-		switch( TYPE(arg_x) ){
+		switch( TYPE(arg_x) ){ //script basic type to COM variant type
 
 			  case VTYPE_DOUBLE:
 			  case VTYPE_ARRAY:
@@ -368,6 +379,8 @@ besFUNCTION(CallByName)
 
   }
    
+  //invoke should not need a try catch block because IDisp is already known to be ok and COM should only return a hr result?
+
   //property put gets special handling..
   if(CallType == VbLet){
 	    DISPID mydispid = DISPID_PROPERTYPUT;
@@ -379,7 +392,6 @@ besFUNCTION(CallByName)
   }
 
   hr=IDisp->Invoke( dispid, IID_NULL, LOCALE_USER_DEFAULT, CallType, &dispparams, &retVal, NULL, NULL);
-   
   if( FAILED(hr) ) RETURN0("Invoke failed")
 
   char* cstr = 0;
@@ -422,10 +434,8 @@ besFUNCTION(CallByName)
 
 cleanup:
 
-  for (std::list<BSTR>::iterator it=bstrs.begin(); it != bstrs.end(); ++it){
-    SysFreeString(*it);
-  }
-
+  for (std::list<BSTR>::iterator it=bstrs.begin(); it != bstrs.end(); ++it) SysFreeString(*it);
+  if(pvarg)       delete pvarg;
   if(wMethodName) free(wMethodName); //return0 maybe should goto cleanup cause these would leak 
   if(myCopy)      free(myCopy);
   return 0;

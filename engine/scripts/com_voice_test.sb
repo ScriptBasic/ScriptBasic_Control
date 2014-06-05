@@ -7,7 +7,9 @@ const VbLet = 4
 const VbMethod = 1
 const VbSet = 8
 
-obj = CreateObject("SAPI.SpVoice")
+'you can load objects either by ProgID or CLSID
+obj = CreateObject("SAPI.SpVoice") 
+'obj = CreateObject("{96749377-3391-11D2-9EE3-00C04F797396}")
 
 if obj = 0 then 
 	print "CreateObject failed!\n"
