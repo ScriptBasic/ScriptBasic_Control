@@ -140,11 +140,15 @@ besFUNCTION(ReleaseObject)
 	besDEREFERENCE(Argument);
 
 	if( TYPE(Argument) != VTYPE_LONG) RETURN0("ReleaseObject requires a long argument")
-
 	if( LONGVALUE(Argument) == 0) RETURN0("ReleaseObject(NULL) called")
-
 	IDispatch* IDisp = (IDispatch*)LONGVALUE(Argument);
-	IDisp->Release();
+	
+	try{
+		IDisp->Release();
+	}catch(...){
+		RETURN0("Invalid IDisp pointer?")
+	}
+
 	Argument->Value.lValue = 0;
 
 cleanup:
