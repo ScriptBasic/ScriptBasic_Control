@@ -37,7 +37,6 @@
 #include <stdio.h>
 #include <list>
 #include <string>
-#include <excpt.h>
 
 #include "basext.h"
 
@@ -179,8 +178,7 @@ besFUNCTION(CreateObject)
   if( TYPE(Argument) != VTYPE_STRING) RETURN0("CreateObject requires a string argument")
 
   if(!initilized){
-	  hr = CoInitialize(NULL);
-	  if( hr != S_OK  ) RETURN0("CoInitialize failed")
+	  CoInitialize(NULL);
 	  initilized = 1;
   }
 

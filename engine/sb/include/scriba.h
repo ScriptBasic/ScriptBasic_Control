@@ -40,6 +40,7 @@ typedef struct _SbProgram {
   char *FirstUNIXline;
 
   void *fpStdouFunction;
+  void *fpVbStdOutFunction;
   void *fpStdinFunction;
   void *fpEnvirFunction;
   void *pEmbedder;

@@ -165,6 +165,7 @@ CUT*/
   pProgram->pszCacheFileName = NULL;
   pProgram->FirstUNIXline    = NULL;
   pProgram->fpStdouFunction  = NULL;
+  pProgram->fpVbStdOutFunction = NULL;
   pProgram->fpStdinFunction  = NULL;
   pProgram->fpEnvirFunction  = NULL;
   pProgram->pEmbedder        = NULL;
@@ -1939,6 +1940,8 @@ static int scriba_PreRun(pSbProgram pProgram){
     build_MagicCode(&(pProgram->pEXE->Ver));
     if( iError=execute_InitStructure(  pProgram->pEXE,pProgram->pBUILD) )
       return iError;
+
+	pProgram->pEXE->fpVbStdOutFunction = pProgram->fpVbStdOutFunction;
     pProgram->pEXE->fpStdouFunction = pProgram->fpStdouFunction;
     pProgram->pEXE->fpStdinFunction = pProgram->fpStdinFunction;
     pProgram->pEXE->fpEnvirFunction = pProgram->fpEnvirFunction;
@@ -2762,7 +2765,11 @@ CUT*/
     }
   }
 
-extern MODLIST StaticallyLinkedModules[];
+//extern MODLIST StaticallyLinkedModules[];
+
+MODLIST StaticallyLinkedModules[] ={
+  { NULL, NULL },
+};
 
 /*POD
 =H scriba_InitStaticModules()

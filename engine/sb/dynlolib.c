@@ -89,7 +89,13 @@ CUT*/
 #ifdef _WIN32
   for(  ;  *s ; s++ )
     if( *s == '/') *s = '\\'; /* unix file separators -> DOS */
-  pLib = (void *)LoadLibrary(r);
+
+  if(strstr(r,"sb_engine") != 0){
+	  pLib = GetModuleHandle("sb_engine.dll"); //dz 
+  }else{
+	pLib = (void *)LoadLibrary(r);
+  }
+
 #elif defined(__DARWIN__)
   for( ;  *s ; s++ )
     if( *s == '\\' || *s == ':') *s = '/'; /* DOS/mac file separators -> unix */

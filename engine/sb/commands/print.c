@@ -58,13 +58,19 @@ NOTIMPLEMENTED;
 #else
 
   void (*fpExtOut)(char, void *);
+  void (__stdcall *vbStdOut)(char*, int);
 
   fpExtOut = pEo->fpStdouFunction;
+  vbStdOut = pEo->fpVbStdOutFunction;
 
-  if( fpExtOut )
-    fpExtOut('\n',pEo->pEmbedder);
-  else
-    printf("\n");
+  if(vbStdOut){
+      vbStdOut("\n",1);
+  }else{
+	  if( fpExtOut )
+		fpExtOut('\n',pEo->pEmbedder);
+	  else
+		printf("\n");
+  }
 
 #endif
 END
@@ -95,9 +101,13 @@ NOTIMPLEMENTED;
   char *s;
   unsigned long slen;
   void (*fpExtOut)(char, void *);
+  void (__stdcall *vbStdOut)(char*, int);
+
   char buffer[40];
 
   fpExtOut = pEo->fpStdouFunction;
+  vbStdOut = pEo->fpVbStdOutFunction;
+
   nItem = PARAMETERNODE;
   while( nItem ){
     ItemResult = _EVALUATEEXPRESSION_A(CAR(nItem));
@@ -116,11 +126,15 @@ NOTIMPLEMENTED;
       case VTYPE_STRING:
         s = STRINGVALUE(ItemResult);
         slen = STRLEN(ItemResult);
-        while( slen -- )
-          if( fpExtOut )
-            fpExtOut(*s++,pEo->pEmbedder);
-          else
-            putc(((int)*s++),stdout);
+		if(vbStdOut){
+			vbStdOut(s, slen);
+		}else{
+			while( slen -- )
+			  if( fpExtOut )
+				fpExtOut(*s++,pEo->pEmbedder);
+			  else
+				putc(((int)*s++),stdout);
+		}
           *buffer = (char)0;/* do not print anything afterwards */
         break;
       case VTYPE_ARRAY:
@@ -129,14 +143,19 @@ NOTIMPLEMENTED;
       }
 
     s = buffer;
-    while( *s )
-      if( fpExtOut )
-        fpExtOut(*s++,pEo->pEmbedder);
-      else
-        putc(((int)*s++),stdout);
+	if(vbStdOut){
+		slen = strlen(s);
+		if(slen > 0) vbStdOut(s, slen);
+	}else{
+		while( *s )
+		  if( fpExtOut )
+			fpExtOut(*s++,pEo->pEmbedder);
+		  else
+			putc(((int)*s++),stdout);
+	}
 
     nItem = CDR(nItem);
-    }
+}
 
 
 #endif

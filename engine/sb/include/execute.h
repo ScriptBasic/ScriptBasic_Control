@@ -104,7 +104,8 @@ typedef struct _ExecuteObject {
   VersionInfo Ver;
 
   void *fpStdinFunction;  
-  void *fpStdouFunction;  
+  void *fpStdouFunction;
+  void *fpVbStdOutFunction;
   void *fpEnvirFunction;  
   char *CmdLineArgument;  
 
