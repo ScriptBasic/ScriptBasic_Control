@@ -38,18 +38,6 @@ typedef struct _SHAREDLOCK {
   } SHAREDLOCK, *PSHAREDLOCK;
 
 
-/*FUNDEF*/
-
-int thread_CreateThread(PTHREADHANDLE pThread,
-                      void *pStartFunction,
-                      void *pThreadParameter);
-/*FEDNUF*/
-/*FUNDEF*/
-
-void thread_ExitThread();
-/*FEDNUF*/
-/*FUNDEF*/
-
 void thread_InitMutex(PMUTEX pMutex);
 /*FEDNUF*/
 /*FUNDEF*/

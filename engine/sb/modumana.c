@@ -218,8 +218,6 @@ CUT*/
   pEo->pST->match_parameter     = match_parameter;
   pEo->pST->match_size          = match_size;
 
-  pEo->pST->thread_CreateThread = thread_CreateThread;
-  pEo->pST->thread_ExitThread   = thread_ExitThread;
   pEo->pST->thread_InitMutex    = thread_InitMutex;
   pEo->pST->thread_FinishMutex  = thread_FinishMutex;
   pEo->pST->thread_LockMutex    = thread_LockMutex;

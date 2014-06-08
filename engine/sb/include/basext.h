@@ -23,7 +23,6 @@ extern "C" {
 #include "global.h"
 #include "md5.h"
 #include "match.h"
-#include "thread.h"
 #include "scriba.h"
 #include "logger.h"
 #include "hndlptr.h"
@@ -478,18 +477,6 @@ typedef struct _SupportTable {
                     int *cbBufferSize);
 #define besMatchSize(P1,P2,P3,P4,P5)\
 (pSt->match_size((P1),(P2),(P3),(P4),(P5)))
-
-
-
-
-
-  int (*thread_CreateThread)(PTHREADHANDLE pThread,
-                      void *pStartFunction,
-                      void *pThreadParameter);
-#define besCreateThread(X,Y,Z) (pSt->thread_CreateThread((X),(Y),(Z)))
-
-  void (*thread_ExitThread)();
-#define besExitThread() (pSt->thread_ExitThread())
 
   void (*thread_InitMutex)(PMUTEX pMutex);
 #define besInitMutex(X) (pSt->thread_InitMutex(X))

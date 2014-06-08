@@ -1401,26 +1401,6 @@ This macro calls R<match_size()>.
 //
 
 =POD
-=section besCreateThread
-=H besCreateThread(X,Y,Z)
-
-This macro calls R<thread_CreateThread>.
-=CUT
-  int (*thread_CreateThread)(PTHREADHANDLE pThread,
-                      void *pStartFunction,
-                      void *pThreadParameter);
-#define besCreateThread(X,Y,Z) (pSt->thread_CreateThread((X),(Y),(Z)))
-
-=POD
-=section besExitThread
-=H besExitThread
-
-This macro calls R<thread_ExitThread>.
-=CUT
-  void (*thread_ExitThread)();
-#define besExitThread() (pSt->thread_ExitThread())
-
-=POD
 =section besInitMutex
 =H besInitMutex(X)
 

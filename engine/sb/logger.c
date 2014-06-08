@@ -86,74 +86,6 @@ static void _myf(void *x, void *y){
   free(x);
   }
 
-/*
-This is the logging thread started for each log file. This
-thread waits on the mutex that signals that there is some
-item to be written and then writes the log into the text file
-specified by the file name.
-*/
-static void log_thread(void *q){
-  ptLogger pLOG;
-  ptLogItem pLI;
-  struct tm gm_time;
-
-  /* The actual log structure is passed as the thread argument. */
-  pLOG = q;
-  while( 1 ){
-    /* This mutex is locked by default and is unlocked whenever there is something to send to file. */
-    thread_LockMutex(&(pLOG->mxRun));
-    while( 1 ){/* write all queue items to the file and break loop in the middle*/
-      thread_LockMutex(&(pLOG->mxChain));
-      if( pLOG->QueueStart == NULL ){/* if there are no more elements in the queue then we stop the writing loop */
-        if( pLOG->fp )fflush(pLOG->fp);
-        thread_UnlockMutex(&(pLOG->mxChain));
-        if( log_state(pLOG) == LOGSTATE_SHUTTING ){/* if we are shutting down the log */
-          thread_LockMutex(&(pLOG->mxState));
-          pLOG->state = LOGSTATE_DEAD; /* signal that we are dead */
-          thread_UnlockMutex(&(pLOG->mxState));
-          if( pLOG->fp ){
-            fclose(pLOG->fp);
-            pLOG->fp = NULL;
-            }
-          return; /* finish the worker thread */
-          }
-        break;
-        }
-      /* if the queue is not empty */
-      pLI = pLOG->QueueStart; /* get the first element of the queue and */
-      pLOG->QueueStart = pLOG->QueueStart->n;/* step the queue head ahead one step */
-      /* if the queue became empty then the QueueEnd pointer has also to be null */
-      if( pLOG->QueueStart == NULL )pLOG->QueueEnd = NULL;
-      thread_UnlockMutex(&(pLOG->mxChain));/* and release the chain so other 
-                                              threads can add new elements to it 
-                                              in the meantime */
-      mygmtime(&(pLI->Time),&gm_time);
-      /* if there is no file opened or we stepped into a different time interval than the previous log was */
-      if( (!pLOG->fp) || (pLOG->TimeSpan && (pLOG->LastTime != pLI->Time / pLOG->TimeSpan)) ){
-        if( pLOG->fp ){
-          fclose(pLOG->fp);/* close the file if it was opened */
-          pLOG->fp = NULL;
-          }
-        sprintf(pLOG->szFileName,pLOG->pszFileName,gm_time.tm_year+1900,gm_time.tm_mon,gm_time.tm_mday,gm_time.tm_hour);
-        pLOG->fp = fopen(pLOG->szFileName,"a");
-        /* store the time interval value of the current log */
-        if( pLOG->TimeSpan )
-          pLOG->LastTime = pLI->Time / pLOG->TimeSpan;
-        }
-      if( pLOG->fp )
-        fprintf(pLOG->fp,"%4d.%02d.%02d %02d:%02d:%02d %s\n",gm_time.tm_year+1900,
-                                                             gm_time.tm_mon+1,
-                                                             gm_time.tm_mday,
-                                                             gm_time.tm_hour,
-                                                             gm_time.tm_min,
-                                                             gm_time.tm_sec,
-                                                             pLI->pszMessage);
-      FREE(pLI->pszMessage);
-      FREE(pLI);
-      }
-    }
-  }
-
 /*POD
 =H log_state()
 
@@ -248,24 +180,14 @@ CUT*/
   pLOG->QueueStart = pLOG->QueueEnd = NULL;
   pLOG->state = LOGSTATE_NORMAL;
   if( pszLogFileName == NULL )return 1;
-  if( iLogType == LOGTYPE_SYNCHRONOUS ){
+  //if( iLogType == LOGTYPE_SYNCHRONOUS ){
     pLOG->type  = LOGTYPE_SYNCHRONOUS;
     pLOG->fp = fopen(pszLogFileName,"a");
     if( pLOG->fp == NULL )return 1;
     return 0;
-    }else{
-    pLOG->type  = LOGTYPE_NORMAL;
-    thread_InitMutex(&(pLOG->mxChain));
-    thread_InitMutex(&(pLOG->mxRun));
-    thread_InitMutex(&(pLOG->mxState));
-    thread_LockMutex(&(pLOG->mxRun));
-    thread_CreateThread(&T,log_thread,pLOG);
-    pLOG->LastTime = 0;
-    pLOG->TimeSpan = 0;
-    pLOG->fp = NULL;
-    return 0;
-    }
-  }
+  //}
+   
+}
 
 /*POD
 =H log_printf()
