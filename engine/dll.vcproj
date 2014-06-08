@@ -42,7 +42,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(ProjectDir)\sb\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				ExceptionHandling="2"
 				BasicRuntimeChecks="3"
@@ -186,16 +186,8 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\dllmain.cpp"
+				RelativePath=".\dllmain.c"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAs="2"
-					/>
-				</FileConfiguration>
 			</File>
 			<Filter
 				Name="Commands"
@@ -451,6 +443,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\sb\include\global.h"
+					>
+				</File>
+				<File
 					RelativePath=".\sb\include\hndlptr.h"
 					>
 				</File>
@@ -546,6 +542,10 @@
 					RelativePath=".\sb\include\uniqfnam.h"
 					>
 				</File>
+				<File
+					RelativePath=".\sb\include\vb.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="extensions"
@@ -562,28 +562,12 @@
 						/>
 					</FileConfiguration>
 				</File>
-				<File
-					RelativePath=".\extensions\trial.c"
-					>
-				</File>
 			</Filter>
 			<Filter
 				Name="scripts"
 				>
 				<File
-					RelativePath=".\scripts\com_test.sb"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\scripts\com_voice_test.sb"
+					RelativePath="..\scripts\com_voice_test.sb"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -606,59 +590,27 @@
 						/>
 					</FileConfiguration>
 				</File>
-				<File
-					RelativePath=".\scripts\hello.sb"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-				</File>
 			</Filter>
 			<Filter
 				Name="preprocessors"
 				>
 				<Filter
-					Name="sdbg"
+					Name="vb_dbg"
 					>
 					<File
-						RelativePath=".\sb\sdbg\sdbg.h"
+						RelativePath=".\preprocessors\vb_dbg\vb_dbg.h"
 						>
 					</File>
 					<File
-						RelativePath=".\sb\sdbg\sdbg_comm.h"
+						RelativePath=".\preprocessors\vb_dbg\vb_dbg_comm.h"
 						>
 					</File>
 					<File
-						RelativePath=".\sb\sdbg\sdbg_con.c"
+						RelativePath=".\preprocessors\vb_dbg\vb_dbg_con.c"
 						>
 					</File>
 					<File
-						RelativePath=".\sb\sdbg\sdbg_interface.c"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="dbg"
-					>
-					<File
-						RelativePath=".\sb\dbg\dbg.h"
-						>
-					</File>
-					<File
-						RelativePath=".\sb\dbg\dbg_comm.h"
-						>
-					</File>
-					<File
-						RelativePath=".\sb\dbg\dbg_con.c"
-						>
-					</File>
-					<File
-						RelativePath=".\sb\dbg\interface.c"
+						RelativePath=".\preprocessors\vb_dbg\vb_dbg_interface.c"
 						>
 					</File>
 				</Filter>

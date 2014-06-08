@@ -1,122 +1,3 @@
-/*
-FILE:   scriba.c
-HEADER: scriba.h
-
---GNU LGPL
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-TO_HEADER:
-#include "report.h"
-#include "lexer.h"
-#include "sym.h"
-#include "expression.h"
-#include "syntax.h"
-#include "reader.h"
-#include "myalloc.h"
-#include "builder.h"
-#include "memory.h"
-#include "execute.h"
-#include "buildnum.h"
-#include "conftree.h"
-#include "filesys.h"
-#include "errcodes.h"
-#ifdef _DEBUG
-#include "testalloc.h"
-#endif
-#include "command.h"
-#include "epreproc.h"
-#include "ipreproc.h"
-#include "uniqfnam.h"
-#include "modumana.h"
-#include "ipreproc.h"
-
-typedef struct _SbProgram {
-  void *pMEM;
-  void * (*maf)(size_t);
-  void   (*mrf)(void *);
-  unsigned long fErrorFlags;
-  char *pszFileName;
-  char *pszCacheFileName;
-  char *FirstUNIXline;
-
-  void *fpStdouFunction;
-  void *fpStdinFunction;
-  void *fpEnvirFunction;
-  void *pEmbedder;
-  void *fpReportFunction;
-  void *pReportPointer;
-  pSupportTable pSTI;
-  ExecuteObject *pEPo;
-
-  tConfigTree   *pCONF;
-  ReadObject    *pREAD;
-  LexObject     *pLEX;
-  eXobject      *pEX;
-  BuildObject   *pBUILD;
-  ExecuteObject *pEXE;
-  PreprocObject *pPREP;
-  } SbProgram, *pSbProgram;
-
-// type to pass and receive arguments and result values from ScriptBasic functions
-typedef struct _SbData {
-  unsigned char type;
-  unsigned long size;
-  union {
-    double d;
-    long   l;
-    unsigned char *s;
-    } v;
-  } SbData, *pSbData;
-#define SBT_UNDEF  0
-#define SBT_DOUBLE 1
-#define SBT_LONG   2
-#define SBT_STRING 3
-#define SBT_ZCHAR  4
-
-// Access SbData content. Y is present to emulate class argument passing.
-#define scriba_GetType(Y,X)   ( (X).type )
-#define scriba_GetLength(Y,X) ( (X).size )
-#define scriba_GetString(Y,X) ( (X).v.s  )
-#define scriba_GetLong(Y,X)   ( (X).v.l  )
-#define scriba_GetDouble(Y,X) ( (X).v.d  )
-
-
-#ifdef WIN32
-#define CONFIG_ENVIR "Software\\ScriptBasic\\config"
-#define CONFIG_FILE  "SCRIBA.INI"
-#else
-#define CONFIG_ENVIR "SCRIBACONF"
-#define CONFIG_FILE  "/etc/scriba/basic.conf"
-#endif
-
-#if (defined(_WIN32) || defined(__MACOS__) || defined(WIN32))
-# ifdef __cplusplus
-#  define SCRIBA_MAIN_LIBSPEC extern "C" __declspec(dllexport) 
-# else
-#  define SCRIBA_MAIN_LIBSPEC __declspec(dllexport) 
-# endif
-#else
-# ifdef __cplusplus
-#  define SCRIBA_MAIN_LIBSPEC extern "C" 
-# else
-#  define SCRIBA_MAIN_LIBSPEC
-# endif
-#endif
-
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -125,6 +6,9 @@ typedef struct _SbData {
 
 #include "scriba.h"
 #include "basext.h"
+#include "vb.h"
+
+vbCallback vbStdOut;
 
 /*POD
 =H scriba_new()

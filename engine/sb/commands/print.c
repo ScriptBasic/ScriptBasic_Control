@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <stdio.h>
 #include <string.h>
 #include "command.h"
+#include "vb.h"
 
 /*POD
 =H PRINT command
@@ -58,13 +59,13 @@ NOTIMPLEMENTED;
 #else
 
   void (*fpExtOut)(char, void *);
-  void (__stdcall *vbStdOut)(char*, int);
+ // void (__stdcall *vbStdOut)(char*, int);
 
   fpExtOut = pEo->fpStdouFunction;
-  vbStdOut = pEo->fpVbStdOutFunction;
+  //vbStdOut = pEo->fpVbStdOutFunction;
 
   if(vbStdOut){
-      vbStdOut("\n",1);
+	  vbStdOut(cb_output, "\n",1);
   }else{
 	  if( fpExtOut )
 		fpExtOut('\n',pEo->pEmbedder);
@@ -101,12 +102,12 @@ NOTIMPLEMENTED;
   char *s;
   unsigned long slen;
   void (*fpExtOut)(char, void *);
-  void (__stdcall *vbStdOut)(char*, int);
+  //void (__stdcall *vbStdOut)(char*, int);
 
   char buffer[40];
 
   fpExtOut = pEo->fpStdouFunction;
-  vbStdOut = pEo->fpVbStdOutFunction;
+  //vbStdOut = pEo->fpVbStdOutFunction;
 
   nItem = PARAMETERNODE;
   while( nItem ){
@@ -127,7 +128,7 @@ NOTIMPLEMENTED;
         s = STRINGVALUE(ItemResult);
         slen = STRLEN(ItemResult);
 		if(vbStdOut){
-			vbStdOut(s, slen);
+			vbStdOut(cb_output, s, slen);
 		}else{
 			while( slen -- )
 			  if( fpExtOut )
@@ -145,7 +146,7 @@ NOTIMPLEMENTED;
     s = buffer;
 	if(vbStdOut){
 		slen = strlen(s);
-		if(slen > 0) vbStdOut(s, slen);
+		if(slen > 0) vbStdOut(cb_output, s, slen);
 	}else{
 		while( *s )
 		  if( fpExtOut )

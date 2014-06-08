@@ -11,11 +11,6 @@
 extern dbg_preproc;  //for console based debugger preprocessor
 extern sdbg_preproc; //for the socket based debugger preprocessor
 
-MODLIST StaticallyLinkedModules[] ={
-  { NULL, NULL },
-};
-
-
 void main(int argc, char *argv[]){
   
   int iError;

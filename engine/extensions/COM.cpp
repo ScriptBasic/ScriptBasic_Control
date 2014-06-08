@@ -39,8 +39,9 @@
 #include <string>
 
 #include "basext.h"
+#include "vb.h"
 
-int com_dbg = 1;
+int com_dbg = 0;
 int initilized=0;
 
 //vbCallType aligns with DISPATCH_XX values for Invoke
@@ -111,9 +112,13 @@ void color_printf(colors c, const char *format, ...)
 		va_start(args,format); 
 		try{
  			 _vsnprintf(buf,1024,format,args);
-			 SetConsoleTextAttribute(hConOut, c);
-			 printf("%s",buf);
-			 SetConsoleTextAttribute(hConOut,7); 
+			 if(vbStdOut){
+				 vbStdOut(cb_dbgout, buf, strlen(buf));
+			 }else{
+				 SetConsoleTextAttribute(hConOut, c);
+				 printf("%s",buf);
+				 SetConsoleTextAttribute(hConOut,7); 
+			 }
 		}
 		catch(...){}
 	}
