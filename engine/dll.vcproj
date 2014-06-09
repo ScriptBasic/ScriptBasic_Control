@@ -598,19 +598,11 @@
 					Name="vb_dbg"
 					>
 					<File
-						RelativePath=".\preprocessors\vb_dbg\vb_dbg.h"
+						RelativePath=".\preprocessors\vb_dbg\debugger.c"
 						>
 					</File>
 					<File
-						RelativePath=".\preprocessors\vb_dbg\vb_dbg_comm.h"
-						>
-					</File>
-					<File
-						RelativePath=".\preprocessors\vb_dbg\vb_dbg_con.c"
-						>
-					</File>
-					<File
-						RelativePath=".\preprocessors\vb_dbg\vb_dbg_interface.c"
+						RelativePath=".\preprocessors\vb_dbg\debugger.h"
 						>
 					</File>
 				</Filter>

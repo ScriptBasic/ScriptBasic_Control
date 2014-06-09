@@ -1,5 +1,8 @@
 Attribute VB_Name = "Module1"
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, Source As Any, ByVal Length As Long)
+Private Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
+ 
+Public readyToReturn As Boolean
 
 Enum cb_type
     cb_output = 0
@@ -7,6 +10,17 @@ Enum cb_type
     cb_dbgmsg = 2
 End Enum
 
+Public Function GetDebuggerCommand() As Long
+    
+    readyToReturn = False
+    While Not readyToReturn
+        DoEvents
+        Sleep 20
+    Wend
+    
+    
+    
+End Function
 
 Public Sub vb_stdout(ByVal t As cb_type, ByVal lpMsg As Long, ByVal sz As Long)
 
