@@ -829,11 +829,11 @@ void scomm_Init(pDebuggerObject pDO)
   int i;
 
   sprintf(cBuffer,"DEBUGGER_INIT");
-  vbStdOut(cb_dbgmsg, cBuffer, strlen(cBuffer));
+  vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 
   for( i=0 ; i < pDO->cFileNames ; i++ ){
 	sprintf(cBuffer,"Source-File: %s\r\n",pDO->ppszFileNames[i]);
-    vbStdOut(cb_dbgmsg, cBuffer, strlen(cBuffer));
+    vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
   }
 
 }
@@ -854,7 +854,7 @@ void scomm_WeAreAt(pDebuggerObject pDO,long i)
   int cbBuffer;
 
   sprintf(cBuffer,"Current-Line: %u\r\n",i+1);
-  vbStdOut(cb_dbgmsg, cBuffer, strlen(cBuffer));
+  vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 }
 
 /*POD
@@ -881,13 +881,13 @@ void scomm_List(pDebuggerObject pDO, long lStart, long lEnd, long lThis)
 	    if( j >= pDO->cSourceLines )break;
 
 		sprintf(cBuffer,"Break-Point: %s\r\n", pDO->SourceLines[j].BreakPoint ? "1": "0");
-		vbStdOut(cb_dbgmsg, cBuffer, strlen(cBuffer));
+		vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 
 		sprintf(cBuffer,"Line-Number: %u\r\n",j+1);
-		vbStdOut(cb_dbgmsg, cBuffer, strlen(cBuffer));
+		vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 
 		sprintf(cBuffer,"Line: %s\r\n",pDO->SourceLines[j].line);
-		vbStdOut(cb_dbgmsg, cBuffer, strlen(cBuffer));
+		vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
   }
 
 }
@@ -975,7 +975,7 @@ void scomm_Message(pDebuggerObject pDO, char *pszMessage)
   char cBuffer[200];
   int cbBuffer;
   sprintf(cBuffer,"Message: %s\r\n",pszMessage);
-  vbStdOut(cb_dbgmsg, cBuffer, strlen(cBuffer));
+  vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 }
 
 /*POD
@@ -1006,7 +1006,8 @@ int scomm_GetCommand(pDebuggerObject pDO, char *pszBuffer, long dwBuffer)
 		lThis = GetCurrentDebugLine(pDO);
 		scomm_WeAreAt(pDO,lThis);
 	                     
-		cbBuffer = recv(pDO->socket,cBuffer,1024,0); //--------> blocks while waiting to receive a command
+		//cbBuffer = recv(pDO->socket,cBuffer,1024,0); //--------> blocks while waiting to receive a command
+		cbBuffer = vbDbgHandler(&cBuffer[0], 1024);
 
 		cmd = *cBuffer;
 		while( ('\r' == cBuffer[cbBuffer-1] || '\n' == cBuffer[cbBuffer-1]) && cbBuffer  ){
@@ -1038,7 +1039,7 @@ int scomm_GetCommand(pDebuggerObject pDO, char *pszBuffer, long dwBuffer)
 							continue;
 						  default:
 							sprintf(cBuffer,"Value: %s\r\n",pszPrintBuff);
-							vbStdOut(cb_dbgmsg, cBuffer, strlen(cBuffer));
+							vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 					}
 				    continue;
 
@@ -1067,7 +1068,7 @@ int scomm_GetCommand(pDebuggerObject pDO, char *pszBuffer, long dwBuffer)
 				  for( i=StackListPointer->LocalVariables->ArrayLowLimit ; i <= StackListPointer->LocalVariables->ArrayHighLimit ; i++ )
 				  {
 						sprintf(cBuffer,"Local-Variable-Name: %s\r\n",pUF->ppszLocalVariables[i-1]);
-						vbStdOut(cb_dbgmsg, cBuffer, strlen(cBuffer));
+						vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 
 						if( StackListPointer->LocalVariables )
 						{
@@ -1082,12 +1083,12 @@ int scomm_GetCommand(pDebuggerObject pDO, char *pszBuffer, long dwBuffer)
 									continue;
 								default:
 									sprintf(cBuffer,"Local-Variable-Value: %s\r\n",pszPrintBuff);
-									vbStdOut(cb_dbgmsg, cBuffer, strlen(cBuffer));
+									vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 							  }
 						 }
 						 else{
 						  sprintf(cBuffer,"undef\r\n");
-						  vbStdOut(cb_dbgmsg, cBuffer, strlen(cBuffer));
+						  vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 						 }
 					}
 					continue;
@@ -1098,7 +1099,7 @@ int scomm_GetCommand(pDebuggerObject pDO, char *pszBuffer, long dwBuffer)
 						if( NULL == pDO->ppszGlobalVariables[i] )continue;
 
 						sprintf(cBuffer,"Global-Variable-Name: %s\r\n",pDO->ppszGlobalVariables[i]);
-						vbStdOut(cb_dbgmsg, cBuffer, strlen(cBuffer));
+						vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 
 						if( pEo->GlobalVariables )
 						{
@@ -1112,11 +1113,11 @@ int scomm_GetCommand(pDebuggerObject pDO, char *pszBuffer, long dwBuffer)
 										continue;
 									default:
 										sprintf(cBuffer,"Global-Variable-Value: %s\r\n",pszPrintBuff);
-										vbStdOut(cb_dbgmsg, cBuffer, strlen(cBuffer));
+										vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 								}
 						  }else{
 							sprintf(cBuffer,"undef\r\n");
-							vbStdOut(cb_dbgmsg, cBuffer, strlen(cBuffer));
+							vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 						  }
 					}
 

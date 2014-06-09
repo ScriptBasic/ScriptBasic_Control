@@ -16,9 +16,10 @@ extern void*  vb_dbg_preproc;
 extern LPWSTR __C2W(char *szString);
 
 
-void __stdcall SetVBStdout(void* lpfnHandler){
+void __stdcall SetCallBacks(void* lpfnMsgHandler, void* lpfnDbgHandler){
 #pragma EXPORT
-	vbStdOut = (vbCallback)lpfnHandler;
+	vbStdOut     = (vbCallback)lpfnMsgHandler;
+	vbDbgHandler = (vbDbgCallback)lpfnDbgHandler;
 }
 
 int __stdcall GetErrorString(int iErrorCode, char* buf, int bufSz){
@@ -43,7 +44,8 @@ int __stdcall run_script(char* fPath, int use_debugger)
   scriba_SetFileName(pProgram, fPath);
 
   if(use_debugger){
-		//iError = scriba_LoadInternalPreprocessorByFunction(pProgram, "vb_dbg", &vb_dbg_preproc);
+		iError = scriba_LoadInternalPreprocessorByFunction(pProgram, "vb_dbg", &vb_dbg_preproc);
+		if(iError != 0) goto cleanup;
   }
 
   if( iError = scriba_LoadSourceProgram(pProgram) ) goto cleanup;

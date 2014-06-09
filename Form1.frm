@@ -5,11 +5,18 @@ Begin VB.Form Form1
    ClientHeight    =   9825
    ClientLeft      =   60
    ClientTop       =   345
-   ClientWidth     =   11010
+   ClientWidth     =   14100
    LinkTopic       =   "Form1"
    ScaleHeight     =   9825
-   ScaleWidth      =   11010
+   ScaleWidth      =   14100
    StartUpPosition =   3  'Windows Default
+   Begin VB.ListBox List1 
+      Height          =   2595
+      Left            =   6570
+      TabIndex        =   5
+      Top             =   6975
+      Width           =   4065
+   End
    Begin VB.TextBox txtOut 
       BeginProperty Font 
          Name            =   "Courier"
@@ -26,7 +33,7 @@ Begin VB.Form Form1
       ScrollBars      =   3  'Both
       TabIndex        =   4
       Top             =   6975
-      Width           =   10590
+      Width           =   5190
    End
    Begin VB.CheckBox chkDebug 
       Caption         =   "use debugger"
@@ -49,8 +56,8 @@ Begin VB.Form Form1
       Left            =   135
       TabIndex        =   0
       Top             =   585
-      Width           =   10725
-      _ExtentX        =   18918
+      Width           =   13650
+      _ExtentX        =   24077
       _ExtentY        =   10345
    End
    Begin VB.Label Label1 
@@ -73,7 +80,7 @@ Private Declare Function FreeLibrary Lib "kernel32" (ByVal hLibModule As Long) A
 
 Private Declare Function run_script Lib "sb_engine" (ByVal lpLibFileName As String, ByVal use_debugger As Long) As Long
 Private Declare Sub GetErrorString Lib "sb_engine" (ByVal iErrorCode As Long, ByVal buf As String, ByVal sz As Long)
-Private Declare Sub SetVBStdout Lib "sb_engine" (ByVal callback As Long)
+Private Declare Sub SetCallBacks Lib "sb_engine" (ByVal msgProc As Long, ByVal dbgCmdProc As Long)
 
 Dim loadedFile As String
 Dim hsbLib As Long
@@ -84,7 +91,7 @@ Private Sub cmdRun_Click()
     Dim buf As String
      
     txtOut.Text = Empty
-    SetVBStdout AddressOf vb_stdout
+    SetCallBacks AddressOf vb_stdout, AddressOf GetDebuggerCommand
     rv = run_script(loadedFile, chkDebug.Value)
     
     Me.Caption = "run_script() = " & rv & "        -    " & Format(Now, "m:s:ss AM/PM")

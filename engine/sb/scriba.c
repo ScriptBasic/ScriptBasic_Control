@@ -9,6 +9,7 @@
 #include "vb.h"
 
 vbCallback vbStdOut;
+vbDbgCallback vbDbgHandler;
 
 /*POD
 =H scriba_new()
