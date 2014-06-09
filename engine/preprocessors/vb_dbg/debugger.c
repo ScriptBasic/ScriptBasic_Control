@@ -82,11 +82,8 @@ static char hexi(unsigned int x ){
 This function should be used to get the textual representation of a
 ScriptBasic T<VARIABLE>.
 */
-int SPrintVariable(pDebuggerObject pDO,
-                   VARIABLE v,
-                   char *pszBuffer,
-                   unsigned long *cbBuffer
-  ){
+int SPrintVariable(pDebuggerObject pDO, VARIABLE v, char *pszBuffer, unsigned long *cbBuffer)
+{
 /*noverbatim
 
 =itemize
@@ -250,12 +247,9 @@ CUT*/
     return 0;
     }
   return 1;
-  }
+}
 
-/*POD
-=section SPrintVarByName
-=H Print the value of a variable into a string
-
+/*
 This fucntion prints a variable string representation into a buffer.
 The name of the variable is given in the variable T<pszName>.
 
@@ -269,16 +263,11 @@ variables levels higher than the bottom of the stack.
 
 If the function succeeds finding the variable it returns the return value of the
 function R<SPrintVariable>. If the variable is not found it returns 2.
+*/
 
-/*FUNCTION*/
-int SPrintVarByName(pDebuggerObject pDO,
-                    pExecuteObject pEo,
-                    char *pszName,
-                    char *pszBuffer,
-                    unsigned long *cbBuffer
-  ){
-/*noverbatim
-CUT*/
+int SPrintVarByName(pDebuggerObject pDO, pExecuteObject pEo, char *pszName, char *pszBuffer, unsigned long *cbBuffer)
+{
+
   pUserFunction_t pUF;
   long i;
   char *s;
@@ -322,18 +311,12 @@ CUT*/
        }
      }
   return 2;
-  }
+}
 
-/*POD
-=section GetSourceLineNumber
-=H Get the source line number for a given node
 
-/*FUNCTION*/
-long GetSourceLineNumber(pDebuggerObject pDO,
-                         long PC
-  ){
-/*noverbatim
-CUT*/
+long GetSourceLineNumber(pDebuggerObject pDO, long PC)
+{
+
   long i,j;
   long lLineNumber;
   char *pszFileName;
@@ -356,151 +339,22 @@ CUT*/
     }
 
   return pDO->Nodes[PC-1].lSourceLine-1;
-  }
+}
 
-/*FUNCTION*/
-long GetCurrentDebugLine(pDebuggerObject pDO
-  ){
+long __stdcall GetCurrentDebugLine(pDebuggerObject pDO)
+{
+#pragma EXPORT
 
   if( pDO->StackListPointer == NULL && pDO->StackTop )
-     return GetSourceLineNumber(pDO,pDO->StackTop->Node);
+		return GetSourceLineNumber(pDO,pDO->StackTop->Node);
 
   if( pDO->StackListPointer == NULL || pDO->StackListPointer->down == NULL )
-    return GetSourceLineNumber(pDO,pDO->pEo->ProgramCounter);
+		return GetSourceLineNumber(pDO,pDO->pEo->ProgramCounter);
 
   return GetSourceLineNumber(pDO,pDO->StackListPointer->down->Node);
-  }
 
-int MyExecBefore(pExecuteObject pEo){
-  long i,j,lThisLine;
-  pPrepext pEXT;
-  pDebuggerObject pDO;
-  char lbuf[80];
-  char cmd;
+}
 
-  pEXT = pEo->pHookers->hook_pointer;
-  pDO  = pEXT->pPointer;
-  pDO->pEo = pEo;
-
-  pDO->lPrevPC = pDO->lPC;
-  pDO->lPC = pEo->ProgramCounter;
-  if( pDO->DbgStack )pDO->DbgStack->LocalVariables = pEo->LocalVariables;
-
-  lThisLine = GetSourceLineNumber(pDO,pEo->ProgramCounter);
-
-  if( pDO->SourceLines[lThisLine].BreakPoint == 0 ){
-    /* if we are executing some step over function */
-    if( pDO->Run2CallStack != -1 && pDO->Run2CallStack < pDO->CallStackDepth )return 0;
-    if( pDO->Run2Line && pDO->Nodes[pDO->lPC-1].lSourceLine != pDO->Run2Line )return 0;
-    }
-
-  scomm_WeAreAt(pDO,lThisLine);
-
-  pDO->StackListPointer = pDO->DbgStack;
-  while(1){
-
-    cmd = scomm_GetCommand(pDO,lbuf,80);  // ------------> gets the command from teh user
-
-    switch( cmd ){
-
-      case 'D':/* step the stack list pointer to the bottom */
-         pDO->StackListPointer = pDO->DbgStack;
-         scomm_Message(pDO,"done");
-         continue;
-      case 'u':/* step the stack list pointer up */
-        if( pDO->StackListPointer ){
-          pDO->StackListPointer = pDO->StackListPointer->up;
-          scomm_Message(pDO,"done");
-          }else scomm_Message(pDO,"No way up more");
-        continue;
-      case 'd':/* step the stack list pointer down */
-        if( pDO->StackListPointer && pDO->StackListPointer->down )
-          pDO->StackListPointer = pDO->StackListPointer->down;
-        else
-          pDO->StackListPointer = pDO->StackTop;
-        if( pDO->StackListPointer )
-          scomm_Message(pDO,"done");
-        else
-          scomm_Message(pDO,"No way down more");
-        continue;
-      case 'b': /* set break point at a line */
-        if( ! *lbuf )/* set it at the current line */
-          i = GetCurrentDebugLine(pDO)+1;
-        else
-          GetRange(lbuf,&i,&j);
-        if( i < 1 || i > pDO->cSourceLines ){
-          scomm_Message(pDO,"invalid line number");
-          continue;
-          }
-        pDO->SourceLines[i-1].BreakPoint = 1;
-        scomm_Message(pDO,"done");
-        continue;
-      case 'B':/* remove breakpoint from line(s) */
-        if( ! *lbuf )/* remove all */
-          i = 1, j = pDO->cSourceLines;
-        else
-          GetRange(lbuf,&i,&j);
-        if( i < 1 || i >= pDO->cSourceLines ){
-          scomm_Message(pDO,"invalid line number");
-          continue;
-          }
-        if( j == 0 )j = i;
-        if( j > pDO->cSourceLines )j = pDO->cSourceLines;
-        while( i <= j ){
-          pDO->SourceLines[i-1].BreakPoint = 0;
-          i++;
-          }
-        scomm_Message(pDO,"done");
-        continue;
-      case 'q':/* quit the program execution */
-        scomm_Message(pDO,"Ok... you have said that... quitting...");
-        pEo->pszModuleError = "Debugger Operator Forced Exit.";
-        return COMMAND_ERROR_PREPROCESSOR_ABORT;
-
-      case 's':/*step a single line and step into functions */
-        pDO->Run2CallStack = pDO->CallStackDepth+1;
-        pDO->Run2Line = 0;
-        return 0; /* step one step forward */
-      case 'o':/* run program until it gets out of the current function */
-        pDO->Run2CallStack = pDO->CallStackDepth ? pDO->CallStackDepth - 1 : 0 ;
-        pDO->Run2Line = 0;
-        return 0; /* step one step forward */
-      case 'S':
-        pDO->Run2CallStack = pDO->CallStackDepth;
-        pDO->Run2Line = 0;
-        return 0; /* step one step forward but remain on the same level */
-      case 'r':
-         pDO->Run2CallStack = -1;/* any level deep */
-         if( ! *lbuf ){
-           pDO->Run2Line = -1;/* a nonzero value that can not be a valid line number */
-           return 0;
-           }
-         GetRange(lbuf,&i,&j);
-         pDO->Run2Line = i;
-         return 0;
-      case 'R':
-         pDO->Run2CallStack = pDO->CallStackDepth; /* on the current level */
-         if( ! *lbuf ){
-           pDO->Run2Line = -1;/* a nonzero value that can not be a valid line number */
-           return 0;
-           }
-         GetRange(lbuf,&i,&j);
-         pDO->Run2Line = i;
-         return 0;
-      }
-    }
-  return 0;
-  }
-int MyExecAfter(pExecuteObject pEo){
-  pPrepext pEXT;
-  pDebuggerObject pDO;
-
-  pEXT = pEo->pHookers->hook_pointer;
-  pDO  = pEXT->pPointer;
-  pDO->pEo = pEo;
-
-  return 0;
-  }
 int MyExecCall(pExecuteObject pEo){
   pPrepext pEXT;
   pDebuggerObject pDO;
@@ -512,7 +366,8 @@ int MyExecCall(pExecuteObject pEo){
   PushStackItem(pDO,pEo->ProgramCounter);
   
   return 0;
-  }
+}
+
 int MyExecReturn(pExecuteObject pEo){
   pPrepext pEXT;
   pDebuggerObject pDO;
@@ -524,7 +379,19 @@ int MyExecReturn(pExecuteObject pEo){
   PopStackItem(pDO);
 
   return 0;
-  }
+}
+
+int MyExecAfter(pExecuteObject pEo){
+  pPrepext pEXT;
+  pDebuggerObject pDO;
+
+  pEXT = pEo->pHookers->hook_pointer;
+  pDO  = pEXT->pPointer;
+  pDO->pEo = pEo;
+
+  return 0;
+}
+
 
 static pDebuggerObject new_DebuggerObject(pPrepext pEXT){
   pDebuggerObject pDO;
@@ -551,8 +418,6 @@ static pDebuggerObject new_DebuggerObject(pPrepext pEXT){
   pDO->Run2CallStack = 0;
   pDO->Run2Line = 0;
 
-  pDO->pszBindIP = "127.0.0.1";
-  pDO->iPort = 6647;
   return pDO;
   }
 
@@ -669,11 +534,11 @@ int vb_dbg_preproc(pPrepext pEXT,long *pCmd, void *p)
 		      if( *s == '\n' || *s == '\r' )*s = (char)0;
 		      s++;
 		      }
-        /* check for the listen port definition */
-        /* REM DBGLISTEN 127.0.0.1:6647         */
+        /* check for the listen port definition * /
+        /* REM DBGLISTEN 127.0.0.1:6647         * /
         s = pDO->SourceLines[i].line;
         do{
-          while( *s && isspace(*s) )s++;/* ignore spaces at the start of the line */
+          while( *s && isspace(*s) )s++;/* ignore spaces at the start of the line * /
           if( strnicmp(s,"rem",3) )break;
           s += 3;
           if( ! isspace(*s) )break;
@@ -687,14 +552,15 @@ int vb_dbg_preproc(pPrepext pEXT,long *pCmd, void *p)
           if( pDO->pszBindIP == NULL )return 1;
           strcpy(pDO->pszBindIP,s);
           s =  pDO->pszBindIP;
-          /* seek forward to the : separating the IP address and the port number */
+          /* seek forward to the : separating the IP address and the port number * /
           while( *s && *s != ':' )s++;
           if( *s == ':' ){
-            *s = (char)0; /* terminate the ip address*/
+            *s = (char)0; /* terminate the ip address* /
             s++;
-            pDO->iPort = atoi(s); /* convert the string to int */
+            pDO->iPort = atoi(s); /* convert the string to int * /
             }
         }while(0);
+		*/
         pDO->SourceLines[i].szFileName = AllocFileName(pEXT,Result->szFileName);
         pDO->SourceLines[i].lLineNumber = Result->lLineNumber;
         pDO->SourceLines[i].BreakPoint = 0;
@@ -828,7 +694,7 @@ void scomm_Init(pDebuggerObject pDO)
   char cBuffer[500];
   int i;
 
-  sprintf(cBuffer,"DEBUGGER_INIT");
+  sprintf(cBuffer,"DEBUGGER_INIT:hDebug:%d", pDO);
   vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 
   for( i=0 ; i < pDO->cFileNames ; i++ ){
@@ -857,16 +723,12 @@ void scomm_WeAreAt(pDebuggerObject pDO,long i)
   vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 }
 
-/*POD
-=section List
-=H List code lines
-
+/*
 List the source lines from T<lStart> to T<lEnd>.
 
 The optional T<lThis> may show the caret where the actual execution
 context is.
-
-/*FUNCTION*/
+*/
 void scomm_List(pDebuggerObject pDO, long lStart, long lEnd, long lThis)
 {
   long j;
@@ -892,9 +754,9 @@ void scomm_List(pDebuggerObject pDO, long lStart, long lEnd, long lThis)
 
 }
 
-/*POD
-=section GetRange
-=H get line number range from a string
+/*
+
+get line number range from a string
 
 This is an auxilliary function, which is used by the debugger.
 This simply gets the two numbers from the debugger command and returns
@@ -910,7 +772,7 @@ If there is first number but it is not followed by '-' then the T<*plEnd> will
 be set to zero.
 
 Finally if there are no numbers on the command line then bot variables are set zero.
-/*FUNCTION*/
+*/
 
 void GetRange(char *pszBuffer, long *plStart, long *plEnd)
 {
@@ -937,39 +799,13 @@ Arguments:
   }
 
 
+
+
 /*
-static void print_help(){
-  printf(
-"h help\n"
-"s step one line, or just press return on the line\n"
-"S step one line, do not step into functions or subs\n"
-"o step until getting out of the current function\n"
-"  (if you stepped into but changed your mind)\n"
-"? var  print the value of a variable\n"
-"u step one level up in the stack\n"
-"d step one level down in the stack (for variable printing)\n"
-"D step down in the stack to current execution depth\n"
-"G list all global variables\n"
-"L list all local variables\n"
-"l [n-m] list the source lines\n"
-"r [n] run to line n\n"
-"R [n] run to line n but do not stop in recursive function call\n"
-"b [n] set breakpoint on the line n or the current line\n"
-"B [n-m] remove breakpoints from lines\n"
-"q quit the program\n"
-);
-  }
-*/
-
-/*POD
-=section Message
-=H Report success of some command
-
 This function is called when a command that results no output is executed.
 The message is an informal message to the client that either tells that the
 command was executed successfully or that the command failed and why.
-
-/*FUNCTION*/
+*/
 void scomm_Message(pDebuggerObject pDO, char *pszMessage)
 {
   char cBuffer[200];
@@ -978,156 +814,343 @@ void scomm_Message(pDebuggerObject pDO, char *pszMessage)
   vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 }
 
-/*POD
-=section GetCommand
-=H Prompt the debugger station
-
+/*
 This function should send the prompt to the client and get the client
 input. The function should return a single character that represents the
 command what the debugger is supposed to do and the possible string argument
 in T<pszBuffer>. The available space for the argument is given T<cbBuffer>.
-
-/*FUNCTION*/
-int scomm_GetCommand(pDebuggerObject pDO, char *pszBuffer, long dwBuffer)
+*/
+char scomm_GetCommand(pDebuggerObject pDO, char *pszBuffer, long dwBuffer)
 {
-  int i,j;
-  int cmd;
+  char cmd;
   char pszPrintBuff[1024];
   long cbPrintBuff;
-  pUserFunction_t pUF;
-  pExecuteObject pEo;
-  long lStart,lEnd,lThis;
   char cBuffer[1025];
   int cbBuffer;
-  pDebugCallStack_t StackListPointer;
+  pExecuteObject pEo;
+  long lThis;
 
   pEo = pDO->pEo;
   while( 1 ){
 		lThis = GetCurrentDebugLine(pDO);
 		scomm_WeAreAt(pDO,lThis);
 	                     
-		//cbBuffer = recv(pDO->socket,cBuffer,1024,0); //--------> blocks while waiting to receive a command
-		cbBuffer = vbDbgHandler(&cBuffer[0], 1024);
+		cbBuffer = vbDbgHandler(&cBuffer[0], 1024);//--------> blocks while waiting to receive a command from user
 
-		cmd = *cBuffer;
-		while( ('\r' == cBuffer[cbBuffer-1] || '\n' == cBuffer[cbBuffer-1]) && cbBuffer  ){
-		  cBuffer[--cbBuffer] = (char)0;
-		}
-
+		cmd = cBuffer[0];
 		strcpy(pszBuffer,cBuffer+1);
 
 		switch( cmd ){
-		  case 'l':/*list lines*/
-					lThis = GetCurrentDebugLine(pDO);
+			case 'l':/*list lines*/
+					  cmd_getLines(pDO, cBuffer, cbBuffer);
+					  continue;
 
-					if( cbBuffer > 2 ){/*if there are arguments: 1 command char, 2 new line */
-					  GetRange(cBuffer+1,&lStart,&lEnd);
-					  scomm_List(pDO,lStart,lEnd,lThis);
-					  }else scomm_WeAreAt(pDO,lThis);
+			case '?': /* ex: ?var1 */
+					  cmd_getVarVal(pDO, cBuffer+1);
+					  continue;
 
-					continue;
+			case 'L': /* list local variables */
+					  cmd_listLocals(pDO);
+					  continue;
 
-		  case '?':
-					cbPrintBuff = 1024;
-					i = SPrintVarByName(pDO,pDO->pEo,cBuffer+1,pszPrintBuff,&cbPrintBuff);
-					switch( i ){
-						  case 1:
-							scomm_Message(pDO,"variable is too long to print");
-							continue;
-						  case 2:
-							scomm_Message(pDO,"variable is non-existent");
-							continue;
-						  default:
-							sprintf(cBuffer,"Value: %s\r\n",pszPrintBuff);
-							vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
-					}
-				    continue;
+			case 'G':/* list global variables */
+					  cmd_listGlobals(pDO);
+					  continue;
+		}
 
-		case 'L': /* list local variables */
-
-				  if( pDO->StackListPointer == NULL || pDO->StackListPointer->pUF == NULL ){
-					  /* pUF is NULL when the subroutine is external implemented in a DLL */
-					scomm_Message(pDO,"program is not local");
-					continue;
-					}
-				  StackListPointer = pDO->StackListPointer;
-				  if( pDO->pEo->ProgramCounter == StackListPointer->pUF->NodeId )
-				  {
-					/* In this case the debug call stack was already created to handle the function,
-					   but the LocalVariables still hold the value of the caller local variables.
-					*/
-					if( pDO->StackListPointer->up == NULL || pDO->StackListPointer->up->pUF == NULL ){
-						  scomm_Message(pDO,"program is not local");
-						  continue;
-				    }
-					StackListPointer = StackListPointer->up;
-				  }
-				  pUF = StackListPointer->pUF;
-
-				  if( StackListPointer->LocalVariables )
-				  for( i=StackListPointer->LocalVariables->ArrayLowLimit ; i <= StackListPointer->LocalVariables->ArrayHighLimit ; i++ )
-				  {
-						sprintf(cBuffer,"Local-Variable-Name: %s\r\n",pUF->ppszLocalVariables[i-1]);
-						vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
-
-						if( StackListPointer->LocalVariables )
-						{
-							  j = SPrintVariable(pDO,ARRAYVALUE(pDO->StackListPointer->LocalVariables,i),pszPrintBuff,&cbPrintBuff);
-							  switch( j )
-							  {
-								case 1:
-									scomm_Message(pDO,"variable is too long to print");
-									continue;
-								case 2:
-									scomm_Message(pDO,"variable is non-existent");
-									continue;
-								default:
-									sprintf(cBuffer,"Local-Variable-Value: %s\r\n",pszPrintBuff);
-									vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
-							  }
-						 }
-						 else{
-						  sprintf(cBuffer,"undef\r\n");
-						  vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
-						 }
-					}
-					continue;
-
-		case 'G':/* list global variables */
-				  for( i=0 ; i < pDO->cGlobalVariables ; i++ )
-				  {
-						if( NULL == pDO->ppszGlobalVariables[i] )continue;
-
-						sprintf(cBuffer,"Global-Variable-Name: %s\r\n",pDO->ppszGlobalVariables[i]);
-						vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
-
-						if( pEo->GlobalVariables )
-						{
-							  j = SPrintVariable(pDO,ARRAYVALUE(pEo->GlobalVariables,i+1),pszPrintBuff,&cbPrintBuff);
-							  switch( j ){
-									case 1:
-										scomm_Message(pDO,"variable is too long to print");
-										continue;
-									case 2:
-										scomm_Message(pDO,"variable is non-existent");
-										continue;
-									default:
-										sprintf(cBuffer,"Global-Variable-Value: %s\r\n",pszPrintBuff);
-										vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
-								}
-						  }else{
-							sprintf(cBuffer,"undef\r\n");
-							vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
-						  }
-					}
-
-					continue;
-		  }//end switch
-
-		  break;
-    }//END WHILE
+	    break;
+    }
 
   return cmd;
 }
 
+int MyExecBefore(pExecuteObject pEo)
+{
+  long i,j,lThisLine;
+  pPrepext pEXT;
+  pDebuggerObject pDO;
+  char lbuf[80];
+  char cmd;
 
+  pEXT = pEo->pHookers->hook_pointer;
+  pDO  = pEXT->pPointer;
+  pDO->pEo = pEo;
+
+  pDO->lPrevPC = pDO->lPC;
+  pDO->lPC = pEo->ProgramCounter;
+  if( pDO->DbgStack )pDO->DbgStack->LocalVariables = pEo->LocalVariables;
+
+  lThisLine = GetSourceLineNumber(pDO,pEo->ProgramCounter);
+
+  if( pDO->SourceLines[lThisLine].BreakPoint == 0 ){
+		/* if we are executing some step over function */
+		if( pDO->Run2CallStack != -1 && pDO->Run2CallStack < pDO->CallStackDepth )return 0;
+		if( pDO->Run2Line && pDO->Nodes[pDO->lPC-1].lSourceLine != pDO->Run2Line )return 0;
+  }
+
+  scomm_WeAreAt(pDO,lThisLine);
+  pDO->StackListPointer = pDO->DbgStack;
+
+  while(1){
+
+		cmd = scomm_GetCommand(pDO,lbuf,80);  // ------------> gets the command from the user
+
+		switch( cmd ){
+
+			  case 'D':/* step the stack list pointer to the bottom */
+						 pDO->StackListPointer = pDO->DbgStack;
+						 scomm_Message(pDO,"done");
+						 continue;
+
+			  case 'u':/* step the stack list pointer up */
+						if( pDO->StackListPointer )
+						{
+						  pDO->StackListPointer = pDO->StackListPointer->up;
+						  scomm_Message(pDO,"done");
+						}
+						else scomm_Message(pDO,"No way up more");
+						continue;
+
+			  case 'd':/* step the stack list pointer down */
+						if( pDO->StackListPointer && pDO->StackListPointer->down )
+							pDO->StackListPointer = pDO->StackListPointer->down;
+						else
+							pDO->StackListPointer = pDO->StackTop;
+						
+						if( pDO->StackListPointer )
+							scomm_Message(pDO,"done");
+						else
+							scomm_Message(pDO,"No way down more");
+						continue;
+
+			  case 'b': /* set break point at a line */
+						if( ! *lbuf )/* set it at the current line */
+							i = GetCurrentDebugLine(pDO)+1;
+						else
+							GetRange(lbuf,&i,&j);
+
+						if( i < 1 || i > pDO->cSourceLines ){
+							scomm_Message(pDO,"invalid line number");
+							continue;
+						}
+						pDO->SourceLines[i-1].BreakPoint = 1;
+						scomm_Message(pDO,"done");
+						continue;
+
+			  case 'B':/* remove breakpoint from line(s) */
+						
+						if( ! *lbuf )/* remove all */
+							i = 1, j = pDO->cSourceLines;
+						else
+							GetRange(lbuf,&i,&j);
+
+						if( i < 1 || i >= pDO->cSourceLines ){
+							  scomm_Message(pDO,"invalid line number");
+							  continue;
+						}
+
+						if( j == 0 )j = i;
+						if( j > pDO->cSourceLines )j = pDO->cSourceLines;
+
+						while( i <= j )
+						{
+						  pDO->SourceLines[i-1].BreakPoint = 0;
+						  i++;
+						}
+						scomm_Message(pDO,"done");
+						continue;
+
+			  case 'q':/* quit the program execution */
+						scomm_Message(pDO,"Ok... you have said that... quitting...");
+						pEo->pszModuleError = "Debugger Operator Forced Exit.";
+						return COMMAND_ERROR_PREPROCESSOR_ABORT;
+
+			  case 's':/*step a single line and step into functions */
+						pDO->Run2CallStack = pDO->CallStackDepth+1;
+						pDO->Run2Line = 0;
+						return 0; /* step one step forward */
+
+			  case 'o':/* run program until it gets out of the current function */
+						pDO->Run2CallStack = pDO->CallStackDepth ? pDO->CallStackDepth - 1 : 0 ;
+						pDO->Run2Line = 0;
+						return 0; /* step one step forward */
+
+			  case 'S':
+						pDO->Run2CallStack = pDO->CallStackDepth;
+						pDO->Run2Line = 0;
+						return 0; /* step one step forward but remain on the same level */
+
+			  case 'r':
+						 pDO->Run2CallStack = -1;/* any level deep */
+						 if( ! *lbuf )
+						 {
+							pDO->Run2Line = -1;/* a nonzero value that can not be a valid line number */
+							return 0;
+						 }
+						 GetRange(lbuf,&i,&j);
+						 pDO->Run2Line = i;
+						 return 0;
+
+			  case 'R':
+						 pDO->Run2CallStack = pDO->CallStackDepth; /* on the current level */
+						 if( ! *lbuf )
+						 {
+							 pDO->Run2Line = -1; /* a nonzero value that can not be a valid line number */
+							 return 0;
+						 }
+						 GetRange(lbuf,&i,&j);
+						 pDO->Run2Line = i;
+						 return 0;
+
+		  } //end switch
+    } //end while
+    
+	return 0;
+}
+
+
+void cmd_getLines(pDebuggerObject pDO, char* cBuffer, int cbBuffer)
+{
+	long lStart,lEnd,lThis;
+
+	lThis = GetCurrentDebugLine(pDO);
+	
+	/*if there are arguments: 1 command char, 2 new line */
+	if( cbBuffer > 2 )
+	{
+	  GetRange(cBuffer+1,&lStart,&lEnd);
+	  scomm_List(pDO,lStart,lEnd,lThis);
+	}
+	else scomm_WeAreAt(pDO,lThis);
+}
+
+void cmd_getVarVal(pDebuggerObject pDO, char* varName)
+{
+  char pszPrintBuff[1024];
+  long cbPrintBuff;
+  char cBuffer[1025];
+  int i;
+
+	cbPrintBuff = 1024;
+	i = SPrintVarByName(pDO,pDO->pEo,varName,pszPrintBuff,&cbPrintBuff);
+	switch( i ){
+		  case 1:
+			scomm_Message(pDO,"variable is too long to print");
+			return;
+		  case 2:
+			scomm_Message(pDO,"variable is non-existent");
+			return;
+		  default:
+			sprintf(cBuffer,"Value: %s\r\n",pszPrintBuff);
+			vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
+	}
+
+}
+
+void cmd_listLocals(pDebuggerObject pDO)
+{
+  pUserFunction_t pUF;
+  pExecuteObject pEo;
+  long lStart,lEnd,lThis;
+  char pszPrintBuff[1024];
+  long cbPrintBuff;
+  char cBuffer[1025];
+  int cbBuffer;
+  pDebugCallStack_t StackListPointer;
+  int i,j;
+
+	if( pDO->StackListPointer == NULL || pDO->StackListPointer->pUF == NULL ){
+		  /* pUF is NULL when the subroutine is external implemented in a DLL */
+		scomm_Message(pDO,"Execution is in dll extension.");
+		return;
+	}
+
+	StackListPointer = pDO->StackListPointer;
+	if( pDO->pEo->ProgramCounter == StackListPointer->pUF->NodeId )
+	{
+			/* In this case the debug call stack was already created to handle the function,
+			   but the LocalVariables still hold the value of the caller local variables.
+			*/
+			if( pDO->StackListPointer->up == NULL || pDO->StackListPointer->up->pUF == NULL )
+			{
+				  scomm_Message(pDO,"program is not local");
+				  return;
+			}
+			StackListPointer = StackListPointer->up;
+	}
+
+	pUF = StackListPointer->pUF;
+
+	if( StackListPointer->LocalVariables )
+	for(i=StackListPointer->LocalVariables->ArrayLowLimit ; i <= StackListPointer->LocalVariables->ArrayHighLimit ; i++ )
+	{
+		sprintf(cBuffer,"Local-Variable-Name: %s\r\n",pUF->ppszLocalVariables[i-1]);
+		vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
+
+		if( StackListPointer->LocalVariables )
+		{
+			  j = SPrintVariable(pDO,ARRAYVALUE(pDO->StackListPointer->LocalVariables,i),pszPrintBuff,&cbPrintBuff);
+			  switch( j )
+			  {
+				case 1:
+					scomm_Message(pDO,"variable is too long to print");
+					return;
+				case 2:
+					scomm_Message(pDO,"variable is non-existent");
+					return;
+				default:
+					sprintf(cBuffer,"Local-Variable-Value: %s\r\n",pszPrintBuff);
+					vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
+			  }
+		 }
+		 else{
+		  sprintf(cBuffer,"undef\r\n");
+		  vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
+		 }
+	}
+		
+
+
+}
+
+void cmd_listGlobals(pDebuggerObject pDO)
+{
+
+  pUserFunction_t pUF;
+  pExecuteObject pEo;
+  long lStart,lEnd,lThis;
+  char pszPrintBuff[1024];
+  long cbPrintBuff;
+  char cBuffer[1025];
+  int cbBuffer;
+  pDebugCallStack_t StackListPointer;
+  int i,j;
+
+	  for(i=0 ; i < pDO->cGlobalVariables ; i++ )
+	  {
+			if( NULL == pDO->ppszGlobalVariables[i] )return;
+
+			sprintf(cBuffer,"Global-Variable-Name: %s\r\n",pDO->ppszGlobalVariables[i]);
+			vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
+
+			if( pEo->GlobalVariables )
+			{
+				  j = SPrintVariable(pDO,ARRAYVALUE(pEo->GlobalVariables,i+1),pszPrintBuff,&cbPrintBuff);
+				  switch( j ){
+						case 1:
+							scomm_Message(pDO,"variable is too long to print");
+							return;
+						case 2:
+							scomm_Message(pDO,"variable is non-existent");
+							return;
+						default:
+							sprintf(cBuffer,"Global-Variable-Value: %s\r\n",pszPrintBuff);
+							vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
+					}
+			  }else{
+				sprintf(cBuffer,"undef\r\n");
+				vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
+			  }
+		}
+
+}

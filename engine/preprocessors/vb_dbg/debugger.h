@@ -7,6 +7,9 @@ dbg_comm.h
 extern "C" {
 #endif
 
+#define EXPORT comment(linker, "/EXPORT:"__FUNCTION__"="__FUNCDNAME__)
+
+
 // Debug information on user defined functions.
 typedef struct _UserFunction_t {
   long cLocalVariables;
@@ -71,17 +74,25 @@ typedef struct _DebuggerObject {
   int iPort;
 } DebuggerObject, *pDebuggerObject;
 
+long __stdcall GetCurrentDebugLine(pDebuggerObject pDO);
+
 int  SPrintVariable(pDebuggerObject pDO,VARIABLE v,char *pszBuffer,unsigned long *cbBuffer);
 int  SPrintVarByName(pDebuggerObject pDO,pExecuteObject pEo,char *pszName,char *pszBuffer,unsigned long *cbBuffer);
 long GetSourceLineNumber(pDebuggerObject pDO,long PC);
-long GetCurrentDebugLine(pDebuggerObject pDO);
 void GetRange(char *pszBuffer, long *plStart, long *plEnd);
 
 void scomm_Init(pDebuggerObject pDO);
 void scomm_WeAreAt(pDebuggerObject pDO, long i);
 void scomm_List(pDebuggerObject pDO, long lStart, long lEnd, long lThis);
 void scomm_Message(pDebuggerObject pDO, char *pszMessage);
-int  scomm_GetCommand(pDebuggerObject pDO, char *pszBuffer, long cbBuffer);
+char scomm_GetCommand(pDebuggerObject pDO, char *pszBuffer, long cbBuffer);
+
+void cmd_listLocals(pDebuggerObject pDO);
+void cmd_listGlobals(pDebuggerObject pDO);
+void cmd_getVarVal(pDebuggerObject pDO, char* varName);
+void cmd_getLines(pDebuggerObject pDO, char* cBuffer, int cbBuffer);
+
+int MyExecBefore(pExecuteObject pEo);
 
 #ifdef __cplusplus
 }
