@@ -68,10 +68,6 @@ typedef struct _DebuggerObject {
   int bLocalStart;
   long FunctionNode;
   long lPrevPC,lPC;
-  SOCKET listen_socket;
-  SOCKET socket;
-  char *pszBindIP;
-  int iPort;
 } DebuggerObject, *pDebuggerObject;
 
 long __stdcall GetCurrentDebugLine(pDebuggerObject pDO);

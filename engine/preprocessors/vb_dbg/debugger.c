@@ -33,6 +33,53 @@ This program implements a simple debugger "preprocessor" for ScriptBasic.
 #include "debugger.h"
 #include "vb.h"
 
+int LineNumberForNode(pDebuggerObject pDO, int node)
+{
+  if( node < 1 || node > pDO->cNodes ) return 0;
+  if( pDO->Nodes[node-1].lSourceLine ) return pDO->Nodes[node-1].lSourceLine;
+}
+
+void __stdcall dbg_EnumCallStack(pDebuggerObject pDO)
+{
+#pragma EXPORT
+
+  pDebugCallStack_t p;
+  pDebugCallStack_t np;
+  pUserFunction_t   uf;
+  char buf[1024];
+  long i;
+
+  if( pDO == NULL )return;
+
+  sprintf(buf, "Call-Stack:%d:%s", LineNumberForNode(pDO,pDO->lPC), "CurrentLine");
+  vbStdOut(cb_debugger,buf,strlen(buf));
+
+  if( pDO->StackListPointer == NULL )return;
+  
+  p = pDO->StackListPointer;
+  if(p->pUF && p->pUF->pszFunctionName ){
+	  sprintf(buf, "Call-Stack:%d:%s", LineNumberForNode(pDO,p->Node), p->pUF->pszFunctionName);
+  }else{
+	  sprintf(buf, "Call-Stack:%d:Unknown", LineNumberForNode(pDO,p->Node) );
+  }
+  vbStdOut(cb_debugger,buf,strlen(buf));
+  
+  for(i=0; i < pDO->CallStackDepth; i++){
+	    if(p->up == NULL) return;
+		p = p->up;
+		if(p->pUF && p->pUF->pszFunctionName ){
+			  sprintf(buf, "Call-Stack:%d:%s", LineNumberForNode(pDO,p->Node) , p->pUF->pszFunctionName);
+		}else{
+			 sprintf(buf, "Call-Stack:%d:Unknown", LineNumberForNode(pDO,p->Node));
+		}
+		vbStdOut(cb_debugger,buf,strlen(buf));
+  }
+
+
+  return;
+}
+
+
 // Push the item on the debugger stack when entering the function starting at the node Node
 static void PushStackItem(pDebuggerObject pDO, long Node)
 {

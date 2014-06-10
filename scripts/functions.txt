@@ -5,12 +5,7 @@ g_a = g_a + 1
 
 
 
-'function func1(v0)
-'
-'	v0 = v0 + 1
-'	print "v0=", v0, "  g_a=", g_a	
-'
-'end function
+
 
 function func2(v0)
 local v1
@@ -21,4 +16,9 @@ local v2
 
 end function
 
-func2 g_a 
+function func1(v0)
+    func2 v0
+end function
+
+func1 g_a 
+print "andd were done!"

@@ -15,7 +15,7 @@ Begin VB.Form Form1
    Begin MSComctlLib.ListView lvVars 
       Height          =   1815
       Left            =   90
-      TabIndex        =   11
+      TabIndex        =   10
       Top             =   9630
       Width           =   7530
       _ExtentX        =   13282
@@ -55,7 +55,7 @@ Begin VB.Form Form1
       Caption         =   "Command1"
       Height          =   510
       Left            =   9990
-      TabIndex        =   10
+      TabIndex        =   9
       Top             =   7335
       Width           =   1230
    End
@@ -70,34 +70,27 @@ Begin VB.Form Form1
          Strikethrough   =   0   'False
       EndProperty
       Height          =   1455
-      Left            =   5670
+      Left            =   5445
       MultiLine       =   -1  'True
       ScrollBars      =   3  'Both
-      TabIndex        =   9
-      Top             =   8055
-      Width           =   8205
+      TabIndex        =   8
+      Top             =   6660
+      Width           =   4245
    End
    Begin VB.CommandButton cmdManual 
       Caption         =   "Command1"
       Height          =   375
       Left            =   12825
-      TabIndex        =   8
+      TabIndex        =   7
       Top             =   6660
       Width           =   960
    End
    Begin VB.TextBox txtCmd 
       Height          =   285
       Left            =   10620
-      TabIndex        =   7
+      TabIndex        =   6
       Top             =   6705
       Width           =   1995
-   End
-   Begin VB.ListBox List1 
-      Height          =   1035
-      Left            =   5625
-      TabIndex        =   3
-      Top             =   6750
-      Width           =   4065
    End
    Begin VB.TextBox txtOut 
       BeginProperty Font 
@@ -227,7 +220,7 @@ Begin VB.Form Form1
    Begin MSComctlLib.Toolbar tbarDebug 
       Height          =   315
       Left            =   180
-      TabIndex        =   4
+      TabIndex        =   3
       Top             =   225
       Width           =   9540
       _ExtentX        =   16828
@@ -316,7 +309,7 @@ Begin VB.Form Form1
       Align           =   2  'Align Bottom
       Height          =   255
       Left            =   0
-      TabIndex        =   5
+      TabIndex        =   4
       Top             =   11745
       Width           =   13905
       _ExtentX        =   24527
@@ -341,11 +334,40 @@ Begin VB.Form Form1
          EndProperty
       EndProperty
    End
+   Begin MSComctlLib.ListView lvCallStack 
+      Height          =   1815
+      Left            =   7695
+      TabIndex        =   11
+      Top             =   9630
+      Width           =   6090
+      _ExtentX        =   10742
+      _ExtentY        =   3201
+      View            =   3
+      LabelEdit       =   1
+      LabelWrap       =   -1  'True
+      HideSelection   =   -1  'True
+      FullRowSelect   =   -1  'True
+      _Version        =   393217
+      ForeColor       =   -2147483640
+      BackColor       =   -2147483643
+      BorderStyle     =   1
+      Appearance      =   1
+      NumItems        =   2
+      BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         Text            =   "Line"
+         Object.Width           =   1235
+      EndProperty
+      BeginProperty ColumnHeader(2) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   1
+         Text            =   "Function"
+         Object.Width           =   2540
+      EndProperty
+   End
    Begin VB.Label Label2 
       Caption         =   "Cmd"
       Height          =   285
       Left            =   9900
-      TabIndex        =   6
+      TabIndex        =   5
       Top             =   6750
       Width           =   555
    End
@@ -403,7 +425,19 @@ Private Sub RefreshVariables()
     
 End Sub
 
-Private Sub Command1_Click()
+Private Sub RefreshCallStack()
+    Dim c As Collection
+    Dim cs As cCallStack
+    Dim li As ListItem
+    
+    lvCallStack.ListItems.Clear
+    
+    Set c = EnumCallStack()
+    
+    For Each cs In c
+        Set li = lvCallStack.ListItems.Add(, , cs.lineNo)
+        li.SubItems(1) = cs.func
+    Next
     
 End Sub
 
@@ -457,7 +491,6 @@ Private Sub ExecuteScript(Optional withDebugger As Boolean)
     Dim buf As String
      
     txtOut.Text = Empty
-    List1.Clear
     
     scivb.ReadOnly = True
     If scivb.isDirty Then scivb.SaveFile loadedFile
@@ -497,6 +530,9 @@ Private Sub Form_Load()
     scivb.DirectSCI.MarkerSetFore 2, vbRed 'set breakpoint color
     scivb.DirectSCI.MarkerSetBack 2, vbRed
     
+    lvCallStack.ColumnHeaders(2).Width = lvCallStack.Width - lvCallStack.ColumnHeaders(2).Left - 100
+    lvVars.ColumnHeaders(lvVars.ColumnHeaders.Count).Width = lvVars.Width - lvVars.ColumnHeaders(lvVars.ColumnHeaders.Count).Left - 100
+    
     'App.Path & "\scripts\com_voice_test.sb"
     LoadFile App.Path & "\scripts\functions.txt"
     
@@ -531,10 +567,13 @@ Public Sub SyncUI()
     Dim curLine As Long
     
     curLine = GetCurrentDebugLine(hDebugObject)
+    Me.Caption = "Current Line: " & curLine
+    
     scivb.GotoLine curLine
     scivb.HighLightActiveLine = True
     scivb.SetFocus
     
     RefreshVariables
+    RefreshCallStack
     
 End Sub

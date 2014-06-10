@@ -21,12 +21,15 @@ Public Declare Function dbg_LineCount Lib "sb_engine" (ByVal hDebug As Long) As 
 'we may not need this we should track internally...
 Private Declare Function dbg_isBpSet Lib "sb_engine" (ByVal hDebug As Long, ByVal lineNo As Long) As Long
 
+Private Declare Sub dbg_EnumCallStack Lib "sb_engine" (ByVal hDebug As Long)
+
 Public hDebugObject As Long     'handle to the current debug object - pDO
 Public readyToReturn As Boolean
 Public dbg_cmd As String
 Public running As Boolean
 Public variables As New Collection 'of CVariable
 Public breakpoints As New Collection 'of CBreakPoint
+Public callStack As New Collection 'of CCallStack
 
 Enum cb_type
     cb_output = 0
@@ -43,6 +46,15 @@ Enum sb_VarTypes
     VTYPE_REF = 4
     VTYPE_UNDEF = 5
 End Enum
+
+Public Function EnumCallStack() As Collection
+    
+    Set callStack = Nothing
+    dbg_EnumCallStack hDebugObject 'this goes into syncronous set of callbacks
+    Set EnumCallStack = callStack
+    
+End Function
+
 
 Public Function BreakPointExists(lineNo As Long) As Boolean
 
@@ -190,9 +202,15 @@ Public Sub HandleDebugMessage(msg As String)
 
     Dim cmd() As String
     Dim v As CVariable
+    Dim c As New cCallStack
     Dim handled As Boolean
     
-    cmd = Split(msg, ":", 2)
+    If Left(msg, 10) = "Call-Stack" Then
+        cmd = Split(msg, ":", 3)
+    Else
+        cmd = Split(msg, ":", 2)
+    End If
+    
     
     Select Case cmd(0)
         Case "DEBUGGER_INIT" 'DEBUGGER_INIT: hDebugObj
@@ -216,6 +234,14 @@ Public Sub HandleDebugMessage(msg As String)
             v.value = GetVariableValue(v.name)
             v.varType = VariableType(v.name)
             variables.Add v
+            handled = True
+            
+        Case "Call-Stack"
+            Set c = New cCallStack
+            c.index = callStack.Count
+            c.lineNo = CLng(cmd(1))
+            c.func = cmd(2)
+            callStack.Add c
             handled = True
             
     'Source-File: %s\r\n
