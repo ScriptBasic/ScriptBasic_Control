@@ -1,0 +1,10 @@
+
+
+- way for host to addobject/variable
+- command: MsgBox
+- command: FileExists ?
+- callstack window
+- run to cursor?
+-scivb gutterclick?
+
+

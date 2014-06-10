@@ -85,11 +85,7 @@ void scomm_Init(pDebuggerObject pDO);
 void scomm_WeAreAt(pDebuggerObject pDO, long i);
 void scomm_List(pDebuggerObject pDO, long lStart, long lEnd, long lThis);
 void scomm_Message(pDebuggerObject pDO, char *pszMessage);
-char scomm_GetCommand(pDebuggerObject pDO, char *pszBuffer, long cbBuffer);
 
-void cmd_listLocals(pDebuggerObject pDO);
-void cmd_listGlobals(pDebuggerObject pDO);
-void cmd_getVarVal(pDebuggerObject pDO, char* varName);
 void cmd_getLines(pDebuggerObject pDO, char* cBuffer, int cbBuffer);
 
 int MyExecBefore(pExecuteObject pEo);

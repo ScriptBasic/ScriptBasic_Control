@@ -1,3 +1,6 @@
+
+a = 21
+
 declare sub CreateObject alias "CreateObject" lib "sb_engine.dll"
 declare sub CallByName alias "CallByName" lib "sb_engine.dll"
 declare sub ReleaseObject alias "ReleaseObject" lib "sb_engine.dll"
