@@ -3,9 +3,17 @@ g_a = 1
 
 g_a = g_a + 1
 
+x[2,3] = "test"
 
+LineStyle[0] = 111111
+LineStyle[1] = 222222
 
+print LineStyle[0]
 
+LineStyle[2] = undef
+LineStyle[3] = undef
+LineStyle[4] = red
+LineStyle[5] = green
 
 function func2(v0)
 local v1

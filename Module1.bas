@@ -11,6 +11,9 @@ Private Declare Function dbg_getVarVal Lib "sb_engine" (ByVal hDebug As Long, By
 'enumerate global and local variable names (uses vbstdOut callback)
 Private Declare Sub dbg_EnumVars Lib "sb_engine" (ByVal hDebug As Long)
 
+Private Declare Sub dbg_EnumAryVarsByName Lib "sb_engine" (ByVal hDebug As Long, ByRef varName As Byte)
+Private Declare Sub dbg_EnumAryVarsByPointer Lib "sb_engine" (ByVal hDebug As Long, ByVal pVar As Long)
+
 Private Declare Function dbg_VarTypeFromName Lib "sb_engine" (ByVal hDebug As Long, ByRef varName As Byte) As Long
 
 'set or remove a breakpoint on a line
@@ -22,6 +25,10 @@ Public Declare Function dbg_LineCount Lib "sb_engine" (ByVal hDebug As Long) As 
 Private Declare Function dbg_isBpSet Lib "sb_engine" (ByVal hDebug As Long, ByVal lineNo As Long) As Long
 
 Private Declare Sub dbg_EnumCallStack Lib "sb_engine" (ByVal hDebug As Long)
+Private Declare Sub dbg_RunToLine Lib "sb_engine" (ByVal hDebug As Long, ByVal lineNo As Long)
+
+
+
 
 Public hDebugObject As Long     'handle to the current debug object - pDO
 Public readyToReturn As Boolean
@@ -46,6 +53,11 @@ Enum sb_VarTypes
     VTYPE_REF = 4
     VTYPE_UNDEF = 5
 End Enum
+
+Public Sub RunToLine(lineNo As Long)
+    dbg_RunToLine hDebugObject, lineNo
+    DebuggerCmd "m"
+End Sub
 
 Public Function EnumCallStack() As Collection
     
@@ -108,6 +120,18 @@ Private Sub InitDebuggerBpx()
     Next
 End Sub
 
+Public Function VariableTypeToString(x As sb_VarTypes) As String
+
+    types = Array("LONG", "DOUBLE", "STRING", "ARRAY", "REF", "UNDEF")
+    
+    If x < 0 Or x > 5 Then
+        VariableTypeToString = "???"
+    Else
+        VariableTypeToString = LCase(types(x))
+    End If
+    
+End Function
+
 Public Function VariableType(varName As String) As String
     
     Dim x  As sb_VarTypes
@@ -115,14 +139,7 @@ Public Function VariableType(varName As String) As String
     
     v() = StrConv(varName & Chr(0), vbFromUnicode)
     x = dbg_VarTypeFromName(hDebugObject, v(0))
-    
-    types = Array("LONG", "DOUBLE", "STRING", "ARRAY", "REF", "UNDEF")
-    
-    If x < 0 Or x > 5 Then
-        VariableType = "???"
-    Else
-        VariableType = LCase(types(x))
-    End If
+    VariableType = VariableTypeToString(x)
     
 End Function
 
@@ -131,8 +148,24 @@ Public Sub DebuggerCmd(cmd As String)
     readyToReturn = True
 End Sub
 
-Public Function EnumVariables() As Collection
+Public Function EnumArrayVariables(varNameOrPointer As Variant) As Collection
     
+    Dim v() As Byte
+    Set variables = Nothing
+    
+    If TypeName(varNameOrPointer) = "String" Then
+        v() = StrConv(varNameOrPointer & Chr(0), vbFromUnicode)
+        dbg_EnumAryVarsByName hDebugObject, v(0) 'this goes into syncronous set of callbacks
+    Else
+        dbg_EnumAryVarsByPointer hDebugObject, CLng(varNameOrPointer) 'this goes into syncronous set of callbacks
+    End If
+    
+    Set EnumArrayVariables = variables
+    
+End Function
+
+Public Function EnumVariables() As Collection
+   
     Set variables = Nothing
     dbg_EnumVars hDebugObject 'this goes into syncronous set of callbacks
     Set EnumVariables = variables
@@ -157,7 +190,7 @@ Public Function GetVariableValue(varName As String) As String
         GetVariableValue = StrConv(buf, vbUnicode)
         i = InStr(GetVariableValue, Chr(0))
         If i > 1 Then
-            GetVariableValue = Left(GetVariableValue, i)
+            GetVariableValue = Left(GetVariableValue, i - 1)
         End If
     ElseIf ret = 1 Then
         GetVariableValue = "[ > 1024 chars ]"
@@ -207,6 +240,8 @@ Public Sub HandleDebugMessage(msg As String)
     
     If Left(msg, 10) = "Call-Stack" Then
         cmd = Split(msg, ":", 3)
+    ElseIf Left(msg, 14) = "Array-Variable" Then
+        cmd = Split(msg, ":", 4)
     Else
         cmd = Split(msg, ":", 2)
     End If
@@ -244,6 +279,14 @@ Public Sub HandleDebugMessage(msg As String)
             callStack.Add c
             handled = True
             
+        Case "Array-Variable" 'Array-Variable:%d:%d:%s", i, TYPE(v2), buf);
+            Set v = New CVariable
+            v.index = CLng(cmd(1))
+            v.varType = VariableTypeToString(CLng(cmd(2)))
+            v.value = cmd(3) 'if is array then aryPointer will be parsed from value..
+            variables.Add v
+            handled = True
+
     'Source-File: %s\r\n
     'Current-Line: %u\r\n
     'Break-Point: %s\r\n = 1/0

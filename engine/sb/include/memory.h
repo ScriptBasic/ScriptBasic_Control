@@ -16,25 +16,19 @@ typedef struct _FixSizeMemoryObject {
     long   lValue; 
     double dValue; 
     struct _FixSizeMemoryObject **aValue;
-    } Value;
+  } Value;
   unsigned long Size; 
-  BYTE sType; 
-              
+  BYTE sType;             
   BYTE vType; 
   BYTE State; 
-  
-  
-  
-  
   struct _FixSizeMemoryObject *next;     
   union {
     struct _FixSizeMemoryObject *prev;   
     struct _FixSizeMemoryObject **rprev; 
-    }link;
+  }link;
   long ArrayLowLimit, ArrayHighLimit;    
                                          
-  } FixSizeMemoryObject, *pFixSizeMemoryObject, 
-    *MortalList, **pMortalList;
+} FixSizeMemoryObject, *pFixSizeMemoryObject, *MortalList, **pMortalList;
 
 
 #define DOUBLEVALUE(x) ((x)->Value.dValue)

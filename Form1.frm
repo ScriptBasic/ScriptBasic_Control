@@ -5,7 +5,7 @@ Begin VB.Form Form1
    Caption         =   "Form1"
    ClientHeight    =   12000
    ClientLeft      =   60
-   ClientTop       =   345
+   ClientTop       =   630
    ClientWidth     =   13905
    KeyPreview      =   -1  'True
    LinkTopic       =   "Form1"
@@ -284,20 +284,22 @@ Begin VB.Form Form1
             ImageKey        =   "Step Out"
          EndProperty
          BeginProperty Button12 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Key             =   "Set Next"
-            Object.ToolTipText     =   "Set Next Statement"
+            Key             =   "Run to Cursor"
+            Object.ToolTipText     =   "Run to Cursor"
             ImageKey        =   "Set Next"
          EndProperty
          BeginProperty Button13 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Style           =   3
          EndProperty
          BeginProperty Button14 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Object.Visible         =   0   'False
             Key             =   "Immediate"
             Object.ToolTipText     =   "Immediate Window"
             ImageKey        =   "Immediate"
             Style           =   1
          EndProperty
          BeginProperty Button15 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Object.Visible         =   0   'False
             Key             =   "Callstack"
             Object.ToolTipText     =   "Callstack"
             ImageKey        =   "Callstack"
@@ -379,6 +381,12 @@ Begin VB.Form Form1
       Top             =   6525
       Width           =   1860
    End
+   Begin VB.Menu mnuCallStackPopup 
+      Caption         =   "mnuCallStackPopup"
+      Begin VB.Menu mnuExecuteTillReturn 
+         Caption         =   "Execute Until Return"
+      End
+   End
 End
 Attribute VB_Name = "Form1"
 Attribute VB_GlobalNameSpace = False
@@ -397,14 +405,20 @@ Private Declare Sub SetCallBacks Lib "sb_engine" (ByVal msgProc As Long, ByVal d
 
 Dim loadedFile As String
 Dim hsbLib As Long
+Dim lastEIP As Long
 
-
-
+Const SC_MARK_CIRCLE = 0
+Const SC_MARK_ARROW = 2
+Dim selCallStackItem As ListItem
+Dim selVariable As ListItem
 
 Private Sub cmdManual_Click()
-    txtDebug.Text = Empty
-    dbg_cmd = txtCmd.Text
-    readyToReturn = True
+    'txtDebug.Text = Empty
+    'dbg_cmd = txtCmd.Text
+    'readyToReturn = True
+    
+    MsgBox GetVariableValue(txtCmd.Text)
+    
 End Sub
 
 Private Sub RefreshVariables()
@@ -421,6 +435,7 @@ Private Sub RefreshVariables()
         li.SubItems(1) = v.name
         li.SubItems(2) = v.varType
         li.SubItems(3) = v.value
+        If v.varType = "array" Then li.Tag = v.pAryElement
     Next
     
 End Sub
@@ -441,13 +456,43 @@ Private Sub RefreshCallStack()
     
 End Sub
 
+Private Sub lvCallStack_ItemClick(ByVal Item As MSComctlLib.ListItem)
+    scivb.GotoLine CLng(Item.Text)
+    Set selCallStackItem = Item
+End Sub
+
+Private Sub lvVars_DblClick()
+    If selVariable Is Nothing Then Exit Sub
+    If selVariable.SubItems(2) <> "array" Then Exit Sub
+    
+    Dim c As Collection
+    Dim varName As String
+    
+    varName = selVariable.SubItems(1)
+    Set c = EnumArrayVariables(varName)
+    If c.Count > 0 Then
+        frmAryDump.DumpArrayValues varName, c
+    End If
+    
+End Sub
+
+Private Sub lvVars_ItemClick(ByVal Item As MSComctlLib.ListItem)
+    Set selVariable = Item
+End Sub
+
+Private Sub mnuExecuteTillReturn_Click()
+    MsgBox "todo: disable all breakpoints,run to line selCallStackItem.text + 1, reenable breakpoints", vbInformation
+End Sub
+
 Private Sub scivb_KeyDown(KeyCode As Long, Shift As Long)
-    Debug.Print KeyCode & " " & Shift
+
+    'Debug.Print KeyCode & " " & Shift
     Select Case KeyCode
         Case vbKeyF2: ToggleBreakPoint scivb.CurrentLine
         Case vbKeyF5: If running Then DebuggerCmd "R" Else ExecuteScript True
-        Case vbKeyF7: DebuggerCmd "s"
-        Case vbKeyF8: DebuggerCmd "S"
+        Case vbKeyF7: DebuggerCmd "s" 'step into
+        Case vbKeyF8: DebuggerCmd "S" 'step over
+        Case vbKeyF9: DebuggerCmd "o" 'step out
     End Select
     
 End Sub
@@ -475,10 +520,10 @@ Private Sub tbarDebug_ButtonClick(ByVal Button As MSComctlLib.Button)
         Case "Stop":      DebuggerCmd "q"
         Case "Step In":   DebuggerCmd "s"
         Case "Step Over": DebuggerCmd "S"
-        Case "Step Out":  DebuggerCmd "u"
-        Case "Set Next":
-        Case "Immediate"
-        Case "Callstack"
+        Case "Step Out":  DebuggerCmd "o"
+        Case "Run to Cursor": RunToLine scivb.CurrentLine + 1
+        'Case "Immediate"
+        'Case "Callstack"
         Case "Breakpoint":
         Case "Clear Breakpoints":
     End Select
@@ -511,12 +556,14 @@ Private Sub ExecuteScript(Optional withDebugger As Boolean)
     running = False
     scivb.ReadOnly = False
     scivb.HighLightActiveLine = False
-   
+    scivb.DeleteMarker lastEIP, 1
     
 End Sub
 
 Private Sub Form_Load()
         
+    mnuCallStackPopup.Visible = False
+    
     hsbLib = LoadLibrary(App.Path & "\engine\sb_engine.dll")
     
     If hsbLib = 0 Then
@@ -527,9 +574,15 @@ Private Sub Form_Load()
     scivb.LoadHighlighter App.Path & "\dependancies\vb.bin"
     
     scivb.DirectSCI.HideSelection False
+    scivb.DirectSCI.MarkerDefine 2, SC_MARK_CIRCLE
     scivb.DirectSCI.MarkerSetFore 2, vbRed 'set breakpoint color
     scivb.DirectSCI.MarkerSetBack 2, vbRed
     
+    scivb.DirectSCI.MarkerDefine 1, SC_MARK_ARROW
+    scivb.DirectSCI.MarkerSetFore 1, vbBlack 'current eip
+    scivb.DirectSCI.MarkerSetBack 1, vbYellow
+  
+  
     lvCallStack.ColumnHeaders(2).Width = lvCallStack.Width - lvCallStack.ColumnHeaders(2).Left - 100
     lvVars.ColumnHeaders(lvVars.ColumnHeaders.Count).Width = lvVars.Width - lvVars.ColumnHeaders(lvVars.ColumnHeaders.Count).Left - 100
     
@@ -566,8 +619,11 @@ Public Sub SyncUI()
     
     Dim curLine As Long
     
+    scivb.DeleteMarker lastEIP, 1
+    
     curLine = GetCurrentDebugLine(hDebugObject)
-    Me.Caption = "Current Line: " & curLine
+    scivb.SetMarker curLine, 1
+    lastEIP = curLine
     
     scivb.GotoLine curLine
     scivb.HighLightActiveLine = True

@@ -225,15 +225,15 @@ CUT*/
     }
 
   if( TYPE(v) == VTYPE_ARRAY ){
-    sprintf(buf,"ARRAY@#%08X",LONGVALUE(v));
-    slen = strlen(buf);
-    if( _cbBuffer < slen+1 ){
-      *cbBuffer += slen - _cbBuffer;
-      return 1;
-      }
-    strcpy(s,buf);
-    return 0;
-    }
+	  sprintf(buf,"ARRAY(%d to %d) @ 0x%08X", ARRAYLOW(v), ARRAYHIGH(v), v);
+	  slen = strlen(buf);
+	  if( _cbBuffer < slen+1 ){
+	    *cbBuffer += slen - _cbBuffer;
+	    return 1;
+	  }
+	  strcpy(s,buf);
+	  return 0;
+  }
 
   if( TYPE(v) == VTYPE_STRING ){
     /* calculate the printed size */
@@ -358,6 +358,71 @@ int SPrintVarByName(pDebuggerObject pDO, pExecuteObject pEo, char *pszName, char
        }
      }
   return 2;
+}
+
+//can return null..
+VARIABLE __stdcall dbg_VariableFromName(pDebuggerObject pDO, char *pszName)
+{
+#pragma EXPORT
+
+  pExecuteObject pEo;
+  pUserFunction_t pUF;
+  long i;
+  char *s;
+  VARIABLE v;
+
+  s = pszName;
+  while( *s ){
+    if( isupper(*s) )*s = tolower(*s);
+	if( *s == '\n' || *s == '\r' ){
+	  *s = (char)0;
+	  break;
+	  }
+    s++;
+    }
+  while( isspace(*pszName) )pszName++;
+
+  pEo = pDO->pEo;
+
+  if( pDO->StackListPointer && pDO->StackListPointer->pUF ){
+    pUF = pDO->StackListPointer->pUF;
+    for( i=0 ; i < pUF->cLocalVariables ; i++ ){
+		if( !strcmp(pUF->ppszLocalVariables[i],pszName) ){
+			v = ARRAYVALUE(pDO->StackListPointer->LocalVariables,i+1);
+			return v;
+		}
+      }
+  }
+
+  for( i=0 ; i < pDO->cGlobalVariables ; i++ ){
+     if( pDO->ppszGlobalVariables[i] && !strcmp(pDO->ppszGlobalVariables[i],pszName) ){
+		 if( pEo->GlobalVariables ){
+			v = ARRAYVALUE(pEo->GlobalVariables,i+1);
+			return v;
+		 }
+     }
+  }
+
+  if( pDO->StackListPointer && pDO->StackListPointer->pUF ){
+    pUF = pDO->StackListPointer->pUF;
+    for( i=0 ; i < pUF->cLocalVariables ; i++ ){
+		if( !strncmp(pUF->ppszLocalVariables[i],"main::",6) && !strcmp(pUF->ppszLocalVariables[i]+6,pszName) ){
+			v = ARRAYVALUE(pDO->StackListPointer->LocalVariables,i+1);
+			return v;
+		}
+    }
+  }
+
+  for( i=0 ; i < pDO->cGlobalVariables ; i++ ){
+     if( pDO->ppszGlobalVariables[i] && !strncmp(pDO->ppszGlobalVariables[i],"main::",6) && !strcmp(pDO->ppszGlobalVariables[i]+6,pszName) ){
+		 if( pEo->GlobalVariables ){
+			v = ARRAYVALUE(pEo->GlobalVariables,i+1);
+			return v;
+		 }
+     }
+   }
+
+  return NULL;
 }
 
 
@@ -652,33 +717,7 @@ int vb_dbg_preproc(pPrepext pEXT,long *pCmd, void *p)
 		      if( *s == '\n' || *s == '\r' )*s = (char)0;
 		      s++;
 		      }
-        /* check for the listen port definition * /
-        /* REM DBGLISTEN 127.0.0.1:6647         * /
-        s = pDO->SourceLines[i].line;
-        do{
-          while( *s && isspace(*s) )s++;/* ignore spaces at the start of the line * /
-          if( strnicmp(s,"rem",3) )break;
-          s += 3;
-          if( ! isspace(*s) )break;
-          while( isspace(*s) )s++;
-          if( strnicmp(s,"dbglisten",9) )break;
-          s += 9;
-          if( ! isspace(*s) )break;
-          while( isspace(*s) )s++;
-          
-          pDO->pszBindIP = pEXT->pST->Alloc(strlen(s)+1,pEXT->pMemorySegment);
-          if( pDO->pszBindIP == NULL )return 1;
-          strcpy(pDO->pszBindIP,s);
-          s =  pDO->pszBindIP;
-          /* seek forward to the : separating the IP address and the port number * /
-          while( *s && *s != ':' )s++;
-          if( *s == ':' ){
-            *s = (char)0; /* terminate the ip address* /
-            s++;
-            pDO->iPort = atoi(s); /* convert the string to int * /
-            }
-        }while(0);
-		*/
+        
         pDO->SourceLines[i].szFileName = AllocFileName(pEXT,Result->szFileName);
         pDO->SourceLines[i].lLineNumber = Result->lLineNumber;
         pDO->SourceLines[i].BreakPoint = 0;
@@ -873,50 +912,19 @@ void scomm_List(pDebuggerObject pDO, long lStart, long lEnd, long lThis)
 }
 
 /*
-
-get line number range from a string
-
-This is an auxilliary function, which is used by the debugger.
-This simply gets the two numbers from the debugger command and returns
-them in the variables pointed by T<plStart> and T<plEnd>.
-
-For example the command T<B 2-5> removes breakpoints from lines 2,3,4 and 5.
-In this case this function will return the numbers 2 and 5.
-
-If the first number is missing it is returned as 0. If there is first number
-but the last one is missing it is returned 999999999.
-
-If there is first number but it is not followed by '-' then the T<*plEnd> will
-be set to zero.
-
-Finally if there are no numbers on the command line then bot variables are set zero.
-*/
-
-void GetRange(char *pszBuffer, long *plStart, long *plEnd)
+int __stdcall dbg_isValidSourceLine(pDebuggerObject pDO, int line)
 {
-/*
-Arguments:
-	pszBuffer the debugger command argument string to get the numbers from
-	plStart pointer to the long that will hold the value of the first number
-	plEnd pointer to the long that will hold the value of the second number following the dash character
+  long i;
+   
+
+  if( line < 1 )return 0;
+
+  for( i = 1 ; i < pDO->cSourceLines  ; i++ ){
+
+  }
+
+}
 */
-  *plStart = *plEnd = 0;
-  while( isspace(*pszBuffer) )pszBuffer++;
-  if( !*pszBuffer )return;
-  *plStart = atol(pszBuffer);
-  while( isdigit(*pszBuffer))pszBuffer++;
-  while( isspace(*pszBuffer) )pszBuffer++;
-  if( *pszBuffer == '-' ){
-    pszBuffer++;
-    *plEnd = 999999999;/* something large, very large */
-  }
-  while( isspace(*pszBuffer) )pszBuffer++;
-  if( !*pszBuffer )return;
-  *plEnd = atol(pszBuffer);
-  return;
-  }
-
-
 
 
 /*
@@ -932,6 +940,12 @@ void scomm_Message(pDebuggerObject pDO, char *pszMessage)
   vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 }
 
+void _stdcall dbg_RunToLine(pDebuggerObject pDO, int line)
+{
+#pragma EXPORT
+	pDO->Run2CallStack = -1; /* any level deep */
+	pDO->Run2Line = line;    				 
+}
 
 int _stdcall dbg_LineCount(pDebuggerObject pDO)
 {
@@ -1038,24 +1052,17 @@ int MyExecBefore(pExecuteObject pEo)
 						return 0; /* step one step forward but remain on the same level */
 
 			  case 'r':
-						 pDO->Run2CallStack = -1;/* any level deep */
-						 //if( ! *lbuf )
-						 //{
-							pDO->Run2Line = -1;/* a nonzero value that can not be a valid line number */
-							return 0;
-						 //}
-						 //GetRange(lbuf,&i,&j);
-						 //pDO->Run2Line = i;
-						 //return 0;
+						pDO->Run2CallStack = -1;/* any level deep */
+						pDO->Run2Line = -1;/* a nonzero value that can not be a valid line number */
+						return 0;  
 
 			  case 'R':
 						 pDO->Run2CallStack = pDO->CallStackDepth; /* on the current level */
 						 pDO->Run2Line = -1; /* a nonzero value that can not be a valid line number */
 						 return 0;
 						  
-						 //GetRange(lbuf,&i,&j);
-						 //pDO->Run2Line = i;
-						 //return 0;
+			  case 'm': return 0; //manually set (like RunToLine export) just return..
+						 
 
 		  } //end switch
     } //end while
@@ -1063,14 +1070,14 @@ int MyExecBefore(pExecuteObject pEo)
 	return 0;
 }
 
-
+/*
 void cmd_getLines(pDebuggerObject pDO, char* cBuffer, int cbBuffer)
 {
 	long lStart,lEnd,lThis;
 
 	lThis = GetCurrentDebugLine(pDO);
 	
-	/*if there are arguments: 1 command char, 2 new line */
+	/*if there are arguments: 1 command char, 2 new line * /
 	if( cbBuffer > 2 )
 	{
 	  GetRange(cBuffer+1,&lStart,&lEnd);
@@ -1078,6 +1085,7 @@ void cmd_getLines(pDebuggerObject pDO, char* cBuffer, int cbBuffer)
 	}
 	else scomm_WeAreAt(pDO,lThis);
 }
+*/
 
 
 /*
@@ -1090,6 +1098,45 @@ int __stdcall dbg_getVarVal(pDebuggerObject pDO, char* varName, char* buf, int *
 {
 #pragma EXPORT
 	return SPrintVarByName(pDO,pDO->pEo, varName, buf, &bufsz);
+}
+
+void __stdcall dbg_EnumAryVarsByPointer(pDebuggerObject pDO, VARIABLE v)
+{
+#pragma EXPORT
+	VARIABLE v2=NULL;
+	int low, high, i;
+	unsigned long sz;
+    char cBuffer[2050];
+    char buf[1025];
+
+	if(v==NULL) return;
+	if(TYPE(v) != VTYPE_ARRAY) return;
+	
+	low = ARRAYLOW(v);
+	high = ARRAYHIGH(v);
+
+	for(i = low; i <= high; i++){
+		v2 = v->Value.aValue[i-low]; //even if lbound(v) = 3 first element is at .aValue[0] 
+		if(v2 != NULL){
+			sz = 1024;
+			SPrintVariable(pDO, v2, buf, &sz);
+			sprintf(cBuffer,"Array-Variable:%d:%d:%s", i, TYPE(v2), buf);
+			vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
+		}
+	}
+}
+
+void __stdcall dbg_EnumAryVarsByName(pDebuggerObject pDO, char* varName)
+{
+#pragma EXPORT
+	VARIABLE v, v2=NULL;
+	int low, high, i;
+	unsigned long sz;
+    char cBuffer[2050];
+    char buf[1025];
+
+	v = dbg_VariableFromName(pDO, varName);
+	dbg_EnumAryVarsByPointer(pDO, v);
 }
 
 void __stdcall dbg_EnumVars(pDebuggerObject pDO)

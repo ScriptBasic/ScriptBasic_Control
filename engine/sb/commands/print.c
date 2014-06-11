@@ -57,20 +57,67 @@ COMMAND(PRINTNL)
 #if NOTIMP_PRINTNL
 NOTIMPLEMENTED;
 #else
-
+  NODE nItem;
+  VARIABLE ItemResult;
+  char *s;
+  unsigned long slen;
   void (*fpExtOut)(char, void *);
- // void (__stdcall *vbStdOut)(char*, int);
+  char buffer[40];
 
   fpExtOut = pEo->fpStdouFunction;
-  //vbStdOut = pEo->fpVbStdOutFunction;
+ 
+  nItem = PARAMETERNODE;
+  while( nItem ){
+		ItemResult = _EVALUATEEXPRESSION_A(CAR(nItem));
+		ASSERTOKE;
 
-  if(vbStdOut){
-	  vbStdOut(cb_output, "\n",1);
-  }else{
-	  if( fpExtOut )
-		fpExtOut('\n',pEo->pEmbedder);
-	  else
-		printf("\n");
+		if( memory_IsUndef(ItemResult) )
+		  strcpy(buffer,"undef\n");
+		else
+		{
+			switch( TYPE(ItemResult) ){
+			  case VTYPE_LONG:
+					sprintf(buffer,"%ld\n",LONGVALUE(ItemResult));
+					break;
+
+			  case VTYPE_DOUBLE:
+					sprintf(buffer,"%le\n",DOUBLEVALUE(ItemResult));
+					break;
+
+			  case VTYPE_STRING:
+					s = STRINGVALUE(ItemResult);
+					slen = STRLEN(ItemResult);
+					if(vbStdOut){
+						vbStdOut(cb_output, s, slen);
+					}else{
+						while( slen -- )
+						  if( fpExtOut )
+							fpExtOut(*s++,pEo->pEmbedder);
+						  else
+							putc(((int)*s++),stdout);
+					}
+					  *buffer = (char)0;/* do not print anything afterwards */
+					break;
+
+			  case VTYPE_ARRAY:
+					sprintf(buffer,"ARRAY@#%08X\n",LONGVALUE(ItemResult));
+					break;
+			  }
+		}
+
+		s = buffer;
+		if(vbStdOut){
+			slen = strlen(s);
+			if(slen > 0) vbStdOut(cb_output, s, slen);
+		}else{
+			while( *s )
+			  if( fpExtOut )
+				fpExtOut(*s++,pEo->pEmbedder);
+			  else
+				putc(((int)*s++),stdout);
+		}
+
+		nItem = CDR(nItem);
   }
 
 #endif
@@ -102,61 +149,63 @@ NOTIMPLEMENTED;
   char *s;
   unsigned long slen;
   void (*fpExtOut)(char, void *);
-  //void (__stdcall *vbStdOut)(char*, int);
-
   char buffer[40];
 
   fpExtOut = pEo->fpStdouFunction;
-  //vbStdOut = pEo->fpVbStdOutFunction;
-
+ 
   nItem = PARAMETERNODE;
   while( nItem ){
-    ItemResult = _EVALUATEEXPRESSION_A(CAR(nItem));
-    ASSERTOKE;
+		ItemResult = _EVALUATEEXPRESSION_A(CAR(nItem));
+		ASSERTOKE;
 
-    if( memory_IsUndef(ItemResult) )
-      strcpy(buffer,"undef");
-    else
-    switch( TYPE(ItemResult) ){
-      case VTYPE_LONG:
-        sprintf(buffer,"%ld",LONGVALUE(ItemResult));
-        break;
-      case VTYPE_DOUBLE:
-        sprintf(buffer,"%le",DOUBLEVALUE(ItemResult));
-        break;
-      case VTYPE_STRING:
-        s = STRINGVALUE(ItemResult);
-        slen = STRLEN(ItemResult);
+		if( memory_IsUndef(ItemResult) )
+		  strcpy(buffer,"undef");
+		else
+		{
+			switch( TYPE(ItemResult) ){
+			  case VTYPE_LONG:
+					sprintf(buffer,"%ld",LONGVALUE(ItemResult));
+					break;
+
+			  case VTYPE_DOUBLE:
+					sprintf(buffer,"%le",DOUBLEVALUE(ItemResult));
+					break;
+
+			  case VTYPE_STRING:
+					s = STRINGVALUE(ItemResult);
+					slen = STRLEN(ItemResult);
+					if(vbStdOut){
+						vbStdOut(cb_output, s, slen);
+					}else{
+						while( slen -- )
+						  if( fpExtOut )
+							fpExtOut(*s++,pEo->pEmbedder);
+						  else
+							putc(((int)*s++),stdout);
+					}
+					  *buffer = (char)0;/* do not print anything afterwards */
+					break;
+
+			  case VTYPE_ARRAY:
+					sprintf(buffer,"ARRAY@#%08X",LONGVALUE(ItemResult));
+					break;
+			  }
+		}
+
+		s = buffer;
 		if(vbStdOut){
-			vbStdOut(cb_output, s, slen);
+			slen = strlen(s);
+			if(slen > 0) vbStdOut(cb_output, s, slen);
 		}else{
-			while( slen -- )
+			while( *s )
 			  if( fpExtOut )
 				fpExtOut(*s++,pEo->pEmbedder);
 			  else
 				putc(((int)*s++),stdout);
 		}
-          *buffer = (char)0;/* do not print anything afterwards */
-        break;
-      case VTYPE_ARRAY:
-        sprintf(buffer,"ARRAY@#%08X",LONGVALUE(ItemResult));
-        break;
-      }
 
-    s = buffer;
-	if(vbStdOut){
-		slen = strlen(s);
-		if(slen > 0) vbStdOut(cb_output, s, slen);
-	}else{
-		while( *s )
-		  if( fpExtOut )
-			fpExtOut(*s++,pEo->pEmbedder);
-		  else
-			putc(((int)*s++),stdout);
-	}
-
-    nItem = CDR(nItem);
-}
+		nItem = CDR(nItem);
+  }
 
 
 #endif
