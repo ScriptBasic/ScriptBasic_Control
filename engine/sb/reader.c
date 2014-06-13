@@ -484,6 +484,13 @@ CUT*/
             }
           }
 
+		/* added dzzie - allow embedded clients option to set a default include dir without using compiled config file..*/
+		if( fp==NULL && pszDefaultIncludeDir != NULL){
+			strcpy(szBuffer,pszDefaultIncludeDir);
+            strcat(szBuffer,file_name);
+			fp = pRo->fpOpenFile(szBuffer,pRo->pFileHandleClass);  /* open a file for reading (just for test: can we?) */
+		} 
+
         if( fp == NULL ){/* if there was no file openable during the search */
           REPORT(p->szFileName ,p->lLineNumber ,READER_ERROR_INCLUDE_FILE,NULL);
           goto NotInclude;

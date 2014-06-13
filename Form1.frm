@@ -15,7 +15,7 @@ Begin VB.Form Form1
    Begin MSComctlLib.ListView lvVars 
       Height          =   1815
       Left            =   90
-      TabIndex        =   10
+      TabIndex        =   7
       Top             =   9630
       Width           =   7530
       _ExtentX        =   13282
@@ -54,9 +54,9 @@ Begin VB.Form Form1
    Begin VB.CommandButton Command1 
       Caption         =   "Command1"
       Height          =   510
-      Left            =   9990
-      TabIndex        =   9
-      Top             =   7335
+      Left            =   12015
+      TabIndex        =   6
+      Top             =   45
       Width           =   1230
    End
    Begin VB.TextBox txtDebug 
@@ -69,28 +69,13 @@ Begin VB.Form Form1
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Height          =   1455
-      Left            =   5445
+      Height          =   1725
+      Left            =   8595
       MultiLine       =   -1  'True
       ScrollBars      =   3  'Both
-      TabIndex        =   8
-      Top             =   6660
-      Width           =   4245
-   End
-   Begin VB.CommandButton cmdManual 
-      Caption         =   "Command1"
-      Height          =   375
-      Left            =   12825
-      TabIndex        =   7
-      Top             =   6660
-      Width           =   960
-   End
-   Begin VB.TextBox txtCmd 
-      Height          =   285
-      Left            =   10620
-      TabIndex        =   6
-      Top             =   6705
-      Width           =   1995
+      TabIndex        =   5
+      Top             =   6750
+      Width           =   5145
    End
    Begin VB.TextBox txtOut 
       BeginProperty Font 
@@ -102,13 +87,13 @@ Begin VB.Form Form1
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Height          =   2715
+      Height          =   2760
       Left            =   135
       MultiLine       =   -1  'True
       ScrollBars      =   3  'Both
       TabIndex        =   2
       Top             =   6750
-      Width           =   5190
+      Width           =   8340
    End
    Begin SCIVB_LITE.SciSimple scivb 
       Height          =   5865
@@ -222,8 +207,8 @@ Begin VB.Form Form1
       Left            =   180
       TabIndex        =   3
       Top             =   225
-      Width           =   9540
-      _ExtentX        =   16828
+      Width           =   3870
+      _ExtentX        =   6826
       _ExtentY        =   556
       ButtonWidth     =   582
       ButtonHeight    =   556
@@ -339,7 +324,7 @@ Begin VB.Form Form1
    Begin MSComctlLib.ListView lvCallStack 
       Height          =   1815
       Left            =   7695
-      TabIndex        =   11
+      TabIndex        =   8
       Top             =   9630
       Width           =   6090
       _ExtentX        =   10742
@@ -365,13 +350,12 @@ Begin VB.Form Form1
          Object.Width           =   2540
       EndProperty
    End
-   Begin VB.Label Label2 
-      Caption         =   "Cmd"
+   Begin VB.Label lblStatus 
       Height          =   285
-      Left            =   9900
-      TabIndex        =   5
-      Top             =   6750
-      Width           =   555
+      Left            =   4230
+      TabIndex        =   9
+      Top             =   270
+      Width           =   6540
    End
    Begin VB.Label Label1 
       Caption         =   "Output"
@@ -395,6 +379,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryA" (ByVal lpLibFileName As String) As Long
 Private Declare Function FreeLibrary Lib "kernel32" (ByVal hLibModule As Long) As Long
+Private Declare Function GetModuleHandle Lib "kernel32" Alias "GetModuleHandleA" (ByVal lpModuleName As String) As Long
 
 
 Private Declare Function run_script Lib "sb_engine" (ByVal lpLibFileName As String, ByVal use_debugger As Long) As Long
@@ -402,10 +387,10 @@ Private Declare Sub GetErrorString Lib "sb_engine" (ByVal iErrorCode As Long, By
 Private Declare Sub SetCallBacks Lib "sb_engine" (ByVal msgProc As Long, ByVal dbgCmdProc As Long)
 
 
-
 Dim loadedFile As String
 Dim hsbLib As Long
 Dim lastEIP As Long
+Public hasImports As Boolean
 
 Const SC_MARK_CIRCLE = 0
 Const SC_MARK_ARROW = 2
@@ -420,6 +405,25 @@ Private Sub cmdManual_Click()
     MsgBox GetVariableValue(txtCmd.Text)
     
 End Sub
+
+Function isExecutableLine(lineNo As Long) As Boolean
+    Dim tmp As String
+    On Error Resume Next
+    
+    tmp = LCase(scivb.GetLineText(lineNo))
+    tmp = Trim(Replace(tmp, vbTab, Empty))
+    tmp = Replace(tmp, vbCr, Empty)
+    tmp = Replace(tmp, vbLf, Empty)
+    
+    If Len(tmp) = 0 Then GoTo fail
+    If Left(tmp, 1) = "'" Then GoTo fail 'is comment
+    If Left(tmp, 5) = "local" Then GoTo fail
+    If Left(tmp, 5) = "const" Then GoTo fail
+    
+    isExecutableLine = True
+Exit Function
+fail: isExecutableLine = False
+End Function
 
 Private Sub RefreshVariables()
     
@@ -488,7 +492,7 @@ Private Sub scivb_KeyDown(KeyCode As Long, Shift As Long)
 
     'Debug.Print KeyCode & " " & Shift
     Select Case KeyCode
-        Case vbKeyF2: ToggleBreakPoint scivb.CurrentLine
+        Case vbKeyF2: If isExecutableLine(scivb.CurrentLine) Then ToggleBreakPoint scivb.CurrentLine
         Case vbKeyF5: If running Then DebuggerCmd "R" Else ExecuteScript True
         Case vbKeyF7: DebuggerCmd "s" 'step into
         Case vbKeyF8: DebuggerCmd "S" 'step over
@@ -532,31 +536,34 @@ End Sub
 
 
 Private Sub ExecuteScript(Optional withDebugger As Boolean)
+
     Dim rv As Long
     Dim buf As String
-     
+    
+    
     txtOut.Text = Empty
     
+    'todo set scivb backcolor to grayed..
     scivb.ReadOnly = True
     If scivb.isDirty Then scivb.SaveFile loadedFile
     
     running = True
-    Form1.sbStatus.Panels(1).Text = "Running"
+    lblStatus = IIf(withDebugger, "Debugging", "Running")
     
     rv = run_script(loadedFile, IIf(withDebugger, 1, 0))
     
     If rv <> 0 Then
         buf = String(255, " ")
         Call GetErrorString(rv, buf, 255)
-        sbStatus.Panels(1).Text = "Error: " & buf
-    Else
-        sbStatus.Panels(1).Text = "Idle"
+        txtOut = "Error: " & buf
     End If
     
+    lblStatus = "Idle"
     running = False
     scivb.ReadOnly = False
     scivb.HighLightActiveLine = False
     scivb.DeleteMarker lastEIP, 1
+    If hasImports Then scivb.LoadFile loadedFile
     
 End Sub
 
@@ -564,12 +571,18 @@ Private Sub Form_Load()
         
     mnuCallStackPopup.Visible = False
     
+    Dim incDir As String, modDir As String
+        
     hsbLib = LoadLibrary(App.Path & "\engine\sb_engine.dll")
     
     If hsbLib = 0 Then
         MsgBox "Failed to load sb_engine.dll by explicit path?"
     End If
     
+    incDir = "D:\desktop\full_scriptbasic\scriptbasic\include\"
+    modDir = "D:\desktop\full_scriptbasic\scriptbasic\modules\"
+    SetConfig incDir, modDir
+
     SetCallBacks AddressOf vb_stdout, AddressOf GetDebuggerCommand
     scivb.LoadHighlighter App.Path & "\dependancies\vb.bin"
     
@@ -592,9 +605,9 @@ Private Sub Form_Load()
     
 End Sub
 
-Sub LoadFile(fpath As String)
+Sub LoadFile(fPath As String)
    
-   loadedFile = fpath
+   loadedFile = fPath
    scivb.DeleteAllMarkers
    scivb.LoadFile loadedFile
    Set breakpoints = New Collection
@@ -612,7 +625,8 @@ End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
     FreeLibrary hsbLib
-    End
+   ' FreeLibrary GetModuleHandle("scivb_lite.ocx")
+   ' FreeLibrary GetModuleHandle("scilexer.dll")
 End Sub
 
 Public Sub SyncUI()

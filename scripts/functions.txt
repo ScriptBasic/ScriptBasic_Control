@@ -1,3 +1,6 @@
+import nt.bas
+
+print nt::RegRead("HKLM\\SOFTWARE\\7-Zip\\Path"),"\n"
 
 g_a = 1
 

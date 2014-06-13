@@ -854,10 +854,10 @@ void scomm_Init(pDebuggerObject pDO)
   sprintf(cBuffer,"DEBUGGER_INIT:%d", pDO);
   vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 
-  for( i=0 ; i < pDO->cFileNames ; i++ ){
-	sprintf(cBuffer,"Source-File: %s\r\n",pDO->ppszFileNames[i]);
+  /*for( i=0 ; i < pDO->cFileNames ; i++ ){
+	sprintf(cBuffer,"Source-File: %s",pDO->ppszFileNames[i]);
     vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
-  }
+  }*/
 
 }
 
@@ -881,34 +881,31 @@ void scomm_WeAreAt(pDebuggerObject pDO,long i)
 }
 
 /*
-List the source lines from T<lStart> to T<lEnd>.
-
-The optional T<lThis> may show the caret where the actual execution
-context is.
+scripts using import statement combine the source files into one flat file.
+for debugging we need to load this flat file so our line numbers match..
 */
-void scomm_List(pDebuggerObject pDO, long lStart, long lEnd, long lThis)
+void __stdcall dbg_WriteFlatSourceFile(pDebuggerObject pDO, char* path)
 {
+#pragma EXPORT
+
   long j;
   char cBuffer[1024];
   int cbBuffer;
 
-  if( lStart < 1 )lStart = 1;
-  if( lEnd   < 1 )lEnd   = 1;
+  FILE *f = fopen(path, "wb");
+  if(f==NULL) return;
 
-  for( j = lStart-1 ; j < lEnd ; j++ ){
-		
-	    if( j >= pDO->cSourceLines )break;
+  for( j = 0 ; j < pDO->cSourceLines ; j++ )
+	 fprintf(f,"%s\r\n",pDO->SourceLines[j].line);
 
-		sprintf(cBuffer,"Break-Point: %s\r\n", pDO->SourceLines[j].BreakPoint ? "1": "0");
-		vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
+  fclose(f);
 
-		sprintf(cBuffer,"Line-Number: %u\r\n",j+1);
-		vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
+}
 
-		sprintf(cBuffer,"Line: %s\r\n",pDO->SourceLines[j].line);
-		vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
-  }
-
+int __stdcall dbg_SourceLineCount(pDebuggerObject pDO)
+{
+#pragma EXPORT
+	return pDO->cSourceLines;
 }
 
 /*
@@ -1069,24 +1066,6 @@ int MyExecBefore(pExecuteObject pEo)
     
 	return 0;
 }
-
-/*
-void cmd_getLines(pDebuggerObject pDO, char* cBuffer, int cbBuffer)
-{
-	long lStart,lEnd,lThis;
-
-	lThis = GetCurrentDebugLine(pDO);
-	
-	/*if there are arguments: 1 command char, 2 new line * /
-	if( cbBuffer > 2 )
-	{
-	  GetRange(cBuffer+1,&lStart,&lEnd);
-	  scomm_List(pDO,lStart,lEnd,lThis);
-	}
-	else scomm_WeAreAt(pDO,lThis);
-}
-*/
-
 
 /*
 return values: 

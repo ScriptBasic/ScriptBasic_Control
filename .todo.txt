@@ -1,10 +1,9 @@
 
-
+- how to handle breakpoints if file has imports and we retrieve the flatfile?
+- breakpoints should move if new lines inserted..(this may suck)
+- breakpoints should remove themselves if line deleted
 - way for host to addobject/variable
 - command: MsgBox
-- command: FileExists ?
-- callstack window
-- run to cursor?
--scivb gutterclick?
+- scivb gutterclick?
 
 

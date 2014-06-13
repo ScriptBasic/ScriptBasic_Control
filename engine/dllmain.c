@@ -9,12 +9,25 @@
 #include "errcodes.h"
 #include "vb.h"
 
+//include dir used in reader.c
+// for( cft_GetEx(pRo->pConfig,"include",&Node,&s,NULL,NULL,NULL);  
+
+//module dir used in modumana and ipreproc 
+//(493  )       if( ! cft_GetEx(pEo->pConfig,"module",&Node,&s,NULL,NULL,NULL) ){
+
 
 extern void*  vb_dbg_preproc; 
 
 #define EXPORT comment(linker, "/EXPORT:"__FUNCTION__"="__FUNCDNAME__)
 extern LPWSTR __C2W(char *szString);
 
+void __stdcall SetDefaultDirs(char* incDir, char* modDir){
+#pragma EXPORT
+	if(pszDefaultIncludeDir) free(pszDefaultIncludeDir);
+	if(pszDefaultModuleDir) free(pszDefaultModuleDir);
+	pszDefaultIncludeDir = strdup(incDir);
+	pszDefaultModuleDir  = strdup(modDir);
+}
 
 void __stdcall SetCallBacks(void* lpfnMsgHandler, void* lpfnDbgHandler){
 #pragma EXPORT
@@ -39,6 +52,7 @@ int __stdcall run_script(char* fPath, int use_debugger)
   int iError;
   char* cmdline = "";
   pSbProgram pProgram;
+  char* buf[255]; 
 
   pProgram = scriba_new(NULL,NULL);
   scriba_SetFileName(pProgram, fPath);
@@ -49,11 +63,23 @@ int __stdcall run_script(char* fPath, int use_debugger)
   }
 
   if( iError = scriba_LoadSourceProgram(pProgram) ) goto cleanup;
+
+  if(vbStdOut){
+	  sprintf(buf, "ENGINE_PRECONFIG:%d", pProgram); 
+	  vbStdOut(cb_engine, buf, strlen(buf));
+  }
+
   if( iError = scriba_Run(pProgram,cmdline) ) goto cleanup;
 	  
 
 cleanup:
   scriba_destroy(pProgram);
+
+  if(vbStdOut){
+	  sprintf(buf, "ENGINE_DESTROY:%d", pProgram); 
+	  vbStdOut(cb_engine, buf, strlen(buf));
+  }
+
   return iError;
 
 }

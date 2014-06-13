@@ -43,7 +43,7 @@ extern struct MD5_CTX;
 extern void MD5Init PROTO_LIST ((MD5_CTX *));
 extern void MD5Update PROTO_LIST((MD5_CTX *, unsigned char *, unsigned int));
 extern void MD5Final PROTO_LIST ((unsigned char [16], MD5_CTX *));
-
+extern char* pszDefaultModuleDir;
 
 #if BCC32
 extern char *_pgmptr;
@@ -488,27 +488,46 @@ CUT*/
       j++;
       }
 
-    if( (*ThisModule)->ModulePointer == NULL ){
-      /* relative file name, prepend ModulePath */
-      if( ! cft_GetEx(pEo->pConfig,"module",&Node,&s,NULL,NULL,NULL) ){
-        while( 1 ){
-          if( cft_GetEx(pEo->pConfig,NULL,&Node,&s,NULL,NULL,NULL) ){
-            /* if there are no more directories in the configuration */
-            break;
-            }
-          if( ! strcmp(cft_GetKey(pEo->pConfig,Node),"module") ){
-            if( strlen(s) + strlen((*ThisModule)->pszModuleName) > FNLEN )return COMMAND_ERROR_MODULE_LOAD;
-            strcpy(szBuffer,s);
-            strcat(szBuffer,(*ThisModule)->pszModuleName);
-            if( strlen(szBuffer) + cbDllExtension > FNLEN )return COMMAND_ERROR_MODULE_LOAD;
-            strcat(szBuffer,pszDllExtension);
-            (*ThisModule)->ModulePointer = dynlolib_LoadLibrary( szBuffer );
-            if( (*ThisModule)->ModulePointer != NULL )break;
-            }
-          Node = cft_EnumNext(pEo->pConfig,Node);
-          }
-        }
+	//added 6.13.14 dzzie for embedded clients to not have to use  compiled config..(although other default path checks exist)
+	if ( (*ThisModule)->ModulePointer == NULL && pszDefaultModuleDir != NULL )
+	{
+		if( strlen(pszDefaultModuleDir) + strlen((*ThisModule)->pszModuleName) > FNLEN )return COMMAND_ERROR_MODULE_LOAD;
+		strcpy(szBuffer,pszDefaultModuleDir);
+		strcat(szBuffer,(*ThisModule)->pszModuleName);
+
+		if(strstr((*ThisModule)->pszModuleName,".") != 0){
+			if( strlen(szBuffer) + cbDllExtension > FNLEN )return COMMAND_ERROR_MODULE_LOAD;
+			strcat(szBuffer,pszDllExtension);
+		}
+
+		(*ThisModule)->ModulePointer = dynlolib_LoadLibrary( szBuffer );
+	}
+
+    if( (*ThisModule)->ModulePointer == NULL )
+	{
+		  /* relative file name, prepend ModulePath */
+		  if( ! cft_GetEx(pEo->pConfig,"module",&Node,&s,NULL,NULL,NULL) )
+		  {
+				while( 1 )
+				{
+					  if( cft_GetEx(pEo->pConfig,NULL,&Node,&s,NULL,NULL,NULL) ){
+							/* if there are no more directories in the configuration */
+							break;
+					  }
+					  if( ! strcmp(cft_GetKey(pEo->pConfig,Node),"module") ){
+							if( strlen(s) + strlen((*ThisModule)->pszModuleName) > FNLEN )return COMMAND_ERROR_MODULE_LOAD;
+							strcpy(szBuffer,s);
+							strcat(szBuffer,(*ThisModule)->pszModuleName);
+							if( strlen(szBuffer) + cbDllExtension > FNLEN )return COMMAND_ERROR_MODULE_LOAD;
+							strcat(szBuffer,pszDllExtension);
+							(*ThisModule)->ModulePointer = dynlolib_LoadLibrary( szBuffer );
+							if( (*ThisModule)->ModulePointer != NULL )break;
+					  }
+					  Node = cft_EnumNext(pEo->pConfig,Node);
+				  }
+		  }
       }
+	
 #ifdef WIN32
     while( (*ThisModule)->ModulePointer == NULL ){
       /* On Windows as a last resort try to find the module file in the same directory as the executable is
@@ -529,8 +548,11 @@ CUT*/
       *s = (char)0;
       if( strlen(sData) + strlen((*ThisModule)->pszModuleName) + cbDllExtension > FNLEN )break;
       strcpy(s,(*ThisModule)->pszModuleName);
-      //strcat(s,pszDllExtension); //dz 5.28.14 -disabled auto appending extension onto declare imports (so we can import from hosting exe)
-      (*ThisModule)->ModulePointer = dynlolib_LoadLibrary( sData );
+
+	  //dz 5.28.14 -disabled auto appending extension onto declare imports if filename contains a dot already..(so we can import from hosting exe)
+	  if(strstr(s,".") != 0) strcat(s,pszDllExtension); 
+      
+	  (*ThisModule)->ModulePointer = dynlolib_LoadLibrary( sData );
       if( (*ThisModule)->ModulePointer != NULL )break;
       /* c:\ScriptBasic\bin\scriba.exe */
       /*                 s- ^          */

@@ -27,9 +27,15 @@ Private Declare Function dbg_isBpSet Lib "sb_engine" (ByVal hDebug As Long, ByVa
 Private Declare Sub dbg_EnumCallStack Lib "sb_engine" (ByVal hDebug As Long)
 Private Declare Sub dbg_RunToLine Lib "sb_engine" (ByVal hDebug As Long, ByVal lineNo As Long)
 
+Private Declare Sub SetDefaultDirs Lib "sb_engine" (ByRef incDir As Byte, ByRef modDir As Byte)
 
+'scripts that use import directive internally turn into one long flat script file. for debugging
+'we must dump them to file and then load them for display so line numbers line up..
+Private Declare Sub dbg_WriteFlatSourceFile Lib "sb_engine" (ByVal hDebug As Long, ByRef fPath As Byte)
+Private Declare Function dbg_SourceLineCount Lib "sb_engine" (ByVal hDebug As Long) As Long
+'
 
-
+Public hProgram As Long
 Public hDebugObject As Long     'handle to the current debug object - pDO
 Public readyToReturn As Boolean
 Public dbg_cmd As String
@@ -37,11 +43,13 @@ Public running As Boolean
 Public variables As New Collection 'of CVariable
 Public breakpoints As New Collection 'of CBreakPoint
 Public callStack As New Collection 'of CCallStack
+Public fso As New CFileSystem2
 
 Enum cb_type
     cb_output = 0
     cb_dbgout = 1
     cb_debugger = 2
+    cb_engine = 3
 End Enum
 
 Enum sb_VarTypes
@@ -53,6 +61,24 @@ Enum sb_VarTypes
     VTYPE_REF = 4
     VTYPE_UNDEF = 5
 End Enum
+
+Function LoadFlatFile() As Boolean
+    
+    Dim tmp As String
+    Dim b() As Byte
+    
+    tmp = fso.GetFreeFileName(Environ("temp"))
+    b() = StrConv(tmp & Chr(0), vbFromUnicode)
+    dbg_WriteFlatSourceFile hDebugObject, b(0)
+    
+    If fso.FileExists(tmp) Then
+        Form1.hasImports = True
+        Form1.scivb.ReadOnly = False
+        LoadFlatFile = Form1.scivb.LoadFile(tmp)
+        Form1.scivb.ReadOnly = True
+    End If
+    
+End Function
 
 Public Sub RunToLine(lineNo As Long)
     dbg_RunToLine hDebugObject, lineNo
@@ -148,6 +174,17 @@ Public Sub DebuggerCmd(cmd As String)
     readyToReturn = True
 End Sub
 
+Public Sub SetConfig(includeDir As String, moduleDir As String)
+    
+    Dim i() As Byte, m() As Byte
+    
+    i() = StrConv(includeDir & Chr(0), vbFromUnicode)
+    m() = StrConv(moduleDir & Chr(0), vbFromUnicode)
+     
+    SetDefaultDirs i(0), m(0)
+    
+End Sub
+
 Public Function EnumArrayVariables(varNameOrPointer As Variant) As Collection
     
     Dim v() As Byte
@@ -227,8 +264,6 @@ Public Function GetDebuggerCommand(ByVal buf As Long, ByVal sz As Long) As Long
         MsgBox "Shouldnt happen!"
     End If
     
-    Form1.sbStatus.Panels(1).Text = "Running"
-    
 End Function
 
 Public Sub HandleDebugMessage(msg As String)
@@ -251,6 +286,7 @@ Public Sub HandleDebugMessage(msg As String)
         Case "DEBUGGER_INIT" 'DEBUGGER_INIT: hDebugObj
             'reint structures here
             hDebugObject = CLng(cmd(1))
+            If Form1.scivb.DirectSCI.GetLineCount <> dbg_SourceLineCount(hDebugObject) Then LoadFlatFile
             InitDebuggerBpx
             handled = True
             
@@ -287,6 +323,8 @@ Public Sub HandleDebugMessage(msg As String)
             variables.Add v
             handled = True
 
+'        Case "Source-File" 'this just tells us loaded files on start, not when the executeion changes to a diff file..
+           
     'Source-File: %s\r\n
     'Current-Line: %u\r\n
     'Break-Point: %s\r\n = 1/0
@@ -315,6 +353,8 @@ Public Sub vb_stdout(ByVal t As cb_type, ByVal lpMsg As Long, ByVal sz As Long)
     
     If t = cb_debugger Then
         HandleDebugMessage msg
+    ElseIf t = cb_engine Then
+        
     Else
         If t = cb_dbgout Then msg = "DBG> " & msg
         With Form1.txtOut
@@ -325,3 +365,37 @@ Public Sub vb_stdout(ByVal t As cb_type, ByVal lpMsg As Long, ByVal sz As Long)
     End If
     
 End Sub
+
+Private Sub HandleEngineMessage(msg As String)
+    On Error Resume Next
+    Dim tmp() As String
+    
+    tmp = Split(msg, ":")
+    If tmp(0) = "ENGINE_PRECONFIG" Then
+        hProgram = CLng(tmp(1))
+    ElseIf tmp(0) = "ENGINE_DESTROY" Then
+        hProgram = 0
+    End If
+    
+End Sub
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

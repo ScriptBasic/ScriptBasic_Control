@@ -105,6 +105,9 @@ typedef struct _SbData {
 # endif
 #endif
 
+extern char* pszDefaultIncludeDir; //so embedded clients can set a default include dir at runtime without compiled config..
+extern char* pszDefaultModuleDir;
+
 /*FUNDEF*/
 
 SCRIBA_MAIN_LIBSPEC pSbProgram scriba_new(void * (*maf)(size_t),

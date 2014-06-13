@@ -1,9 +1,10 @@
 Type=Exe
-Form=Form1.frm
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\WINDOWS\system32\stdole2.tlb#OLE Automation
 Object={FBE17B58-A1F0-4B91-BDBD-C9AB263AC8B0}#78.0#0; scivb_lite.ocx
-Module=Module1; Module1.bas
 Object={831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0; MSCOMCTL.OCX
+Reference=*\G{DDC88AC2-2723-4C1B-9D61-C4F4D7CF5375}#2.7#0#..\libs\vbDevKit\vbDevKit.dll#Vb Developers Library From Sandsprite.com
+Form=Form1.frm
+Module=Module1; Module1.bas
 Class=CVariable; CVariable.cls
 Class=CBreakpoint; ClBreakpoint.cls
 Class=cCallStack; CCallStack.cls
