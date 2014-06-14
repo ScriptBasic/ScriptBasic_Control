@@ -1,0 +1,15 @@
+import com.inc
+
+'you can load objects either by ProgID or CLSID
+'obj = CreateObject("{96749377-3391-11D2-9EE3-00C04F797396}")
+
+obj = CreateObject("SAPI.SpVoice") 
+
+if obj = 0 then 
+	print "CreateObject failed!\n"
+else
+	CallByName(obj, "rate", VbLet, 2)
+	CallByName(obj, "volume", VbLet, 60)
+	CallByName(obj, "speak", VbMethod, "Hello from Script Basic!")
+	ReleaseObject(obj)
+end if 
