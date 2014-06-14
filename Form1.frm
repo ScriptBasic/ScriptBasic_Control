@@ -373,6 +373,21 @@ Begin VB.Form Form1
       Top             =   6525
       Width           =   1860
    End
+   Begin VB.Menu mnuFile 
+      Caption         =   "File"
+      Begin VB.Menu mnuOpen 
+         Caption         =   "Open"
+      End
+      Begin VB.Menu mnuSave 
+         Caption         =   "Save"
+      End
+      Begin VB.Menu mnuSpacer 
+         Caption         =   "-"
+      End
+      Begin VB.Menu mnuOptions 
+         Caption         =   "Options"
+      End
+   End
    Begin VB.Menu mnuCallStackPopup 
       Caption         =   "mnuCallStackPopup"
       Begin VB.Menu mnuExecuteTillReturn 
@@ -403,6 +418,11 @@ Public hasImports As Boolean
 Const SC_MARK_CIRCLE = 0
 Const SC_MARK_ARROW = 2
 'http://www.scintilla.org/aprilw/SciLexer.bas
+'
+'if we subclass scivb.sciHWND we can use Dwelltime for mouse over variable popups, and
+'we can capture gutterclick events to set breakpoints..then if i like it enough, I can
+'break compatability on the ocx to add them in permanent if need be..or just keep as external
+'extension module..
 
 Dim selCallStackItem As ListItem
 Dim selVariable As ListItem
@@ -499,6 +519,42 @@ Private Sub mnuExecuteTillReturn_Click()
     MsgBox "todo: disable all breakpoints,run to line selCallStackItem.text + 1, reenable breakpoints", vbInformation
 End Sub
 
+ 
+Private Sub mnuOpen_Click()
+    Dim f As String
+    f = dlg.OpenDialog(AllFiles)
+    If Len(f) = 0 Then Exit Sub
+    LoadFile f
+End Sub
+
+
+
+Private Sub mnuOptions_Click()
+    frmOptions.Show 1, Me
+End Sub
+
+Private Sub mnuSave_Click()
+    scivb.SaveFile loadedFile
+End Sub
+
+Private Sub scivb_DoubleClick()
+    Dim word As String
+    word = scivb.CurrentWord
+    If Len(word) < 20 Then
+        Me.Caption = "  " & scivb.hilightWord(word, , vbTextCompare) & " instances of '" & word & " ' found"
+    End If
+End Sub
+
+Private Sub scivb_MouseUp(Button As Integer, Shift As Integer, X As Long, Y As Long)
+    If scivb.SelLength > 0 And scivb.SelLength < 20 Then
+        Dim word As String
+        word = scivb.SelText
+        If Len(word) < 20 Then
+            Me.Caption = "  " & scivb.hilightWord(word, , vbTextCompare) & " instances of '" & word & " ' found"
+        End If
+    End If
+End Sub
+
 Private Sub scivb_KeyDown(KeyCode As Long, Shift As Long)
 
     'Debug.Print KeyCode & " " & Shift
@@ -512,24 +568,40 @@ Private Sub scivb_KeyDown(KeyCode As Long, Shift As Long)
     
 End Sub
 
-'h help
-'s step one line, or just press return on the line
-'S step one line, do not step into functions or subs
-'o step until getting out of the current function (if you stepped into but changed your mind)
-'? var  print the value of a variable
-'u step one level up in the stack
-'d step one level down in the stack (for variable printing)
-'D step down in the stack to current execution depth
-'l [n-m] list the source lines
-'r [n] run to line n
-'R [n] run to line n but do not stop in recursive function call
-'b [n] set breakpoint on the line n or the current line
-'B [n-m] remove breakpoints from lines
-'q quit the program
+Private Sub scivb_KeyUp(KeyCode As Long, Shift As Long)
+
+    Dim curWord As String
+    Dim txt As String
+    Dim curPos As Long
+    Dim prevChar As String
+    
+    If KeyCode = 186 Then
+        curPos = scivb.GetCaretInLine()
+        txt = scivb.GetLineText(scivb.CurrentLine)
+
+        If curPos < 3 Then Exit Sub
+        prevChar = Mid(txt, curPos - 1, 1)
+        If prevChar <> ":" Then Exit Sub
+        
+        scivb.GotoCol curPos - 2
+        curWord = scivb.CurrentWord
+        scivb.GotoCol curPos
+        
+        If curWord = "nt" Then
+
+            scivb.ShowAutoComplete ":RegRead :RegDel :RegWrite :MsgBox :ShutDown :ListProcesses :StartService :StopService :PauseService :ContinueService :HardLink"
+
+        End If
+    End If
+
+
+End Sub
+
+
 
 Private Sub tbarDebug_ButtonClick(ByVal Button As MSComctlLib.Button)
 
-    Select Case Button.Key
+    Select Case Button.key
         Case "Execute":   If running Then DebuggerCmd "R" Else ExecuteScript
         Case "Run":       If running Then DebuggerCmd "R" Else ExecuteScript True
         Case "Stop":      DebuggerCmd "q"
@@ -581,21 +653,18 @@ End Sub
 Private Sub Form_Load()
     
     mnuCallStackPopup.Visible = False
-    
-    Dim incDir As String, modDir As String
-        
-    hsbLib = LoadLibrary(App.Path & "\engine\sb_engine.dll")
+    hsbLib = LoadLibrary(App.path & "\engine\sb_engine.dll")
     
     If hsbLib = 0 Then
         MsgBox "Failed to load sb_engine.dll by explicit path?"
     End If
     
-    incDir = "D:\desktop\full_scriptbasic\scriptbasic\include\"
-    modDir = "D:\desktop\full_scriptbasic\scriptbasic\modules\"
-    SetConfig incDir, modDir
+    includeDir = GetMySetting("includeDir", App.path & "\include\")
+    moduleDir = GetMySetting("moduleDir", App.path & "\modules\")
+    SetConfig includeDir, moduleDir
 
     SetCallBacks AddressOf vb_stdout, AddressOf GetDebuggerCommand, AddressOf HostResolver
-    scivb.LoadHighlighter App.Path & "\dependancies\vb.bin"
+    scivb.LoadHighlighter App.path & "\dependancies\vb.bin"
     
     scivb.DirectSCI.HideSelection False
     scivb.DirectSCI.MarkerDefine 2, SC_MARK_CIRCLE
@@ -606,17 +675,20 @@ Private Sub Form_Load()
     scivb.DirectSCI.MarkerSetFore 1, vbBlack 'current eip
     scivb.DirectSCI.MarkerSetBack 1, vbYellow
   
-  
     lvCallStack.ColumnHeaders(2).Width = lvCallStack.Width - lvCallStack.ColumnHeaders(2).Left - 100
     lvVars.ColumnHeaders(lvVars.ColumnHeaders.Count).Width = lvVars.Width - lvVars.ColumnHeaders(lvVars.ColumnHeaders.Count).Left - 100
     
     'App.Path & "\scripts\com_voice_test.sb"
     'LoadFile App.Path & "\scripts\functions.txt"
     
-    AddObject "Form1", Me
-    AddString "test", "this is my string from vb!"
-    LoadFile App.Path & "\scripts\GetHostObject.sb"
+    'AddObject "Form1", Me
+    'AddString "test", "this is my string from vb!"
+    'LoadFile App.Path & "\scripts\GetHostObject.sb"
     
+    scivb.DirectSCI.AutoCSetIgnoreCase True
+    scivb.DisplayCallTips = True
+    Call scivb.LoadCallTips(App.path & "\dependancies\calltips.txt")
+    LoadFile App.path & "\scripts\importNT.sb"
     
 End Sub
 
@@ -639,6 +711,8 @@ Private Sub Form_Resize()
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
+    Call SaveMySetting("includeDir", includeDir)
+    Call SaveMySetting("moduleDir", moduleDir)
     FreeLibrary hsbLib
 End Sub
 

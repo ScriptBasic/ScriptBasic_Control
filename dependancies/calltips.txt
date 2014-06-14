@@ -1,0 +1,13 @@
+RegRead(string regpath)
+RegDel(string regpath)
+RegWrite(string regpath)
+MsgBox("Text","Caption" [,"buttons","style",defbutton])
+ShutDown( "machine","message", timeout, force, reboot)
+ListProcesses(out Array ps[0 tp 8])
+StartService("Service name")
+StopService("Service name")
+PauseService("Service name")
+ContinueService("Service name")
+HardLink("existing file","new filename")
+ 
+

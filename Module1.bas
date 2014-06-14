@@ -1,6 +1,6 @@
 Attribute VB_Name = "Module1"
 Public Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, source As Any, ByVal Length As Long)
-Private Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
+Public Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 
 'get the currently executing line number
 Public Declare Function GetCurrentDebugLine Lib "sb_engine" (ByVal hDebug As Long) As Long
@@ -39,7 +39,11 @@ Public dbg_cmd As String
 Public running As Boolean
 Public variables As New Collection 'of CVariable
 Public callStack As New Collection 'of CCallStack
-Public fso As New CFileSystem2
+
+Public includeDir As String, moduleDir As String
+
+Global fso As New CFileSystem2
+Global dlg As New CCmnDlg
 
 Enum cb_type
     cb_output = 0
@@ -89,26 +93,26 @@ Public Function EnumCallStack() As Collection
     
 End Function
 
-Public Function VariableTypeToString(x As sb_VarTypes) As String
+Public Function VariableTypeToString(X As sb_VarTypes) As String
 
     types = Array("LONG", "DOUBLE", "STRING", "ARRAY", "REF", "UNDEF")
     
-    If x < 0 Or x > 5 Then
+    If X < 0 Or X > 5 Then
         VariableTypeToString = "???"
     Else
-        VariableTypeToString = LCase(types(x))
+        VariableTypeToString = LCase(types(X))
     End If
     
 End Function
 
 Public Function VariableType(varName As String) As String
     
-    Dim x  As sb_VarTypes
+    Dim X  As sb_VarTypes
     Dim v() As Byte
     
     v() = StrConv(varName & Chr(0), vbFromUnicode)
-    x = dbg_VarTypeFromName(hDebugObject, v(0))
-    VariableType = VariableTypeToString(x)
+    X = dbg_VarTypeFromName(hDebugObject, v(0))
+    VariableType = VariableTypeToString(X)
     
 End Function
 
@@ -272,7 +276,7 @@ Public Sub HandleDebugMessage(msg As String)
             
         Case "Call-Stack"
             Set c = New cCallStack
-            c.index = callStack.Count
+            c.Index = callStack.Count
             c.lineNo = CLng(cmd(1))
             c.func = cmd(2)
             callStack.Add c
@@ -280,7 +284,7 @@ Public Sub HandleDebugMessage(msg As String)
             
         Case "Array-Variable" 'Array-Variable:%d:%d:%s , index, varType, buf);
             Set v = New CVariable
-            v.index = CLng(cmd(1))
+            v.Index = CLng(cmd(1))
             v.varType = VariableTypeToString(CLng(cmd(2)))
             v.value = cmd(3) 'if is array then aryPointer will be parsed from value..
             variables.Add v
