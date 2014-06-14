@@ -1,0 +1,19 @@
+declare sub GetHostObject alias "GetHostObject" lib "sb_engine.dll"
+declare sub GetHostString alias "GetHostString" lib "sb_engine.dll"
+declare sub CallByName alias "CallByName" lib "sb_engine.dll"
+
+const VbGet = 2
+const VbLet = 4
+const VbMethod = 1
+const VbSet = 8
+
+obj = GetHostObject("Form1")
+
+if obj = 0 then 
+	print "GetHostObject failed! Make sure host called AddObject\n"
+else
+	CallByName(obj, "caption", VbLet, "this is my form caption!")
+	CallByName(obj, "Alert", VbMethod, "This is my test")
+end if 
+
+print "GetHostString(test)=", GetHostString("test")

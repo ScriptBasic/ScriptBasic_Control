@@ -18,8 +18,11 @@ typedef void (__stdcall *vbCallback)(cb_type, char*, int);
 //Public Function GetDebuggerCommand(ByVal buf As Long, ByVal sz As Long) As Long
 typedef int (__stdcall *vbDbgCallback)(char*, int);
 
+typedef int (__stdcall *vbHostResolverCallback)(char*, int, int);
+
 extern vbCallback vbStdOut;
 extern vbDbgCallback vbDbgHandler;
+extern vbHostResolverCallback vbHostResolver;
 
 #ifdef __cplusplus
 }

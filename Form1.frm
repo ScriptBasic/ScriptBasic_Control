@@ -392,7 +392,7 @@ Private Declare Function GetModuleHandle Lib "kernel32" Alias "GetModuleHandleA"
 
 Private Declare Function run_script Lib "sb_engine" (ByVal lpLibFileName As String, ByVal use_debugger As Long) As Long
 Private Declare Sub GetErrorString Lib "sb_engine" (ByVal iErrorCode As Long, ByVal buf As String, ByVal sz As Long)
-Private Declare Sub SetCallBacks Lib "sb_engine" (ByVal msgProc As Long, ByVal dbgCmdProc As Long)
+Private Declare Sub SetCallBacks Lib "sb_engine" (ByVal msgProc As Long, ByVal dbgCmdProc As Long, ByVal hostResolverProc As Long)
 
 
 Dim loadedFile As String
@@ -579,7 +579,7 @@ Private Sub ExecuteScript(Optional withDebugger As Boolean)
 End Sub
 
 Private Sub Form_Load()
-        
+    
     mnuCallStackPopup.Visible = False
     
     Dim incDir As String, modDir As String
@@ -594,7 +594,7 @@ Private Sub Form_Load()
     modDir = "D:\desktop\full_scriptbasic\scriptbasic\modules\"
     SetConfig incDir, modDir
 
-    SetCallBacks AddressOf vb_stdout, AddressOf GetDebuggerCommand
+    SetCallBacks AddressOf vb_stdout, AddressOf GetDebuggerCommand, AddressOf HostResolver
     scivb.LoadHighlighter App.Path & "\dependancies\vb.bin"
     
     scivb.DirectSCI.HideSelection False
@@ -611,7 +611,11 @@ Private Sub Form_Load()
     lvVars.ColumnHeaders(lvVars.ColumnHeaders.Count).Width = lvVars.Width - lvVars.ColumnHeaders(lvVars.ColumnHeaders.Count).Left - 100
     
     'App.Path & "\scripts\com_voice_test.sb"
-    LoadFile App.Path & "\scripts\functions.txt"
+    'LoadFile App.Path & "\scripts\functions.txt"
+    
+    AddObject "Form1", Me
+    AddString "test", "this is my string from vb!"
+    LoadFile App.Path & "\scripts\GetHostObject.sb"
     
     
 End Sub
@@ -640,15 +644,15 @@ End Sub
 
 Public Sub SyncUI()
     
-    Dim curLine As Long
+    Dim curline As Long
     
     scivb.DeleteMarker lastEIP, 1
     
-    curLine = GetCurrentDebugLine(hDebugObject)
-    scivb.SetMarker curLine, 1
-    lastEIP = curLine
+    curline = GetCurrentDebugLine(hDebugObject)
+    scivb.SetMarker curline, 1
+    lastEIP = curline
     
-    scivb.GotoLine curLine
+    scivb.GotoLine curline
     scivb.HighLightActiveLine = True
     scivb.SetFocus
     
@@ -656,3 +660,7 @@ Public Sub SyncUI()
     RefreshCallStack
     
 End Sub
+
+Public Function Alert(msg As String)
+    MsgBox msg
+End Function

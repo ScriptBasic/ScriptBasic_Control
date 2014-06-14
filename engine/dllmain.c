@@ -29,10 +29,11 @@ void __stdcall SetDefaultDirs(char* incDir, char* modDir){
 	pszDefaultModuleDir  = strdup(modDir);
 }
 
-void __stdcall SetCallBacks(void* lpfnMsgHandler, void* lpfnDbgHandler){
+void __stdcall SetCallBacks(void* lpfnMsgHandler, void* lpfnDbgHandler, void* lpfnHostResolver){
 #pragma EXPORT
 	vbStdOut     = (vbCallback)lpfnMsgHandler;
 	vbDbgHandler = (vbDbgCallback)lpfnDbgHandler;
+	vbHostResolver = (vbHostResolverCallback)lpfnHostResolver;
 }
 
 int __stdcall GetErrorString(int iErrorCode, char* buf, int bufSz){

@@ -11,6 +11,8 @@
 		declare sub CreateObject alias "CreateObject" lib "test.exe"
 		declare sub CallByName alias "CallByName" lib "test.exe"
 		declare sub ReleaseObject alias "ReleaseObject" lib "test.exe"
+        declare sub GetHostObject alias "GetHostObject" lib "sb_engine.dll"
+        declare sub GetHostString alias "GetHostString" lib "sb_engine.dll"
 
 		const VbGet = 2
 		const VbLet = 4
@@ -43,6 +45,7 @@
 
 int com_dbg = 0;
 int initilized=0;
+vbHostResolverCallback vbHostResolver = NULL;
 
 //vbCallType aligns with DISPATCH_XX values for Invoke
 enum vbCallType{ VbGet = 2, VbLet = 4, VbMethod = 1, VbSet = 8 };
@@ -131,6 +134,80 @@ void color_printf(colors c, const char *format, ...)
 #define RETURN0(msg) {if(com_dbg) color_printf(colors::mred, "%s\n", msg); \
 	                 LONGVALUE(besRETURNVALUE) = 0; \
 					 goto cleanup;}
+
+
+
+//Object GetHostObject("Form1")
+//this is for embedded hosts, so script clients can dynamically look up obj pointers
+//for use with teh COM functions. Instead of the MS Script host design of AddObject
+//here we allow the script to query values from a host resolver. Its easier than
+//trying to mess with the internal Symbol tables, and cleaner than editing an include
+//script on the fly every single launch to add global variables which would then show up
+//in the debug pane. this function can be used for retrieving any long value 
+besFUNCTION(GetHostObject)
+  int retVal=0;
+  int slen;
+  char* myCopy = NULL;
+  VARIABLE Argument;
+  besRETURNVALUE = besNEWMORTALLONG;
+
+  if( besARGNR != 1) RETURN0("GetHostObject takes one argument!") 
+
+  Argument = besARGUMENT(1);
+  besDEREFERENCE(Argument);
+  
+  if( TYPE(Argument) != VTYPE_STRING) RETURN0("GetHostObject requires a string argument")
+  if( STRLEN(Argument) > 1000) RETURN0("GetHostObject argument to long")
+
+  myCopy = GetCString(Argument);
+  if(myCopy==0) RETURN0("malloc failed low mem")
+
+  if(vbHostResolver==NULL) RETURN0("GetHostObject requires vbHostResolver callback to be set")
+	
+  retVal = vbHostResolver(myCopy, strlen(myCopy), 0);
+
+cleanup:
+    LONGVALUE(besRETURNVALUE) = retVal;    
+	if(myCopy) free(myCopy);
+	return 0;
+
+besEND
+
+//as above but for retrieving strings up to 1024 chars long
+besFUNCTION(GetHostString)
+  int retVal=0;
+  int slen=0;
+  char* myCopy = NULL;
+  char buf[1026];
+  VARIABLE Argument;
+  besRETURNVALUE = besNEWMORTALLONG;
+
+  if( besARGNR != 1) RETURN0("GetHostString takes one argument!") 
+
+  Argument = besARGUMENT(1);
+  besDEREFERENCE(Argument);
+  
+  if( TYPE(Argument) != VTYPE_STRING) RETURN0("GetHostString requires a string argument")
+  if( STRLEN(Argument) > 1000) RETURN0("GetHostString argument to long")
+
+  myCopy = GetCString(Argument);
+  if(myCopy==0) RETURN0("malloc failed low mem")
+
+  if(vbHostResolver==NULL) RETURN0("GetHostStringt requires vbHostResolver callback to be set")
+	
+  //we are actually going to use our own fixed size buffer for this in case its a string value to be returned..
+  strcpy(buf, myCopy);
+  retVal = vbHostResolver(buf, strlen(buf), 1024);
+  slen = strlen(buf);
+
+cleanup:
+    besALLOC_RETURN_STRING(slen);
+    if(slen > 0) memcpy(STRINGVALUE(besRETURNVALUE),buf,slen);
+	if(myCopy) free(myCopy);
+	return 0;
+
+besEND
+
 
 //ReleaseObject(obj)
 besFUNCTION(ReleaseObject)

@@ -1,7 +1,8 @@
 Form1 = 31, 4, 1261, 836, , 153, 6, 1174, 866, C
 Module1 = 41, 21, 1279, 815, 
-CVariable = 157, 138, 1187, 796, 
+CVariable = 157, 138, 1187, 796, C
 CBreakpoint = 88, 88, 1092, 672, C
 cCallStack = 88, 88, 1092, 672, C
 frmAryDump = 198, 198, 1224, 766, , 166, 96, 1192, 664, C
-modBreakpoints = 132, 132, 840, 733, Z
+modBreakpoints = 132, 132, 840, 733, 
+modHostObjs = 132, 132, 959, 733, Z

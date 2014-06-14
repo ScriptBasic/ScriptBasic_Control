@@ -1,5 +1,5 @@
 Attribute VB_Name = "Module1"
-Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, source As Any, ByVal Length As Long)
+Public Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, source As Any, ByVal Length As Long)
 Private Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 
 'get the currently executing line number
@@ -182,7 +182,6 @@ Public Function GetVariableValue(varName As String) As String
         
     
 End Function
-
 
 Public Function GetDebuggerCommand(ByVal buf As Long, ByVal sz As Long) As Long
         

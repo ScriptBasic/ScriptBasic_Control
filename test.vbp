@@ -10,6 +10,7 @@ Class=CBreakpoint; ClBreakpoint.cls
 Class=cCallStack; CCallStack.cls
 Form=frmAryDump.frm
 Module=modBreakpoints; modBreakpoints.bas
+Module=modHostObjs; modHostObjs.bas
 IconForm="Form1"
 Startup="Form1"
 HelpFile=""

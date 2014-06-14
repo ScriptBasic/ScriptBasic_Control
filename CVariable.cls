@@ -19,16 +19,7 @@ Public index As Long 'for arrays
 Public pAryElement As Long
 
 Property Let name(v As String)
-    
     m_name = Replace(v, "main::", Empty)
-    
-'    If InStr(v, "::") > 0 Then
-'        tmp = Split(v, "::")
-'        m_name = tmp(1)
-'        namespace = tmp(0)
-'    Else
-'        m_name = v
-'    End If
 End Property
 
 Property Get name() As String

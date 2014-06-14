@@ -25,10 +25,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "basext.h"
 #include "vb.h"
 
+//next 4 added dzzie
 vbCallback vbStdOut = NULL;
 vbDbgCallback vbDbgHandler = NULL;
 char* pszDefaultIncludeDir = NULL;
 char* pszDefaultModuleDir = NULL;
+
 
 /*POD
 =H scriba_new()
