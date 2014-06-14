@@ -1,0 +1,39 @@
+import com.inc
+
+obj = CreateObject("VB6.Sample") 
+
+'Sample function prototypes
+'	longTest(v As Long)
+'	intTest(v As Integer)
+'	ByteTest(v As Byte)
+'	GetString(prompt As String, title, def) As String
+'	ShowUI() As Long
+
+if obj = 0 then 
+	print "CreateObject failed!\n"
+else
+    CallByName(obj, "longTest", VbMethod, 20000)
+    CallByName(obj, "intTest", VbMethod, 1000)
+    CallByName(obj, "byteTest", VbMethod, 255)
+    
+    'this one fails silently because its invalid value for byte type..
+    CallByName(obj, "byteTest", VbMethod, 256) 
+
+    retVal = CallByName(obj, "GetString", VbMethod, "Enter some Text:", "my title", "default value!")
+    print "GetString returned: ", retVal, "\n"
+    
+    'do NOT release objects you dont own..
+    objForm = CallByName(obj, "LaunchUI")
+    print "objForm = ", objForm, "\n"
+    
+    for i=0 to 10
+        CallByName(objForm, "AddItem", VbMethod, "Hello from script basic! " & i)
+    next
+    
+    print "Waiting until user closes form to proceede..\n"
+    CallByName(obj, "BlockUntilFormCloses")
+   
+    ReleaseObject(obj)
+    print "anndddd were done!\n"
+    
+end if 
