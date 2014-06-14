@@ -9,6 +9,7 @@ Class=CVariable; CVariable.cls
 Class=CBreakpoint; ClBreakpoint.cls
 Class=cCallStack; CCallStack.cls
 Form=frmAryDump.frm
+Module=modBreakpoints; modBreakpoints.bas
 IconForm="Form1"
 Startup="Form1"
 HelpFile=""

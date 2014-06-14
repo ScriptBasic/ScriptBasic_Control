@@ -1,0 +1,68 @@
+Public Function BreakPointExists(lineNo As Long) As Boolean
+
+    Dim b As CBreakpoint
+    On Error Resume Next
+    Set b = breakpoints("bp:" & lineNo)
+    If Not b Is Nothing Then BreakPointExists = True
+    
+End Function
+
+Public Sub ToggleBreakPoint(Optional ByVal lineNo As Long)
+    
+    If lineNo = 0 Then lineNo = Form1.scivb.CurrentLine
+    
+    If running Then
+        If isExecutableLine(lineNo) Then
+            If BreakPointExists(lineNo) Then
+                RemoveBreakpoint lineNo
+            Else
+                SetBreakpoint lineNo
+            End If
+        Else
+            Form1.Caption = "Can not set breakpoint here not an executable line"
+        End If
+    Else
+        'because import statements change line numbers, and lines can change during edits..
+        Form1.Caption = "Can only set breakpoint once debugging"
+    End If
+                        
+    
+End Sub
+
+Public Sub SetBreakpoint(lineNo As Long)
+    Dim b As CBreakpoint
+    
+    If BreakPointExists(lineNo) Then Exit Sub
+    If running Then dbg_ModifyBreakpoint hDebugObject, lineNo + 1, 1
+    
+    Set b = New CBreakpoint
+    b.lineNo = lineNo
+    breakpoints.Add b, "bp:" & lineNo
+    
+    Form1.scivb.SetMarker lineNo
+End Sub
+
+Public Sub RemoveBreakpoint(lineNo As Long)
+    If Not BreakPointExists(lineNo) Then Exit Sub
+    If running Then dbg_ModifyBreakpoint hDebugObject, lineNo + 1, 0
+    Form1.scivb.DeleteMarker lineNo
+    breakpoints.Remove "bp:" & lineNo
+End Sub
+
+Sub ClearAllBreakpoints()
+    Dim b As CBreakpoint
+    For Each b In breakpoints
+        RemoveBreakpoint b.lineNo
+    Next
+End Sub
+
+Private Sub InitDebuggerBpx()
+    'Dim b As CBreakpoint
+    'For Each b In breakpoints
+    '    dbg_ModifyBreakpoint hDebugObject, b.lineNo + 1, 1
+    'Next
+    
+    'currently we are not saving breakpoints across runs
+    Set breakpoints = New Collection
+    
+End Sub

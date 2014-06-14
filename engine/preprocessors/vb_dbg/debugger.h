@@ -75,14 +75,11 @@ long __stdcall GetCurrentDebugLine(pDebuggerObject pDO);
 int  SPrintVariable(pDebuggerObject pDO,VARIABLE v,char *pszBuffer,unsigned long *cbBuffer);
 int  SPrintVarByName(pDebuggerObject pDO,pExecuteObject pEo,char *pszName,char *pszBuffer,unsigned long *cbBuffer);
 long GetSourceLineNumber(pDebuggerObject pDO,long PC);
-void GetRange(char *pszBuffer, long *plStart, long *plEnd);
 
 void scomm_Init(pDebuggerObject pDO);
 void scomm_WeAreAt(pDebuggerObject pDO, long i);
 void scomm_List(pDebuggerObject pDO, long lStart, long lEnd, long lThis);
 void scomm_Message(pDebuggerObject pDO, char *pszMessage);
-
-void cmd_getLines(pDebuggerObject pDO, char* cBuffer, int cbBuffer);
 
 int MyExecBefore(pExecuteObject pEo);
 

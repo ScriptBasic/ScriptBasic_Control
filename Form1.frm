@@ -12,6 +12,14 @@ Begin VB.Form Form1
    ScaleHeight     =   12000
    ScaleWidth      =   13905
    StartUpPosition =   2  'CenterScreen
+   Begin VB.CommandButton Command2 
+      Caption         =   "Command2"
+      Height          =   510
+      Left            =   9810
+      TabIndex        =   10
+      Top             =   8775
+      Width           =   1230
+   End
    Begin MSComctlLib.ListView lvVars 
       Height          =   1815
       Left            =   90
@@ -352,7 +360,7 @@ Begin VB.Form Form1
    End
    Begin VB.Label lblStatus 
       Height          =   285
-      Left            =   4230
+      Left            =   4185
       TabIndex        =   9
       Top             =   270
       Width           =   6540
@@ -394,6 +402,8 @@ Public hasImports As Boolean
 
 Const SC_MARK_CIRCLE = 0
 Const SC_MARK_ARROW = 2
+'http://www.scintilla.org/aprilw/SciLexer.bas
+
 Dim selCallStackItem As ListItem
 Dim selVariable As ListItem
 
@@ -406,24 +416,7 @@ Private Sub cmdManual_Click()
     
 End Sub
 
-Function isExecutableLine(lineNo As Long) As Boolean
-    Dim tmp As String
-    On Error Resume Next
-    
-    tmp = LCase(scivb.GetLineText(lineNo))
-    tmp = Trim(Replace(tmp, vbTab, Empty))
-    tmp = Replace(tmp, vbCr, Empty)
-    tmp = Replace(tmp, vbLf, Empty)
-    
-    If Len(tmp) = 0 Then GoTo fail
-    If Left(tmp, 1) = "'" Then GoTo fail 'is comment
-    If Left(tmp, 5) = "local" Then GoTo fail
-    If Left(tmp, 5) = "const" Then GoTo fail
-    
-    isExecutableLine = True
-Exit Function
-fail: isExecutableLine = False
-End Function
+
 
 Private Sub RefreshVariables()
     
@@ -460,6 +453,24 @@ Private Sub RefreshCallStack()
     
 End Sub
 
+Sub LockEditor(Optional locked As Boolean = True)
+    Dim i As Long
+    
+    With scivb
+        If locked Then
+            .ReadOnly = True
+            .DirectSCI.StyleSetBack 32, &HF0F0F0
+            For i = 0 To 127
+                .DirectSCI.StyleSetBack i, &HF0F0F0
+            Next i
+        Else
+            .ReadOnly = False
+            .SetHighlighter "VB" 'sets back to defaults..
+        End If
+    End With
+ 
+End Sub
+
 Private Sub lvCallStack_ItemClick(ByVal Item As MSComctlLib.ListItem)
     scivb.GotoLine CLng(Item.Text)
     Set selCallStackItem = Item
@@ -492,7 +503,7 @@ Private Sub scivb_KeyDown(KeyCode As Long, Shift As Long)
 
     'Debug.Print KeyCode & " " & Shift
     Select Case KeyCode
-        Case vbKeyF2: If isExecutableLine(scivb.CurrentLine) Then ToggleBreakPoint scivb.CurrentLine
+        Case vbKeyF2: ToggleBreakPoint
         Case vbKeyF5: If running Then DebuggerCmd "R" Else ExecuteScript True
         Case vbKeyF7: DebuggerCmd "s" 'step into
         Case vbKeyF8: DebuggerCmd "S" 'step over
@@ -526,10 +537,10 @@ Private Sub tbarDebug_ButtonClick(ByVal Button As MSComctlLib.Button)
         Case "Step Over": DebuggerCmd "S"
         Case "Step Out":  DebuggerCmd "o"
         Case "Run to Cursor": RunToLine scivb.CurrentLine + 1
+        Case "Breakpoint": ToggleBreakPoint
+        Case "Clear Breakpoints": RemoveAllBreakpoints
         'Case "Immediate"
         'Case "Callstack"
-        Case "Breakpoint":
-        Case "Clear Breakpoints":
     End Select
     
 End Sub
@@ -543,8 +554,7 @@ Private Sub ExecuteScript(Optional withDebugger As Boolean)
     
     txtOut.Text = Empty
     
-    'todo set scivb backcolor to grayed..
-    scivb.ReadOnly = True
+    LockEditor
     If scivb.isDirty Then scivb.SaveFile loadedFile
     
     running = True
@@ -560,9 +570,10 @@ Private Sub ExecuteScript(Optional withDebugger As Boolean)
     
     lblStatus = "Idle"
     running = False
-    scivb.ReadOnly = False
+    LockEditor False
     scivb.HighLightActiveLine = False
     scivb.DeleteMarker lastEIP, 1
+    ClearUIBreakpoints
     If hasImports Then scivb.LoadFile loadedFile
     
 End Sub
@@ -625,8 +636,6 @@ End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
     FreeLibrary hsbLib
-   ' FreeLibrary GetModuleHandle("scivb_lite.ocx")
-   ' FreeLibrary GetModuleHandle("scilexer.dll")
 End Sub
 
 Public Sub SyncUI()

@@ -1,5 +1,5 @@
 Attribute VB_Name = "Module1"
-Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, Source As Any, ByVal Length As Long)
+Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, source As Any, ByVal Length As Long)
 Private Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 
 'get the currently executing line number
@@ -15,9 +15,6 @@ Private Declare Sub dbg_EnumAryVarsByName Lib "sb_engine" (ByVal hDebug As Long,
 Private Declare Sub dbg_EnumAryVarsByPointer Lib "sb_engine" (ByVal hDebug As Long, ByVal pVar As Long)
 
 Private Declare Function dbg_VarTypeFromName Lib "sb_engine" (ByVal hDebug As Long, ByRef varName As Byte) As Long
-
-'set or remove a breakpoint on a line
-Private Declare Sub dbg_ModifyBreakpoint Lib "sb_engine" (ByVal hDebug As Long, ByVal lineNo As Long, ByVal value As Long)
 
 Public Declare Function dbg_LineCount Lib "sb_engine" (ByVal hDebug As Long) As Long
 
@@ -41,7 +38,6 @@ Public readyToReturn As Boolean
 Public dbg_cmd As String
 Public running As Boolean
 Public variables As New Collection 'of CVariable
-Public breakpoints As New Collection 'of CBreakPoint
 Public callStack As New Collection 'of CCallStack
 Public fso As New CFileSystem2
 
@@ -92,59 +88,6 @@ Public Function EnumCallStack() As Collection
     Set EnumCallStack = callStack
     
 End Function
-
-
-Public Function BreakPointExists(lineNo As Long) As Boolean
-
-'    Dim b As CBreakpoint
-'    For Each b In breakpoints
-'        If b.lineNo = lineNo Then
-'            BreakPointExists = True
-'            Exit Function
-'        End If
-'    Next
-
-    Dim b As CBreakpoint
-    On Error Resume Next
-    Set b = breakpoints("bp:" & lineNo)
-    If Not b Is Nothing Then BreakPointExists = True
-    
-End Function
-
-Public Sub ToggleBreakPoint(lineNo As Long)
-    If BreakPointExists(lineNo) Then
-        RemoveBreakpoint lineNo
-    Else
-        SetBreakpoint lineNo
-    End If
-End Sub
-
-Public Sub SetBreakpoint(lineNo As Long)
-    Dim b As CBreakpoint
-    
-    If BreakPointExists(lineNo) Then Exit Sub
-    If running Then dbg_ModifyBreakpoint hDebugObject, lineNo + 1, 1
-    
-    Set b = New CBreakpoint
-    b.lineNo = lineNo
-    breakpoints.Add b, "bp:" & lineNo
-    
-    Form1.scivb.SetMarker lineNo
-End Sub
-
-Public Sub RemoveBreakpoint(lineNo As Long)
-    If Not BreakPointExists(lineNo) Then Exit Sub
-    If running Then dbg_ModifyBreakpoint hDebugObject, lineNo + 1, 0
-    Form1.scivb.DeleteMarker lineNo
-    breakpoints.Remove "bp:" & lineNo
-End Sub
-
-Private Sub InitDebuggerBpx()
-    Dim b As CBreakpoint
-    For Each b In breakpoints
-        dbg_ModifyBreakpoint hDebugObject, b.lineNo + 1, 1
-    Next
-End Sub
 
 Public Function VariableTypeToString(x As sb_VarTypes) As String
 
@@ -244,14 +187,35 @@ End Function
 Public Function GetDebuggerCommand(ByVal buf As Long, ByVal sz As Long) As Long
         
     Dim b() As Byte
+    Dim source As String, curline As Long
     
-    Form1.SyncUI
+    dbg_cmd = Empty
     
-    readyToReturn = False
-    While Not readyToReturn
-        DoEvents
-        Sleep 20
-    Wend
+    'there are some lines we dont want to stop and show as execution to the user,
+    'such as declares and function starts
+    curline = GetCurrentDebugLine(hDebugObject)
+    If Not BreakPointExists(curline) Then
+        source = LCase(Form1.scivb.GetLineText(curline))
+        source = Trim(Replace(source, vbTab, Empty))
+        If InStr(source, " ") > 1 Then
+            source = Left(source, InStr(source, " ") - 1)
+            If source = "declare" Or source = "function" Then
+                dbg_cmd = "s"
+            End If
+        End If
+    End If
+    
+    If dbg_cmd = Empty Then
+        Form1.SyncUI
+        
+        'we block here until the UI sets the readyToReturn = true
+        'this is not a CPU hog, and form remains responsive to user actions..
+        readyToReturn = False
+        While Not readyToReturn
+            DoEvents
+            Sleep 20
+        Wend
+    End If
     
     If Len(dbg_cmd) < sz Then
         dbg_cmd = dbg_cmd & Chr(0)
@@ -315,20 +279,17 @@ Public Sub HandleDebugMessage(msg As String)
             callStack.Add c
             handled = True
             
-        Case "Array-Variable" 'Array-Variable:%d:%d:%s", i, TYPE(v2), buf);
+        Case "Array-Variable" 'Array-Variable:%d:%d:%s , index, varType, buf);
             Set v = New CVariable
             v.index = CLng(cmd(1))
             v.varType = VariableTypeToString(CLng(cmd(2)))
             v.value = cmd(3) 'if is array then aryPointer will be parsed from value..
             variables.Add v
             handled = True
-
-'        Case "Source-File" 'this just tells us loaded files on start, not when the executeion changes to a diff file..
-           
-    'Source-File: %s\r\n
-    'Current-Line: %u\r\n
-    'Break-Point: %s\r\n = 1/0
-    'Line-Number: %u\r\n
+        
+        Case "Current-Line":
+            handled = True 'we dont need these anymore..
+    
     'Line: %s\r\n
     'Message: %s\r\n
     'Value: %s\r\n
@@ -351,18 +312,17 @@ Public Sub vb_stdout(ByVal t As cb_type, ByVal lpMsg As Long, ByVal sz As Long)
     msg = StrConv(b, vbUnicode)
     If Right(msg, 1) = Chr(0) Then msg = Left(msg, Len(msg) - 1)
     
-    If t = cb_debugger Then
-        HandleDebugMessage msg
-    ElseIf t = cb_engine Then
-        
-    Else
-        If t = cb_dbgout Then msg = "DBG> " & msg
-        With Form1.txtOut
-            .Text = .Text & Replace(msg, vbLf, vbCrLf)
-            .Refresh
-            DoEvents
-        End With
-    End If
+    Select Case t
+        Case cb_debugger: HandleDebugMessage msg
+        Case cb_engine:   HandleEngineMessage msg
+        Case Default:
+                          If t = cb_dbgout Then msg = "DBG> " & msg
+                          With Form1.txtOut
+                               .Text = .Text & Replace(msg, vbLf, vbCrLf)
+                               .Refresh
+                               DoEvents
+                          End With
+    End Select
     
 End Sub
 
@@ -375,6 +335,7 @@ Private Sub HandleEngineMessage(msg As String)
         hProgram = CLng(tmp(1))
     ElseIf tmp(0) = "ENGINE_DESTROY" Then
         hProgram = 0
+        hDebugObject = 0
     End If
     
 End Sub

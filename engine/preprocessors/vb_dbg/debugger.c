@@ -909,22 +909,6 @@ int __stdcall dbg_SourceLineCount(pDebuggerObject pDO)
 }
 
 /*
-int __stdcall dbg_isValidSourceLine(pDebuggerObject pDO, int line)
-{
-  long i;
-   
-
-  if( line < 1 )return 0;
-
-  for( i = 1 ; i < pDO->cSourceLines  ; i++ ){
-
-  }
-
-}
-*/
-
-
-/*
 This function is called when a command that results no output is executed.
 The message is an informal message to the client that either tells that the
 command was executed successfully or that the command failed and why.
