@@ -36,7 +36,7 @@ void __stdcall SetCallBacks(void* lpfnMsgHandler, void* lpfnDbgHandler, void* lp
 	vbHostResolver = (vbHostResolverCallback)lpfnHostResolver;
 }
 
-int __stdcall GetErrorString(int iErrorCode, char* buf, int bufSz){
+int __stdcall GetErrorString(unsigned int iErrorCode, char* buf, int bufSz){
 #pragma EXPORT
   int sz = 0;
   if( iErrorCode >= MAX_ERROR_CODE ) iErrorCode = COMMAND_ERROR_EXTENSION_SPECIFIC;
@@ -50,7 +50,7 @@ int __stdcall run_script(char* fPath, int use_debugger)
 {
 #pragma EXPORT
 
-  int iError;
+  int iError, iErrorCounter;
   char* cmdline = "";
   pSbProgram pProgram;
   char* buf[255]; 
@@ -62,16 +62,20 @@ int __stdcall run_script(char* fPath, int use_debugger)
 		iError = scriba_LoadInternalPreprocessorByFunction(pProgram, "vb_dbg", &vb_dbg_preproc);
 		if(iError != 0) goto cleanup;
   }
-
-  if( iError = scriba_LoadSourceProgram(pProgram) ) goto cleanup;
+  
+  //build will call report error if syntax fail, these goto vbStdOut if set..
+  if(scriba_LoadSourceProgram(pProgram) ) goto cleanup; 
 
   if(vbStdOut){
 	  sprintf(buf, "ENGINE_PRECONFIG:%d", pProgram); 
 	  vbStdOut(cb_engine, buf, strlen(buf));
   }
 
-  if( iError = scriba_Run(pProgram,cmdline) ) goto cleanup;
+  if( iError = scriba_Run(pProgram,cmdline) ){
+	  if( iError > 0 ) report_report(stderr,"",0,iError,REPORT_ERROR,NULL,NULL,NULL);	  
+	  goto cleanup;
 	  
+  }
 
 cleanup:
   scriba_destroy(pProgram);

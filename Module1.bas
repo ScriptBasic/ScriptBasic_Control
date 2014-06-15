@@ -39,17 +39,19 @@ Public dbg_cmd As String
 Public running As Boolean
 Public variables As New Collection 'of CVariable
 Public callStack As New Collection 'of CCallStack
+Public flatFile As String
+Public hadError As Boolean
 
 Public includeDir As String, moduleDir As String
-
-Global fso As New CFileSystem2
 Global dlg As New CCmnDlg
+Global Const LANG_US = &H409
 
 Enum cb_type
     cb_output = 0
     cb_dbgout = 1
     cb_debugger = 2
     cb_engine = 3
+    cb_error = 4
 End Enum
 
 Enum sb_VarTypes
@@ -67,15 +69,16 @@ Function LoadFlatFile() As Boolean
     Dim tmp As String
     Dim b() As Byte
     
-    tmp = fso.GetFreeFileName(Environ("temp"))
+    tmp = GetFreeFileName(Environ("temp"))
     b() = StrConv(tmp & Chr(0), vbFromUnicode)
     dbg_WriteFlatSourceFile hDebugObject, b(0)
     
-    If fso.FileExists(tmp) Then
+    If FileExists(tmp) Then
         Form1.hasImports = True
         Form1.scivb.ReadOnly = False
         LoadFlatFile = Form1.scivb.LoadFile(tmp)
         Form1.scivb.ReadOnly = True
+        flatFile = tmp
     End If
     
 End Function
@@ -318,8 +321,14 @@ Public Sub vb_stdout(ByVal t As cb_type, ByVal lpMsg As Long, ByVal sz As Long)
     Select Case t
         Case cb_debugger: HandleDebugMessage msg
         Case cb_engine:   HandleEngineMessage msg
-        Case Default:
+        Case Else:
+                          If t = cb_error Then
+                                msg = "Error: " & IIf(Len(flatFile) > 0, flatFile, "") & vbCrLf & msg
+                                hadError = True
+                          End If
+                          
                           If t = cb_dbgout Then msg = "DBG> " & msg
+                          
                           With Form1.txtOut
                                .Text = .Text & Replace(msg, vbLf, vbCrLf)
                                .Refresh
@@ -336,9 +345,14 @@ Private Sub HandleEngineMessage(msg As String)
     tmp = Split(msg, ":")
     If tmp(0) = "ENGINE_PRECONFIG" Then
         hProgram = CLng(tmp(1))
+        hadError = False
     ElseIf tmp(0) = "ENGINE_DESTROY" Then
         hProgram = 0
         hDebugObject = 0
+        If Not hadError And FileExists(flatFile) Then
+            Kill flatFile
+            flatFile = Empty
+        End If
     End If
     
 End Sub

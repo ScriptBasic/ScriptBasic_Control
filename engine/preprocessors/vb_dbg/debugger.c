@@ -33,6 +33,8 @@ This program implements a simple debugger "preprocessor" for ScriptBasic.
 #include "debugger.h"
 #include "vb.h"
 
+#define snprintf _snprintf
+
 int LineNumberForNode(pDebuggerObject pDO, int node)
 {
   if( node < 1 || node > pDO->cNodes ) return 0;
@@ -46,21 +48,21 @@ void __stdcall dbg_EnumCallStack(pDebuggerObject pDO)
   pDebugCallStack_t p;
   pDebugCallStack_t np;
   pUserFunction_t   uf;
-  char buf[1024];
+  char buf[1025];
   long i;
 
   if( pDO == NULL )return;
 
-  sprintf(buf, "Call-Stack:%d:%s", LineNumberForNode(pDO,pDO->lPC), "CurrentLine");
+  snprintf(buf, 1024, "Call-Stack:%d:%s", LineNumberForNode(pDO,pDO->lPC), "CurrentLine");
   vbStdOut(cb_debugger,buf,strlen(buf));
 
   if( pDO->StackListPointer == NULL )return;
   
   p = pDO->StackListPointer;
   if(p->pUF && p->pUF->pszFunctionName ){
-	  sprintf(buf, "Call-Stack:%d:%s", LineNumberForNode(pDO,p->Node), p->pUF->pszFunctionName);
+	  snprintf(buf, 1024, "Call-Stack:%d:%s", LineNumberForNode(pDO,p->Node), p->pUF->pszFunctionName);
   }else{
-	  sprintf(buf, "Call-Stack:%d:Unknown", LineNumberForNode(pDO,p->Node) );
+	  snprintf(buf, 1024, "Call-Stack:%d:Unknown", LineNumberForNode(pDO,p->Node) );
   }
   vbStdOut(cb_debugger,buf,strlen(buf));
   
@@ -68,9 +70,9 @@ void __stdcall dbg_EnumCallStack(pDebuggerObject pDO)
 	    if(p->up == NULL) return;
 		p = p->up;
 		if(p->pUF && p->pUF->pszFunctionName ){
-			  sprintf(buf, "Call-Stack:%d:%s", LineNumberForNode(pDO,p->Node) , p->pUF->pszFunctionName);
+			  snprintf(buf, 1024, "Call-Stack:%d:%s", LineNumberForNode(pDO,p->Node) , p->pUF->pszFunctionName);
 		}else{
-			 sprintf(buf, "Call-Stack:%d:Unknown", LineNumberForNode(pDO,p->Node));
+			 snprintf(buf, 1024, "Call-Stack:%d:Unknown", LineNumberForNode(pDO,p->Node));
 		}
 		vbStdOut(cb_debugger,buf,strlen(buf));
   }
@@ -235,12 +237,12 @@ CUT*/
 	  return 0;
   }
 
-  if( TYPE(v) == VTYPE_STRING ){
+  if( TYPE(v) == VTYPE_STRING ){ //<-- it would be nice if this didnt err on to long string but just appended with ... to show more..
     /* calculate the printed size */
     r = v->Value.pValue;
     slen = 2; /* starting and ending " */
     i = 0;
-    while( i < STRLEN(v) ){
+    while( i < STRLEN(v) ){          
       if( *r < 0x20 || *r > 0x7F ){
         slen += 4 ; /* \xXX */
         i++;
@@ -889,8 +891,6 @@ void __stdcall dbg_WriteFlatSourceFile(pDebuggerObject pDO, char* path)
 #pragma EXPORT
 
   long j;
-  char cBuffer[1024];
-  int cbBuffer;
 
   FILE *f = fopen(path, "wb");
   if(f==NULL) return;
@@ -915,9 +915,9 @@ command was executed successfully or that the command failed and why.
 */
 void scomm_Message(pDebuggerObject pDO, char *pszMessage)
 {
-  char cBuffer[200];
+  char cBuffer[1025];
   int cbBuffer;
-  sprintf(cBuffer,"Message: %s\r\n",pszMessage);
+  snprintf(cBuffer,1024,"Message: %s\r\n",pszMessage);
   vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 }
 
@@ -1069,7 +1069,7 @@ void __stdcall dbg_EnumAryVarsByPointer(pDebuggerObject pDO, VARIABLE v)
 	VARIABLE v2=NULL;
 	int low, high, i;
 	unsigned long sz;
-    char cBuffer[2050];
+    char cBuffer[1111];
     char buf[1025];
 
 	if(v==NULL) return;
@@ -1083,7 +1083,7 @@ void __stdcall dbg_EnumAryVarsByPointer(pDebuggerObject pDO, VARIABLE v)
 		if(v2 != NULL){
 			sz = 1024;
 			SPrintVariable(pDO, v2, buf, &sz);
-			sprintf(cBuffer,"Array-Variable:%d:%d:%s", i, TYPE(v2), buf);
+			snprintf(cBuffer,1110, "Array-Variable:%d:%d:%s", i, TYPE(v2), buf);
 			vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 		}
 	}
@@ -1092,12 +1092,7 @@ void __stdcall dbg_EnumAryVarsByPointer(pDebuggerObject pDO, VARIABLE v)
 void __stdcall dbg_EnumAryVarsByName(pDebuggerObject pDO, char* varName)
 {
 #pragma EXPORT
-	VARIABLE v, v2=NULL;
-	int low, high, i;
-	unsigned long sz;
-    char cBuffer[2050];
-    char buf[1025];
-
+	VARIABLE v;
 	v = dbg_VariableFromName(pDO, varName);
 	dbg_EnumAryVarsByPointer(pDO, v);
 }
@@ -1115,7 +1110,7 @@ void __stdcall dbg_EnumVars(pDebuggerObject pDO)
 	 for(i=0 ; i < pDO->cGlobalVariables ; i++ )
 	 {
 		if( NULL == pDO->ppszGlobalVariables[i] )break;
-		sprintf(cBuffer,"Global-Variable-Name:%s",pDO->ppszGlobalVariables[i]);
+		snprintf(cBuffer,1024,"Global-Variable-Name:%s",pDO->ppszGlobalVariables[i]);
 		vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 	 }
 
@@ -1138,7 +1133,7 @@ void __stdcall dbg_EnumVars(pDebuggerObject pDO)
 	 if( StackListPointer->LocalVariables ){
 		for(i=StackListPointer->LocalVariables->ArrayLowLimit ; i <= StackListPointer->LocalVariables->ArrayHighLimit ; i++ )
 		{
-			sprintf(cBuffer,"Local-Variable-Name:%s",pUF->ppszLocalVariables[i-1]);
+			snprintf(cBuffer,1024,"Local-Variable-Name:%s",pUF->ppszLocalVariables[i-1]);
 			vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 		}
 	 }

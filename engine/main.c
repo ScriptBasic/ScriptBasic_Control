@@ -32,7 +32,7 @@ void main(int argc, char *argv[]){
   pProgram = scriba_new(NULL,NULL);
   //scriba_LoadConfiguration(pProgram, cfg); //optional
   //scriba_SetFileName(pProgram,"./scripts/hello.sb");
-  scriba_SetFileName(pProgram,"./scripts/com_voice_test.sb");
+  scriba_SetFileName(pProgram,"./scripts/hello.sb");
 
   /*
   if( scriba_UseCacheFile(pProgram) == SCRIBA_ERROR_SUCCESS ){
@@ -58,8 +58,9 @@ void main(int argc, char *argv[]){
 
   //iError = scriba_LoadInternalPreprocessorByFunction(pProgram, "sdbg", &sdbg_preproc);
 
-  if( scriba_LoadSourceProgram(pProgram) ){
+  if( iError = scriba_LoadSourceProgram(pProgram) ){
 	  printf("failed to load source program!");
+	  report_report(stderr,"",0,iError,REPORT_ERROR,&iErrorCounter,NULL,&fErrorFlags);
 	  getch();
 	  exit(0);
   }

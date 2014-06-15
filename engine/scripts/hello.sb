@@ -1,4 +1,4 @@
-declare sub trial alias "trial" lib "test.exe"
+'declare sub trial alias "trial" lib "test.exe"
 
 a = 1
 b = 2

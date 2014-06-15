@@ -53,6 +53,9 @@ enum {
 
 #include "report.h"
 #include "errcodes.h"
+#include "vb.h"
+
+#define snprintf _snprintf
 
 /*POD
 
@@ -119,26 +122,32 @@ Other bits are reserved for later use.
 =noitemize
 CUT*/
 
-  if( ((*fFlags) & REPORT_F_CGI) && !((*fFlags) & REPORT_F_FRST) ){
+	  char tmp[524]={0};
+
+  /*if( ((*fFlags) & REPORT_F_CGI) && !((*fFlags) & REPORT_F_FRST) ){
     fprintf((FILE *)filepointer,"Status: 200 OK\nContent-Type: text/html\n\n"
                                 "<HTML><HEAD>\n"
                                 "<title>Error page, syntax error</title>\n"
                                 "</HEAD><BODY>\n"
                                 "<H1>Error has happened in the code</H1>"
                                 "<pre>\n");
-    }
+  }*/
 
   if( szErrorString && strlen(szErrorString) > 80 )szErrorString[79] = (char)0;
-
   if( iErrorSeverity >= REPORT_ERROR && piErrorCounter )(*piErrorCounter)++;
-
-  if( FileName )fprintf((FILE*)filepointer,"%s(%ld):",FileName,LineNumber);
-  fprintf((FILE *)filepointer,(iErrorCode < MAX_ERROR_CODE ? " error &H%x:" : " error 0x%08x:"),iErrorCode);
+  if( FileName && strlen(FileName) > 0) snprintf(tmp, 300, "File: %s\n",FileName);
+  if( LineNumber > 0) snprintf(tmp+strlen(tmp), 320, "Line: %d",LineNumber);
+ 
+  snprintf(tmp+strlen(tmp), 400, (iErrorCode < MAX_ERROR_CODE ? " error &H%x: " : " error 0x%08x: "),iErrorCode);
   if( iErrorCode >= MAX_ERROR_CODE )iErrorCode = COMMAND_ERROR_EXTENSION_SPECIFIC;
   if( szErrorString ){
-    fprintf((FILE*)filepointer,en_error_messages[iErrorCode],szErrorString);
-    fprintf((FILE*)filepointer,"\n");
-    }else
-    fprintf((FILE *)filepointer,"%s\n",en_error_messages[iErrorCode]);
-  *fFlags |= REPORT_F_FRST;
+    snprintf(tmp+strlen(tmp), 500, en_error_messages[iErrorCode], szErrorString);
+    strcat(tmp,"\n");
   }
+  else snprintf(tmp+strlen(tmp), 500, "%s\n",en_error_messages[iErrorCode]);
+
+  if(vbStdOut != NULL) vbStdOut(cb_error, tmp, strlen(tmp));
+  else fprintf((FILE*)filepointer,"%s",tmp);
+
+  *fFlags |= REPORT_F_FRST;
+}

@@ -478,6 +478,9 @@ typedef struct _SupportTable {
 #define besMatchSize(P1,P2,P3,P4,P5)\
 (pSt->match_size((P1),(P2),(P3),(P4),(P5)))
 
+void* thread_CreateThread; //these were readded to keep struct layout the same they are null though..
+void* thread_ExitThread;
+
   void (*thread_InitMutex)(PMUTEX pMutex);
 #define besInitMutex(X) (pSt->thread_InitMutex(X))
 
