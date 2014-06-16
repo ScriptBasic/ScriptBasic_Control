@@ -383,15 +383,27 @@ The syntax of the command is
 LINE INPUT [# i , ] variable
 =noverbatim
 
-The parameter T<i> is the file number used in the open statement. If this is not specified the standard input is read.
+The parameter T<i> is the file number used in the open statement. 
+If this is not specified the standard input is read.
 
-The T<variable> will hold a single line from the file read containing the possible new line character terminating the line. If the last line of a file is not terminated by a new line character then the T<variable> will not contain any new line character. Thus this command does return only the characters that are really in the file and does not append extra new line character at the end of the last line if that lacks it.
+The T<variable> will hold a single line from the file read containing the possible new line 
+character terminating the line. If the last line of a file is not terminated by a new line 
+character then the T<variable> will not contain any new line character. Thus this command 
+does return only the characters that are really in the file and does not append extra new 
+line character at the end of the last line if that lacks it.
 
-On the other hand you should not rely on the missing new line character from the end of the last line because it may and usually it happens to be there. Use rather the function R<EOF> to determine if a file reading has reached the end of the file or not.
+On the other hand you should not rely on the missing new line character from the end of 
+the last line because it may and usually it happens to be there. Use rather the function 
+R<EOF> to determine if a file reading has reached the end of the file or not.
 
 See also R<CHOMP>
 
-You can also read from sockets using this command but you should be careful because data in a socket comes from programs generated on the fly. This means that the socket pipe may not contain the line terminating new line and not finished as well unlike a file. Therefore the command may start infinitely long when trying to read from a socket until the application on the other end of the line sends a new line character or closes the socket. When you read from a file this may not happen.
+You can also read from sockets using this command but you should be careful because 
+data in a socket comes from programs generated on the fly. This means that the 
+socket pipe may not contain the line terminating new line and not finished as well 
+unlike a file. Therefore the command may start infinitely long when trying to read 
+from a socket until the application on the other end of the line sends a new line 
+character or closes the socket. When you read from a file this may not happen.
 
 */
 COMMAND(LINPUTF)

@@ -146,8 +146,8 @@ CUT*/
   }
   else snprintf(tmp+strlen(tmp), 500, "%s\n",en_error_messages[iErrorCode]);
 
-  if(vbStdOut != NULL) vbStdOut(cb_error, tmp, strlen(tmp));
-  else fprintf((FILE*)filepointer,"%s",tmp);
+  /*if(vbStdOut != NULL) vbStdOut(cb_error, tmp, strlen(tmp));
+  else*/ fprintf((FILE*)filepointer,"%s",tmp);
 
   *fFlags |= REPORT_F_FRST;
 }

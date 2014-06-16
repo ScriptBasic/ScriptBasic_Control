@@ -84,6 +84,7 @@ typedef struct _ReadObject {
 #include "dynlolib.h"
 #include "scriba.h"
 #include "ipreproc.h"
+#include "vb.h"
 
 /*POD
 

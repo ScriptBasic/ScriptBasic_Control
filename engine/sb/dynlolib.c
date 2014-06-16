@@ -37,6 +37,8 @@ TO_HEADER:
 #include <dlfcn.h>
 #endif
 
+#include "vb.h"
+
 /*POD
 @c Handling Dynamic Load Libraries
 

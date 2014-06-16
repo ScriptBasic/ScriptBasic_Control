@@ -173,6 +173,7 @@ CUT*/
 #include "builder.h"
 #include "errcodes.h"
 #include "buildnum.h"
+#include "vb.h"
 
 #if _WIN32
 #include <windows.h>

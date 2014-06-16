@@ -14,8 +14,6 @@ Attribute VB_Exposed = True
 Private Declare Function ShowWindow Lib "user32" (ByVal hwnd As Long, ByVal nCmdShow As Long) As Long
 Private Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 
-
-
 Public Function longTest(v As Long)
     MsgBox "4 byte Long value: " & v & " received"
 End Function

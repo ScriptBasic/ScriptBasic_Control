@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "myalloc.h"
 #include "dynlolib.h"
 #include "modumana.h"
+#include "vb.h"
 
 extern struct MD5_CTX;
 extern void MD5Init PROTO_LIST ((MD5_CTX *));

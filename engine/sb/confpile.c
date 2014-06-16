@@ -23,6 +23,7 @@ CUT*/
 #include "conftree.h"
 #include "lsp.h"
 #include "confpile.h"
+#include "vb.h"
 
 #define ALLOC(X) (pCT->memory_allocating_function((X),pCT->pMemorySegment))
 #define FREE(X)  (pCT->memory_releasing_function((X),pCT->pMemorySegment))

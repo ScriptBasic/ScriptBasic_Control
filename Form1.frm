@@ -634,11 +634,11 @@ Private Sub ExecuteScript(Optional withDebugger As Boolean)
     
     rv = run_script(loadedFile, IIf(withDebugger, 1, 0))
     
-    If rv <> 0 Then
-        buf = String(255, " ")
-        Call GetErrorString(rv, buf, 255)
-        txtOut = "Error: " & buf
-    End If
+'    If rv <> 0 Then
+'        buf = String(255, " ")
+'        Call GetErrorString(rv, buf, 255)
+'        txtOut = txtOut & vbCrLf & "Error: " & buf
+'    End If
     
     lblStatus = "Idle"
     running = False

@@ -25,6 +25,14 @@ extern vbCallback vbStdOut;
 extern vbDbgCallback vbDbgHandler;
 extern vbHostResolverCallback vbHostResolver;
 
+//we override these to force all outputs to the vb gui. not sure the internal hook thing
+//catches all
+#define	printf my_printf 
+#define	fprintf my_fprintf
+
+extern int my_printf(char* format, ...);
+extern int my_fprintf(FILE* fp, char* format, ...);
+
 #ifdef __cplusplus
 }
 #endif
