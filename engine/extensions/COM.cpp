@@ -47,6 +47,24 @@ int com_dbg = 0;
 int initilized=0;
 vbHostResolverCallback vbHostResolver = NULL;
 
+pSupportTable g_pSt = NULL;
+#define EXPORT comment(linker, "/EXPORT:"__FUNCTION__"="__FUNCDNAME__)
+
+int __stdcall SBCallBack(int EntryPoint)
+{
+#pragma EXPORT
+
+  pSupportTable pSt = g_pSt;
+  VARIABLE FunctionResult;
+  int retVal;
+  
+  if(pSt==NULL) return -1;
+  besHOOK_CALLSCRIBAFUNCTION(EntryPoint, 0, 0, &FunctionResult);
+  retVal = FunctionResult->Value.lValue;
+  besRELEASE(FunctionResult);
+  return retVal;
+}
+
 //vbCallType aligns with DISPATCH_XX values for Invoke
 enum vbCallType{ VbGet = 2, VbLet = 4, VbMethod = 1, VbSet = 8 };
 enum colors{ mwhite=15, mgreen=10, mred=12, myellow=14, mblue=9, mpurple=5, mgrey=7, mdkgrey=8 };
@@ -360,6 +378,8 @@ besFUNCTION(CallByName)
 
   besRETURNVALUE = besNEWMORTALLONG;
   LONGVALUE(besRETURNVALUE) = 0;
+
+  g_pSt = pSt;
 
   if(com_dbg) color_printf(colors::myellow,"CallByName %ld args\n",besARGNR);
   

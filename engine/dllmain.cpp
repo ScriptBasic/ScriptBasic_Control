@@ -16,7 +16,7 @@ realfprintf real_fprintf = fprintf;
 typedef int (*realprintf)(const char*, ...);
 realprintf real_printf = printf;
 
-
+#define IS_SB_ENGINE 1
 #include "vb.h"
 
 

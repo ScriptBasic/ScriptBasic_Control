@@ -39,13 +39,16 @@ Private Sub Command1_Click()
     List1.AddItem "I am still active and processing as normal"
 End Sub
 
+'we have to manually center form because of the way we showed it
+'setting formpos center default wont work in this instance..
+'but it will for frmSelectDate
 Private Sub Form_Load()
     On Error Resume Next
     Me.Left = Screen.Width / 2 - Me.Width / 2
     Me.Top = Screen.Height / 2 - Me.Height / 2
 End Sub
 
-Private Sub Form_Unload(Cancel As Integer)
+Private Sub Form_Unload(cancel As Integer)
     Set f = Nothing
     Unload Me
 End Sub

@@ -42,7 +42,10 @@
 
 int com_dbg = 0;
 int initilized=0;
+pSupportTable g_pSt = NULL;
 
+
+#define EXPORT comment(linker, "/EXPORT:"__FUNCTION__"="__FUNCDNAME__)
 
 //vbCallType aligns with DISPATCH_XX values for Invoke
 enum vbCallType{ VbGet = 2, VbLet = 4, VbMethod = 1, VbSet = 8 };
@@ -122,6 +125,41 @@ void color_printf(colors c, const char *format, ...)
 	SetLastError(dwErr);
 }
 
+int __stdcall SBCallBack(int EntryPoint, int arg)
+{
+#pragma EXPORT
+
+  pSupportTable pSt = g_pSt;
+  VARIABLE FunctionResult;
+  VARIABLE pArg;
+  VARIABLE arg0 = besNEWMORTALLONG;
+  int retVal;
+  
+  if(pSt==NULL){
+	  MessageBox(0,"pSupportTable is not set?","",0);
+	  return -1;
+  }
+
+  arg0->Value.lValue = arg;
+  arg0->vType = VTYPE_LONG;
+  pArg = besNEWARRAY(0,0);
+  pArg->Value.aValue[0] = arg0;
+   
+  //#define besHOOK_CALLSCRIBAFUNCTION(X,Y,Z,W) (pSt->pEo->pHookers->HOOK_CallScribaFunction(pSt->pEo,(X),(Y),(Z),(W)))
+  //int (*HOOK_CallScribaFunction)(pExecuteObject, unsigned long, pFixSizeMemoryObject *, unsigned long, pFixSizeMemoryObject *);
+  
+  besHOOK_CALLSCRIBAFUNCTION(EntryPoint,
+							 pArg->Value.aValue,
+                             1,
+                             &FunctionResult);
+
+  retVal = FunctionResult->Value.lValue;
+  besRELEASE(pArg);
+  besRELEASE(FunctionResult);
+
+  return retVal;
+}
+
 //note the braces..required so if(x)RETURN0(msg) uses the whole blob 
 //should this be goto cleanup instead of return 0? 
 #define RETURN0(msg) {if(com_dbg) color_printf(colors::mred, "%s\n", msg); \
@@ -131,7 +169,7 @@ void color_printf(colors c, const char *format, ...)
 //ReleaseObject(obj)
 besFUNCTION(ReleaseObject)
 
-	VARIABLE Argument;
+	VARIABLE Argument ;
 	besRETURNVALUE = besNEWMORTALLONG;
 
 	if( besARGNR != 1) RETURN0("ReleaseObject takes one argument!") 
@@ -280,6 +318,8 @@ besFUNCTION(CallByName)
   besRETURNVALUE = besNEWMORTALLONG;
   LONGVALUE(besRETURNVALUE) = 0;
 
+  g_pSt = pSt; //we are caching a copy of support table for SBCallback to use
+
   if(com_dbg) color_printf(colors::myellow,"CallByName %ld args\n",besARGNR);
   
   if(besARGNR < 2) RETURN0("CallByName requires at least 2 args..") 
@@ -424,6 +464,7 @@ besFUNCTION(CallByName)
 	case VT_UI8:
 	case VT_INT:
 	case VT_UINT:
+	case VT_DISPATCH:
 
 		if(com_dbg) color_printf(colors::myellow,"return value from COM function was numeric: %d\n", retVal.lVal);
         LONGVALUE(besRETURNVALUE) = retVal.lVal;

@@ -33,6 +33,13 @@ else
     print "Waiting until user closes form to proceede..\n"
     CallByName(obj, "BlockUntilFormCloses")
    
+    sDate = CallByName(obj, "SelectDate")
+    if len(sDate) = 0 then 
+    	print "User pressed cancel for date selection\n"
+    else
+    	print "Date: ", sDate, "\n"
+    end if 
+    
     ReleaseObject(obj)
     print "anndddd were done!\n"
     

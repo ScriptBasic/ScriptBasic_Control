@@ -30,6 +30,7 @@ extern "C" {
 #include "modumana.h"
 #include "ipreproc.h"
 
+//do not add anything to this or existing modules will need to be recompiled..
 typedef struct _SbProgram {
   void *pMEM;
   void * (*maf)(size_t);
@@ -40,7 +41,6 @@ typedef struct _SbProgram {
   char *FirstUNIXline;
 
   void *fpStdouFunction;
-  void *fpVbStdOutFunction;
   void *fpStdinFunction;
   void *fpEnvirFunction;
   void *pEmbedder;

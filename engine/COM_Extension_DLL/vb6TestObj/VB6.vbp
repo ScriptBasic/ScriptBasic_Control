@@ -3,10 +3,15 @@ Class=Sample; Sample.cls
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\WINDOWS\system32\stdole2.tlb#OLE Automation
 Form=Form1.frm
 Module=Module1; Module1.bas
+Object={8E27C92E-1264-101C-8A2F-040224009C02}#7.0#0; MSCAL.OCX
+Form=frmSelectDate.frm
+Form=frmCallBack.frm
 IconForm="Form1"
 Startup="(None)"
 HelpFile=""
 Title="VB6"
+ExeName32="VB6_Example.dll"
+Path32=".."
 Command32=""
 Name="VB6"
 HelpContextID="0"
@@ -33,9 +38,10 @@ Unattended=0
 Retained=0
 ThreadPerObject=0
 MaxNumberOfThreads=1
+DebugStartupOption=0
 
 [MS Transaction Server]
 AutoRefresh=1
 
 [fastBuild]
-fullPath=D:\_code\ScriptBasic_Control\engine\sb\COM_Extension_DLL\VB6_Example.dll
+fullPath=D:\_code\ScriptBasic_Control\engine\COM_Extension_DLL\VB6_Example.dll

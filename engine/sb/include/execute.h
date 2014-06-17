@@ -105,7 +105,6 @@ typedef struct _ExecuteObject {
 
   void *fpStdinFunction;  
   void *fpStdouFunction;
-  void *fpVbStdOutFunction;
   void *fpEnvirFunction;  
   char *CmdLineArgument;  
 
