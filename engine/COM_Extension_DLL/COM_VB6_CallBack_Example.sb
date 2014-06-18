@@ -1,10 +1,20 @@
 import com.inc
 
-function Button1_Click(arg)
-	print "Back in script basic Button1_Click arg=", arg, "\n"
+'in the VB6 GUI
+'this one uses SBCallBackEx which supports multiple types and args
+'return values can be either string or long.
+function Button1_Click(arg, arg1, arg2, arg3, arg4, arg5)
+	print "Button1_Click arg=", arg, "\n"
+	print "Button1_Click arg1=", arg1, "\n"
+	print "Button1_Click arg2=", arg2, "\n"
+	print "Button1_Click arg3=", arg3, "\n"
+	print "Button1_Click arg4=", arg4, "\n"
+	print "Button1_Click arg5=", arg5, "\n"
 	Button1_Click = arg + 1
 end function
 
+'in the VB6 GUI
+'this one uses SBCallBack it only takes one long arg. return value is long
 function Button2_Click(arg)
 	print "Back in script basic Button2_Click arg=", arg, "\n"
 	Button2_Click = arg * 2

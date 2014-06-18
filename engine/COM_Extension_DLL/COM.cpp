@@ -38,6 +38,11 @@
 #include <list>
 #include <string>
 
+#include <comdef.h> 
+#include <AtlBase.h>
+#include <AtlConv.h>
+#include <atlsafe.h>
+
 #include "basext.h"
 
 int com_dbg = 0;
@@ -125,6 +130,117 @@ void color_printf(colors c, const char *format, ...)
 	SetLastError(dwErr);
 }
 
+
+VARIANT __stdcall SBCallBackEx(int EntryPoint, VARIANT *pVal)
+{
+#pragma EXPORT
+
+  pSupportTable pSt = g_pSt;
+  VARIABLE FunctionResult;
+  _variant_t vRet;
+
+  if(pSt==NULL){
+	  MessageBox(0,"pSupportTable is not set?","",0);
+	  return vRet.Detach();
+  }
+  
+    USES_CONVERSION;
+	char buf[1024]={0};
+    HRESULT hr;
+	long lResult;
+	long lb;
+	long ub;
+    SAFEARRAY *pSA = NULL;
+
+	//we only accept variant arrays..
+	if (V_VT(pVal) == (VT_ARRAY | VT_VARIANT | VT_BYREF)) //24588
+		pSA = *(pVal->pparray); 
+	//else if (V_ISARRAY(pVal) && V_ISBYREF(pVal)) //array of longs here didnt work out maybe latter
+	//	pSA = *(pVal->pparray); 
+	else 
+	{ 
+		if (V_VT(pVal) == (VT_ARRAY | VT_VARIANT)) 
+			pSA = pVal->parray; 
+		else 
+			return vRet.Detach();//"Type Mismatch [in] Parameter." 
+	};
+
+    long dim = SafeArrayGetDim(pSA);
+	if(dim != 1) return vRet.Detach();
+
+	lResult = SafeArrayGetLBound(pSA,1,&lb);
+	lResult = SafeArrayGetUBound(pSA,1,&ub);
+
+	lResult=SafeArrayLock(pSA);
+    if(lResult) return vRet.Detach();
+
+    _variant_t vOut;
+	_bstr_t cs; 
+
+	int sz = ub-lb+1;
+    VARIABLE pArg = besNEWARRAY(0,sz);
+
+	//here we proxy the array of COM types into the array of script basic types element by element.
+	//	note this we only support longs and strings. floats will be rounded, objects converted to objptr()
+	//  bytes and integers are ok too..basically just not float and currency..which SB doesnt support anyway..
+    for (long l=lb; l<=ub; l++) {
+		if( SafeArrayGetElement(pSA, &l, &vOut) == S_OK ){
+			if(vOut.vt == VT_BSTR){
+				char* cstr = __B2C(vOut.bstrVal);
+				int slen = strlen(cstr);
+				pArg->Value.aValue[l] = besNEWMORTALSTRING(slen);
+				memcpy(STRINGVALUE(pArg->Value.aValue[l]),cstr,slen);
+				free(cstr);
+			}
+			else{
+				if(vOut.vt == VT_DISPATCH){
+					//todo register handle? but how do we know the lifetime of it..
+					//might only be valid until this exits, or forever?
+				}
+				pArg->Value.aValue[l] = besNEWMORTALLONG;
+				LONGVALUE(pArg->Value.aValue[l]) = vOut.lVal;
+			}
+		}
+    }
+
+  lResult=SafeArrayUnlock(pSA);
+  if (lResult) return vRet.Detach();
+  
+  besHOOK_CALLSCRIBAFUNCTION(EntryPoint,
+							 pArg->Value.aValue,
+                             sz,
+                             &FunctionResult);
+
+  for (long l=0; l <= sz; l++) {
+	 besRELEASE(pArg->Value.aValue[l]);
+     pArg->Value.aValue[l] = NULL;
+  }
+	
+  if(FunctionResult->vType == VTYPE_STRING){
+	char* myStr = GetCString(FunctionResult);
+	vRet.SetString(myStr);
+	free(myStr);
+  }
+  else{
+	  switch( TYPE(FunctionResult) )
+	  {	  
+		case VTYPE_DOUBLE:
+		case VTYPE_ARRAY:
+		case VTYPE_REF:
+				MessageBoxA(0,"Arguments of script basic types [double, ref, array] not supported","Error",0);
+				break;
+		default:
+				vRet = LONGVALUE(FunctionResult);
+	  }
+  }
+
+  besRELEASE(pArg);
+  besRELEASE(FunctionResult);
+
+  return vRet.Detach();
+}
+
+
 int __stdcall SBCallBack(int EntryPoint, int arg)
 {
 #pragma EXPORT
@@ -159,6 +275,20 @@ int __stdcall SBCallBack(int EntryPoint, int arg)
 
   return retVal;
 }
+
+/*besVERSION_NEGOTIATE
+int versmodu(int Version, char *pszVariation, void **ppModuleInternal)
+{
+#pragma EXPORT
+
+  printf("The function bootmodu was started and the requested version is %d\n",Version);
+  printf("The variation is: %s\n",pszVariation);
+  printf("We are returning accepted version %d\n",(int)INTERFACE_VERSION);
+  return (int)INTERFACE_VERSION; //2.1 uses version 11, 2.2 also uses version 11 but structure has changed
+
+}*/
+
+
 
 //note the braces..required so if(x)RETURN0(msg) uses the whole blob 
 //should this be goto cleanup instead of return 0? 
@@ -466,6 +596,7 @@ besFUNCTION(CallByName)
 	case VT_UINT:
 	case VT_DISPATCH:
 
+		//if(retVal.vt == VT_DISPATCH) todo: register handle
 		if(com_dbg) color_printf(colors::myellow,"return value from COM function was numeric: %d\n", retVal.lVal);
         LONGVALUE(besRETURNVALUE) = retVal.lVal;
 		break;

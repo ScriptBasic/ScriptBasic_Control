@@ -205,163 +205,163 @@
 				UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 				>
 				<File
-					RelativePath="..\include\basext.h"
+					RelativePath="..\sb\include\basext.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\builder.h"
+					RelativePath="..\sb\include\builder.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\buildnum.h"
+					RelativePath="..\sb\include\buildnum.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\command.h"
+					RelativePath="..\sb\include\command.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\confpile.h"
+					RelativePath="..\sb\include\confpile.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\conftree.h"
+					RelativePath="..\sb\include\conftree.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\dynlolib.h"
+					RelativePath="..\sb\include\dynlolib.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\epreproc.h"
+					RelativePath="..\sb\include\epreproc.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\errcodes.h"
+					RelativePath="..\sb\include\errcodes.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\execute.h"
+					RelativePath="..\sb\include\execute.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\expression.h"
+					RelativePath="..\sb\include\expression.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\filesys.h"
+					RelativePath="..\sb\include\filesys.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\global.h"
+					RelativePath="..\sb\include\global.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\hndlptr.h"
+					RelativePath="..\sb\include\hndlptr.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\hookers.h"
+					RelativePath="..\sb\include\hookers.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\ipreproc.h"
+					RelativePath="..\sb\include\ipreproc.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\lexer.h"
+					RelativePath="..\sb\include\lexer.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\logger.h"
+					RelativePath="..\sb\include\logger.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\lsp.h"
+					RelativePath="..\sb\include\lsp.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\match.h"
+					RelativePath="..\sb\include\match.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\matchc.h"
+					RelativePath="..\sb\include\matchc.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\md5.h"
+					RelativePath="..\sb\include\md5.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\memory.h"
+					RelativePath="..\sb\include\memory.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\modumana.h"
+					RelativePath="..\sb\include\modumana.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\myalloc.h"
+					RelativePath="..\sb\include\myalloc.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\mygmtime.h"
+					RelativePath="..\sb\include\mygmtime.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\mynotimp.h"
+					RelativePath="..\sb\include\mynotimp.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\notimp.h"
+					RelativePath="..\sb\include\notimp.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\options.h"
+					RelativePath="..\sb\include\options.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\prepext.h"
+					RelativePath="..\sb\include\prepext.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\reader.h"
+					RelativePath="..\sb\include\reader.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\report.h"
+					RelativePath="..\sb\include\report.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\scriba.h"
+					RelativePath="..\sb\include\scriba.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\shared.h"
+					RelativePath="..\sb\include\shared.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\sym.h"
+					RelativePath="..\sb\include\sym.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\syntax.h"
+					RelativePath="..\sb\include\syntax.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\testalloc.h"
+					RelativePath="..\sb\include\testalloc.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\thread.h"
+					RelativePath="..\sb\include\thread.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\uniqfnam.h"
+					RelativePath="..\sb\include\uniqfnam.h"
 					>
 				</File>
 				<File
-					RelativePath="..\include\vb.h"
+					RelativePath="..\sb\include\vb.h"
 					>
 				</File>
 			</Filter>

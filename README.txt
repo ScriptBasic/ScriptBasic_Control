@@ -22,4 +22,8 @@ Features to include:
       ? call stack
       ? variable modification
  
- 
+Directory structure:
+  - top level directory is the vb6 debugger UI using sb_engine.dll
+    - requires the /dependancy/scivb_lite.ocx to be registered
+
+  - scripts - test scripts for the sb_engine build
