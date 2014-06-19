@@ -43,7 +43,7 @@
 #include "basext.h"
 #include "vb.h"
 
-int com_dbg = 0;
+int com_dbg = 1;
 int initilized=0;
 vbHostResolverCallback vbHostResolver = NULL;
 
@@ -299,7 +299,11 @@ besFUNCTION(CreateObject)
   if( hr != S_OK  ) RETURN0("Failed to get clsid")
   
   hr =  CoCreateInstance( clsid, NULL, CLSCTX_INPROC_SERVER, IID_IDispatch,(void**)&IDisp);
-  if ( hr != S_OK ) RETURN0("CoCreateInstance failed does object support IDispatch?")
+  if ( hr != S_OK ){
+	  //ok maybe its an activex exe..
+	  hr =  CoCreateInstance( clsid, NULL, CLSCTX_LOCAL_SERVER, IID_IDispatch,(void**)&IDisp);
+	  if ( hr != S_OK ) RETURN0("CoCreateInstance failed does object support IDispatch?")
+  }
 
   //todo: keep track of valid objects we create for release/call sanity check latter?
   //	  tracking would break operation though if an embedded host used setvariable to add an obj reference..
@@ -525,6 +529,7 @@ besFUNCTION(CallByName)
 	case VT_UI8:
 	case VT_INT:
 	case VT_UINT:
+	case VT_DISPATCH:
 
 		if(com_dbg) color_printf(colors::myellow,"return value from COM function was numeric: %d\n", retVal.lVal);
         LONGVALUE(besRETURNVALUE) = retVal.lVal;

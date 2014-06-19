@@ -1,0 +1,50 @@
+import com.inc
+
+'on error resume next
+
+filename = "c:\\warehouse.xls"
+
+if FileExists(filename) then
+	print "File already exists deleting: ", filename,"\n"
+	delete filename
+end if 
+
+oExcelApp = CreateObject("Excel.Application")
+
+if oExcelApp = 0 then 
+    print "Failed to create Excel Object do you have it installed?"
+    return
+end if 
+
+'vbs: Set ExcelWorkbook = ExcelApp.Workbooks.Add
+oWorkBook = CallByName(oExcelApp, "Workbooks", vbGet)
+oExcelWorkbook = CallByName(oWorkBook, "Add")
+
+'vbs: Set ExcelSheet = ExcelWorkbook.Worksheets(1)
+oExcelSheet = CallByName(oExcelWorkbook, "Worksheets", vbGet, 1)
+
+print "Adding cells...\n"
+
+for i=0 to 10
+   for j=0 to 10
+		'vbs: ExcelSheet.Cells(i, j).Value = "test-" & i & "-" & j
+		oCell = CallByName(oExcelSheet, "Cells", vbGet, i, j)
+		CallByName(oCell, "Value", vbLet, "test-" & i & "-" & j)
+		ReleaseObject(oCell)
+	next
+next
+
+print "Saving document as:", filename, "\n"
+
+CallByName(oExcelWorkbook, "SaveAs", vbMethod, filename)
+CallByName(oExcelWorkbook, "Close")
+CallByName(oExcelApp, "Quit")
+
+print "Releasing objects from memory...\n"
+
+ReleaseObject(oExcelSheet)
+ReleaseObject(oExcelWorkbook)
+ReleaseObject(oWorkBook)
+ReleaseObject(oExcelApp)
+
+print "Script complete!\n"

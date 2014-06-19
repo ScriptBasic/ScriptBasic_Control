@@ -439,7 +439,12 @@ besFUNCTION(CreateObject)
   if( hr != S_OK  ) RETURN0("Failed to get clsid")
   
   hr =  CoCreateInstance( clsid, NULL, CLSCTX_INPROC_SERVER, IID_IDispatch,(void**)&IDisp);
-  if ( hr != S_OK ) RETURN0("CoCreateInstance failed does object support IDispatch?")
+  if ( hr != S_OK ){
+	  //ok maybe its an activex exe..
+	  hr =  CoCreateInstance( clsid, NULL, CLSCTX_LOCAL_SERVER, IID_IDispatch,(void**)&IDisp);
+	  if ( hr != S_OK ) RETURN0("CoCreateInstance failed does object support IDispatch?")
+  }
+
 
   //todo: keep track of valid objects we create for release/call sanity check latter?
   //	  tracking would break operation though if an embedded host used setvariable to add an obj reference..
