@@ -11,6 +11,7 @@
 		declare sub CreateObject alias "CreateObject" lib "test.exe"
 		declare sub CallByName alias "CallByName" lib "test.exe"
 		declare sub ReleaseObject alias "ReleaseObject" lib "test.exe"
+        declare sub TypeName alias "TypeName" lib "test.exe"
 
 		const VbGet = 2
 		const VbLet = 4
@@ -37,6 +38,7 @@
 #include <stdio.h>
 #include <list>
 #include <string>
+#include <map>
 
 #include <comdef.h> 
 #include <AtlBase.h>
@@ -49,7 +51,7 @@ int com_dbg = 0;
 int initilized=0;
 pSupportTable g_pSt = NULL;
 
-
+#define nullptr NULL 
 #define EXPORT comment(linker, "/EXPORT:"__FUNCTION__"="__FUNCDNAME__)
 
 //vbCallType aligns with DISPATCH_XX values for Invoke
@@ -129,6 +131,11 @@ void color_printf(colors c, const char *format, ...)
 
 	SetLastError(dwErr);
 }
+
+
+
+
+
 
 
 VARIANT __stdcall SBCallBackEx(int EntryPoint, VARIANT *pVal)
@@ -276,6 +283,36 @@ int __stdcall SBCallBack(int EntryPoint, int arg)
   return retVal;
 }
 
+HRESULT TypeName(IDispatch* pDisp, std::string *retVal)
+{
+    HRESULT hr = S_OK;
+	UINT count = 0;
+
+    CComPtr<IDispatch> spDisp(pDisp);
+    if(!spDisp)
+        return E_INVALIDARG;
+
+    CComPtr<ITypeInfo> spTypeInfo;
+    hr = spDisp->GetTypeInfo(0, 0, &spTypeInfo);
+
+    if(SUCCEEDED(hr) && spTypeInfo)
+    {
+        CComBSTR funcName;
+        hr = spTypeInfo->GetDocumentation(-1, &funcName, nullptr, nullptr, nullptr);
+        if(SUCCEEDED(hr) && funcName.Length()> 0 )
+        {
+          char* c = __B2C(funcName);
+		  *retVal = c;
+		  free(c);
+        }         
+    }
+
+    return hr;
+
+}
+
+
+
 /*besVERSION_NEGOTIATE
 int versmodu(int Version, char *pszVariation, void **ppModuleInternal)
 {
@@ -295,6 +332,40 @@ int versmodu(int Version, char *pszVariation, void **ppModuleInternal)
 #define RETURN0(msg) {if(com_dbg) color_printf(colors::mred, "%s\n", msg); \
 	                 LONGVALUE(besRETURNVALUE) = 0; \
 					 goto cleanup;}
+
+
+besFUNCTION(TypeName)
+
+	VARIABLE Argument ;
+	char* unk = "Failed";
+
+	if( besARGNR != 1) RETURN0("TypeName takes one argument!") 
+
+	Argument = besARGUMENT(1);
+	besDEREFERENCE(Argument);
+
+	if( TYPE(Argument) != VTYPE_LONG) RETURN0("TypeName requires a long argument")
+	if( LONGVALUE(Argument) == 0) RETURN0("TypeName(NULL) called")
+	IDispatch* IDisp = (IDispatch*)LONGVALUE(Argument);
+	
+	try{
+		std::string retVal;
+		if(TypeName(IDisp, &retVal) == S_OK){
+			besALLOC_RETURN_STRING(retVal.length());
+			memcpy(STRINGVALUE(besRETURNVALUE),retVal.c_str(),retVal.length());
+		}else{
+			besALLOC_RETURN_STRING(strlen(unk));
+			memcpy(STRINGVALUE(besRETURNVALUE),unk,strlen(unk));
+		}
+	}catch(...){
+		RETURN0("Invalid IDisp pointer?")
+	}
+
+cleanup:
+	return 0;
+
+besEND
+
 
 //ReleaseObject(obj)
 besFUNCTION(ReleaseObject)

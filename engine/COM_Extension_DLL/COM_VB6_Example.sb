@@ -12,6 +12,9 @@ obj = CreateObject("VB6.Sample")
 if obj = 0 then 
 	print "CreateObject failed!\n"
 else
+
+    print "TypeName obj = ", TypeName(obj), "\n"
+
     CallByName(obj, "longTest", VbMethod, 20000)
     CallByName(obj, "intTest", VbMethod, 1000)
     CallByName(obj, "byteTest", VbMethod, 255)

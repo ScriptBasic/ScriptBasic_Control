@@ -1,0 +1,25 @@
+import com.inc
+
+function Button1_Click(arg)
+	print "Back in script basic Button1_Click arg=", arg, "\n"
+	Button1_Click = arg + 1
+end function
+
+obj = CreateObject("VB5.CCESample") 
+
+if obj = 0 then 
+    print "CreateObject failed!\n"
+else
+    print "obj = ", obj, "\n"
+	        
+    oCollection = CallByName(obj, "CallBackHandlers", VbGet)
+    print "oCollection = ", oCollection, "\n"
+    
+    CallByName(oCollection, "Add", VbMethod, ADDRESS(Button1_Click()), "frmCallBack.cmdOp1_Click" )
+    
+    retVal = CallByName(obj, "LaunchCallBackForm", vbMethod, 21)
+    print "LaunchCallBackForm returned ", retVal, "\n" 
+    
+    ReleaseObject(obj)
+    print "test complete!\n"
+end if 
