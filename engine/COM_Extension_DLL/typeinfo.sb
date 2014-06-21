@@ -1,0 +1,21 @@
+import com.inc
+
+'on error resume next
+
+oExcelApp = CreateObject("Excel.Application")
+
+if oExcelApp = 0 then 
+    print "Failed to create Excel Object do you have it installed?"
+    return
+end if 
+
+print "Typename = ", TypeName(oExcelApp), "\n"
+
+print "Launching DescribeInterface dialog...\n"
+DescribeInterface oExcelApp 
+
+print "Shutting down Excel and releasing object...\n"
+CallByName(oExcelApp, "Quit")
+ReleaseObject(oExcelApp)
+
+print "Script complete!\n"

@@ -12,6 +12,7 @@
 		declare sub CallByName alias "CallByName" lib "test.exe"
 		declare sub ReleaseObject alias "ReleaseObject" lib "test.exe"
         declare sub TypeName alias "TypeName" lib "test.exe"
+		declare sub DescribeInterface alias "DescribeInterface" lib "test.exe"
 
 		const VbGet = 2
 		const VbLet = 4
@@ -53,6 +54,9 @@ pSupportTable g_pSt = NULL;
 
 #define nullptr NULL 
 #define EXPORT comment(linker, "/EXPORT:"__FUNCTION__"="__FUNCDNAME__)
+
+extern HRESULT TypeName(IDispatch* pDisp, std::string *retVal);
+extern void __stdcall DescribeInterface(IDispatch* pDisp);
 
 //vbCallType aligns with DISPATCH_XX values for Invoke
 enum vbCallType{ VbGet = 2, VbLet = 4, VbMethod = 1, VbSet = 8 };
@@ -283,34 +287,6 @@ int __stdcall SBCallBack(int EntryPoint, int arg)
   return retVal;
 }
 
-HRESULT TypeName(IDispatch* pDisp, std::string *retVal)
-{
-    HRESULT hr = S_OK;
-	UINT count = 0;
-
-    CComPtr<IDispatch> spDisp(pDisp);
-    if(!spDisp)
-        return E_INVALIDARG;
-
-    CComPtr<ITypeInfo> spTypeInfo;
-    hr = spDisp->GetTypeInfo(0, 0, &spTypeInfo);
-
-    if(SUCCEEDED(hr) && spTypeInfo)
-    {
-        CComBSTR funcName;
-        hr = spTypeInfo->GetDocumentation(-1, &funcName, nullptr, nullptr, nullptr);
-        if(SUCCEEDED(hr) && funcName.Length()> 0 )
-        {
-          char* c = __B2C(funcName);
-		  *retVal = c;
-		  free(c);
-        }         
-    }
-
-    return hr;
-
-}
-
 
 
 /*besVERSION_NEGOTIATE
@@ -338,6 +314,7 @@ besFUNCTION(TypeName)
 
 	VARIABLE Argument ;
 	char* unk = "Failed";
+	besRETURNVALUE = besNEWMORTALLONG;
 
 	if( besARGNR != 1) RETURN0("TypeName takes one argument!") 
 
@@ -359,6 +336,34 @@ besFUNCTION(TypeName)
 		}
 	}catch(...){
 		RETURN0("Invalid IDisp pointer?")
+	}
+
+cleanup:
+	return 0;
+
+besEND
+
+
+
+besFUNCTION(DescribeInterface)
+
+	VARIABLE Argument ;
+	char* unk = "Failed";
+	besRETURNVALUE = besNEWMORTALLONG;
+
+	if( besARGNR != 1) RETURN0("DescribeInterface takes one argument!") 
+
+	Argument = besARGUMENT(1);
+	besDEREFERENCE(Argument);
+
+	if( TYPE(Argument) != VTYPE_LONG) RETURN0("DescribeInterface requires a long argument")
+	if( LONGVALUE(Argument) == 0) RETURN0("DescribeInterface(NULL) called")
+	IDispatch* IDisp = (IDispatch*)LONGVALUE(Argument);
+	
+	try{
+		DescribeInterface(IDisp);
+	}catch(...){
+		RETURN0("DescribeInterface threw an error?")
 	}
 
 cleanup:
