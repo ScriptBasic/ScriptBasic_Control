@@ -237,6 +237,74 @@ HRESULT TypeName2(ITypeInfo *spTypeInfo, std::string *retVal)
     return hr;
 }
 
+/*FindCoClass couldnt have been done with out this post by Igor Tandetnik 5/30/07
+    https://groups.google.com/forum/#!topic/microsoft.public.vc.atl/DS2OxSNOi84    */
+
+HRESULT FindCoClass(ITypeInfo* pti, GUID target, std::string &progid, std::string &clsid, std::string &version)
+{
+    HRESULT hr = S_OK;
+	UINT count = 0;
+	char buf[100];
+    std::string tmp;
+	WCHAR* pwszProgID = NULL;
+
+	USES_CONVERSION;
+	UINT index=0;
+	
+	CComPtr<ITypeLib> spTypeLib= nullptr;
+    hr = pti->GetContainingTypeLib(&spTypeLib, &index);
+
+	if(SUCCEEDED(hr) && spTypeLib){
+		UINT cnt = spTypeLib->GetTypeInfoCount();
+		for(int i=0; i < cnt; i++){
+			TYPEKIND tk;
+			CComPtr<ITypeInfo> spTypeInfo = nullptr;
+			hr = spTypeLib->GetTypeInfoType(i, &tk);
+			if( SUCCEEDED(hr) ){
+				if(tk == TKIND_COCLASS){
+					hr = spTypeLib->GetTypeInfo(i, &spTypeInfo);
+					if( SUCCEEDED(hr) ){
+						TYPEATTR *ta = nullptr;
+						hr = spTypeInfo->GetTypeAttr(&ta);
+						if(SUCCEEDED(hr) && ta){
+							for(int j=0; j< ta->cImplTypes; j++){
+								HREFTYPE ht;
+								TYPEATTR *ta2 = nullptr;
+								CComPtr<ITypeInfo> ti2 = nullptr;
+
+								spTypeInfo->GetRefTypeOfImplType(j,&ht);
+								hr = spTypeInfo->GetRefTypeInfo(ht, &ti2);
+								if(SUCCEEDED(hr) && ti2){
+									hr = ti2->GetTypeAttr(&ta2);
+									if(SUCCEEDED(hr) && ta2){
+										if(ta2->guid == target){ //we found our match..
+											sprintf(buf, "%d.%d", ta->wMajorVerNum, ta->wMinorVerNum);
+											version = buf;
+											if (!FAILED(hr = (ProgIDFromCLSID(ta->guid,&pwszProgID))))
+											{
+												progid = W2A(pwszProgID);
+												CoTaskMemFree(pwszProgID);
+											}
+											if (!FAILED(hr = (StringFromCLSID(ta->guid,&pwszProgID))))
+											{
+												clsid = W2A(pwszProgID);
+												CoTaskMemFree(pwszProgID);
+											} 
+										}
+										ti2->ReleaseTypeAttr(ta2);
+									}
+								}
+							}
+							spTypeInfo->ReleaseTypeAttr(ta);
+						}
+					}
+				}
+			}
+		}
+	}
+     return 0;
+}
+
 
 //FUNCFLAG_FRESRICTED=1, 
 #define isRestricted(x)   (((x->wFuncFlags & 0x01)==0) ? false : true)
@@ -249,6 +317,9 @@ HRESULT GetIDispatchMethods(IDispatch* pDisp, std::list<std::string> &methods)
 	UINT count = 0;
 	char buf[100];
     std::string tmp;
+    std::string progid;
+	std::string clsid;
+	std::string version;
 
 	USES_CONVERSION;
 
@@ -266,27 +337,10 @@ HRESULT GetIDispatchMethods(IDispatch* pDisp, std::list<std::string> &methods)
 		
 		if(SUCCEEDED(hr) && pTatt)
         {
-			/*if(pTatt->wMajorVerNum != 0 && pTatt->wMinorVerNum != 0)
-			{
-				sprintf(buf, "Version: %d.%d", pTatt->wMajorVerNum, pTatt->wMinorVerNum);
-				tmp= buf;
-				methods.push_back(tmp);
-			}
-
-			WCHAR* pwszProgID = NULL;
-			if (!FAILED(hr = (ProgIDFromCLSID(pTatt->guid,&pwszProgID)))) //not right one..
-			{
-				tmp = W2A(pwszProgID);
-				methods.push_back("ProgID: " + tmp);
-				CoTaskMemFree(pwszProgID);
-			}
-
-			if (!FAILED(hr = (StringFromCLSID(pTatt->guid,&pwszProgID))))
-			{
-				tmp = W2A(pwszProgID);
-				methods.push_back("CLSID: " + tmp);
-				CoTaskMemFree(pwszProgID);
-			}*/
+			hr = FindCoClass(spTypeInfo,pTatt->guid, progid, clsid, version);
+			if(progid.length() > 0)methods.push_back("ProgID: " + progid); 
+			if(clsid.length() > 0)methods.push_back("CLSID: " + clsid);
+			if(version != "0.0") methods.push_back("Version: " + version);
 
             FUNCDESC *fd = nullptr;
 			
@@ -419,14 +473,10 @@ BOOL CALLBACK MyDlgProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 void __stdcall DescribeInterface(IDispatch* pDisp)
 {
 	std::list<std::string> methods;
-	//IDispatch* pDisp = nullptr;
 	HRESULT hr;
-
-	//hr = iUnk->QueryInterface(IID_IDispatch, (void **)&pDisp);
-    //if (FAILED(hr)) goto error;
 	
 	TypeName(pDisp,&methodDump);
-	methodDump = "Class: " + methodDump + "\r\n";
+	methodDump = "Interface: " + methodDump + "\r\n";
 
 	GetIDispatchMethods(pDisp, methods);
 
