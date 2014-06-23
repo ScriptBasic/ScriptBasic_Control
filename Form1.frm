@@ -400,6 +400,9 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+Dim WithEvents sciext As CSciExtender
+Attribute sciext.VB_VarHelpID = -1
+
 Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryA" (ByVal lpLibFileName As String) As Long
 Private Declare Function FreeLibrary Lib "kernel32" (ByVal hLibModule As Long) As Long
 Private Declare Function GetModuleHandle Lib "kernel32" Alias "GetModuleHandleA" (ByVal lpModuleName As String) As Long
@@ -535,6 +538,34 @@ End Sub
 
 Private Sub mnuSave_Click()
     scivb.SaveFile loadedFile
+End Sub
+
+Private Sub sciext_MarginClick(lLine As Long, Position As Long, margin As Long, modifiers As Long)
+    'Debug.Print "MarginClick: line,pos,margin,modifiers", lLine, Position, margin, modifiers
+    ToggleBreakPoint lLine
+End Sub
+
+Private Sub sciext_MouseDwellEnd(lLine As Long, Position As Long)
+    scivb.StopCallTip
+End Sub
+
+Private Sub sciext_MouseDwellStart(lLine As Long, Position As Long)
+    'Debug.Print "MouseDwell: " & lLine & " CurWord: " & sciext.WordUnderMouse(Position)
+    
+    Dim li As ListItem
+    Dim curWord As String
+    
+    If running Then
+         curWord = sciext.WordUnderMouse(Position)
+         For Each li In lvVars.ListItems
+            If li.SubItems(1) = curWord Then 'they have moused over a variable..
+                scivb.ShowCallTip curWord & " = " & li.SubItems(3)
+                Exit For
+            End If
+         Next
+    End If
+    
+        
 End Sub
 
 Private Sub scivb_DoubleClick()
@@ -689,6 +720,9 @@ Private Sub Form_Load()
     scivb.DisplayCallTips = True
     Call scivb.LoadCallTips(App.path & "\dependancies\calltips.txt")
     LoadFile App.path & "\scripts\importNT.sb"
+    
+    Set sciext = New CSciExtender
+    sciext.Init scivb
     
 End Sub
 

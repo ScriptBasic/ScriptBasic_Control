@@ -8,3 +8,4 @@ modBreakpoints = 132, 132, 840, 733,
 modHostObjs = 132, 132, 959, 733, 
 frmOptions = 110, 110, 749, 685, C, 66, 66, 705, 641, C
 modGeneral = 154, 154, 793, 729, C
+CSciExtender = 132, 132, 938, 825, 
