@@ -17,8 +17,9 @@ Option Explicit
 Public Event MarginClick(lLine As Long, Position As Long, margin As Long, modifiers As Long)
 Public Event MouseDwellStart(lLine As Long, Position As Long)
 Public Event MouseDwellEnd(lLine As Long, Position As Long)
+'Public Event UpdateUI()
 
-Private WithEvents sc As CSubclass2
+Private WithEvents sc As clsSubClass
 Attribute sc.VB_VarHelpID = -1
 Private ucHwnd As Long
 Private owner As SciSimple
@@ -29,6 +30,7 @@ Private Const SCI_LINEFROMPOSITION = 2166
 Private Const SCN_MARGINCLICK = 2010
 Private Const SCN_DWELLSTART = 2016
 Private Const SCN_DWELLEND = 2017
+Private Const SCN_UPDATEUI = 2007
 
 Private Type NMHDR
     hwndFrom As Long
@@ -80,7 +82,7 @@ Function Init(scivb As SciSimple, Optional dwelltime As Long = 600) As Boolean
     Dim i As Long
      
     Set owner = scivb
-    Set sc = New CSubclass2
+    Set sc = New clsSubClass
      
     ucHwnd = GetUCHwnd(scivb)
     If sc.AttachMessage(ucHwnd, WM_NOTIFY) Then
@@ -121,6 +123,9 @@ Private Sub HandleSciMsg(tHdr As NMHDR, scMsg As SCNotification)
     Dim lLine As Long
     
     Select Case tHdr.Code
+                                
+            'Case SCN_UPDATEUI
+            '                    RaiseEvent UpdateUI 'PosChanged was depreceated and removed...
                                 
             Case SCN_MARGINCLICK
                                 lLine = owner.DirectSCI.SendEditor(SCI_LINEFROMPOSITION, scMsg.Position)

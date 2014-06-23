@@ -1,5 +1,5 @@
 Attribute VB_Name = "Module1"
-Public Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, source As Any, ByVal Length As Long)
+Public Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, Source As Any, ByVal length As Long)
 Public Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 
 'get the currently executing line number
@@ -41,6 +41,7 @@ Public variables As New Collection 'of CVariable
 Public callStack As New Collection 'of CCallStack
 Public flatFile As String
 Public hadError As Boolean
+Public shuttingDown As Boolean
 
 Public includeDir As String, moduleDir As String
 Global dlg As New CCmnDlg
@@ -193,7 +194,7 @@ End Function
 Public Function GetDebuggerCommand(ByVal buf As Long, ByVal sz As Long) As Long
         
     Dim b() As Byte
-    Dim source As String, curline As Long
+    Dim Source As String, curline As Long
     
     dbg_cmd = Empty
     
@@ -201,11 +202,11 @@ Public Function GetDebuggerCommand(ByVal buf As Long, ByVal sz As Long) As Long
     'such as declares and function starts
     curline = GetCurrentDebugLine(hDebugObject)
     If Not BreakPointExists(curline) Then
-        source = LCase(Form1.scivb.GetLineText(curline))
-        source = Trim(Replace(source, vbTab, Empty))
-        If InStr(source, " ") > 1 Then
-            source = Left(source, InStr(source, " ") - 1)
-            If source = "declare" Or source = "function" Then
+        Source = LCase(Form1.scivb.GetLineText(curline))
+        Source = Trim(Replace(Source, vbTab, Empty))
+        If InStr(Source, " ") > 1 Then
+            Source = Left(Source, InStr(Source, " ") - 1)
+            If Source = "declare" Or Source = "function" Then
                 dbg_cmd = "s"
             End If
         End If
@@ -303,7 +304,7 @@ Public Sub HandleDebugMessage(msg As String)
     End Select
     
     If Not handled Then
-        Form1.txtDebug = Form1.txtDebug & msg
+        'Form1.txtDebug = Form1.txtDebug & msg
     End If
 
 End Sub
@@ -312,6 +313,8 @@ Public Sub vb_stdout(ByVal t As cb_type, ByVal lpMsg As Long, ByVal sz As Long)
 
     Dim b() As Byte
     Dim msg As String
+    
+    If shuttingDown Then Exit Sub
     
     ReDim b(sz)
     CopyMemory b(0), ByVal lpMsg, sz

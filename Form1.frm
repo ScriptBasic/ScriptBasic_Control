@@ -1,107 +1,132 @@
 VERSION 5.00
 Object = "{FBE17B58-A1F0-4B91-BDBD-C9AB263AC8B0}#78.0#0"; "scivb_lite.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Begin VB.Form Form1 
    Caption         =   "Form1"
-   ClientHeight    =   12000
+   ClientHeight    =   10170
    ClientLeft      =   60
    ClientTop       =   630
    ClientWidth     =   13905
    KeyPreview      =   -1  'True
    LinkTopic       =   "Form1"
-   ScaleHeight     =   12000
+   ScaleHeight     =   10170
    ScaleWidth      =   13905
    StartUpPosition =   2  'CenterScreen
-   Begin VB.CommandButton Command2 
-      Caption         =   "Command2"
-      Height          =   510
-      Left            =   9810
-      TabIndex        =   10
-      Top             =   8775
-      Width           =   1230
-   End
-   Begin MSComctlLib.ListView lvVars 
-      Height          =   1815
-      Left            =   90
-      TabIndex        =   7
-      Top             =   9630
-      Width           =   7530
-      _ExtentX        =   13282
-      _ExtentY        =   3201
-      View            =   3
-      LabelEdit       =   1
-      LabelWrap       =   -1  'True
-      HideSelection   =   -1  'True
-      FullRowSelect   =   -1  'True
-      _Version        =   393217
-      ForeColor       =   -2147483640
-      BackColor       =   -2147483643
-      BorderStyle     =   1
-      Appearance      =   1
-      NumItems        =   4
-      BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         Text            =   "scope"
-         Object.Width           =   2540
-      EndProperty
-      BeginProperty ColumnHeader(2) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         SubItemIndex    =   1
-         Text            =   "name"
-         Object.Width           =   2540
-      EndProperty
-      BeginProperty ColumnHeader(3) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         SubItemIndex    =   2
-         Text            =   "type"
-         Object.Width           =   2540
-      EndProperty
-      BeginProperty ColumnHeader(4) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         SubItemIndex    =   3
-         Text            =   "value"
-         Object.Width           =   2540
-      EndProperty
-   End
-   Begin VB.CommandButton Command1 
-      Caption         =   "Command1"
-      Height          =   510
-      Left            =   12015
-      TabIndex        =   6
-      Top             =   45
-      Width           =   1230
-   End
-   Begin VB.TextBox txtDebug 
-      BeginProperty Font 
-         Name            =   "Courier"
-         Size            =   9.75
-         Charset         =   0
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      Height          =   1725
-      Left            =   8595
-      MultiLine       =   -1  'True
-      ScrollBars      =   3  'Both
-      TabIndex        =   5
-      Top             =   6750
-      Width           =   5145
-   End
-   Begin VB.TextBox txtOut 
-      BeginProperty Font 
-         Name            =   "Courier"
-         Size            =   9.75
-         Charset         =   0
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      Height          =   2760
+   Begin TabDlg.SSTab ts 
+      Height          =   3525
       Left            =   135
-      MultiLine       =   -1  'True
-      ScrollBars      =   3  'Both
       TabIndex        =   2
-      Top             =   6750
-      Width           =   8340
+      Top             =   6525
+      Width           =   13695
+      _ExtentX        =   24156
+      _ExtentY        =   6218
+      _Version        =   393216
+      TabOrientation  =   1
+      Style           =   1
+      TabHeight       =   520
+      TabCaption(0)   =   "Output"
+      TabPicture(0)   =   "Form1.frx":0000
+      Tab(0).ControlEnabled=   -1  'True
+      Tab(0).Control(0)=   "txtOut"
+      Tab(0).Control(0).Enabled=   0   'False
+      Tab(0).ControlCount=   1
+      TabCaption(1)   =   "Variables"
+      TabPicture(1)   =   "Form1.frx":001C
+      Tab(1).ControlEnabled=   0   'False
+      Tab(1).Control(0)=   "lvVars"
+      Tab(1).ControlCount=   1
+      TabCaption(2)   =   "Call Stack"
+      TabPicture(2)   =   "Form1.frx":0038
+      Tab(2).ControlEnabled=   0   'False
+      Tab(2).Control(0)=   "lvCallStack"
+      Tab(2).ControlCount=   1
+      Begin VB.TextBox txtOut 
+         BeginProperty Font 
+            Name            =   "Courier"
+            Size            =   9.75
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   2985
+         Left            =   90
+         MultiLine       =   -1  'True
+         ScrollBars      =   3  'Both
+         TabIndex        =   3
+         Top             =   90
+         Width           =   13515
+      End
+      Begin MSComctlLib.ListView lvVars 
+         Height          =   2985
+         Left            =   -74910
+         TabIndex        =   4
+         Top             =   135
+         Width           =   13515
+         _ExtentX        =   23839
+         _ExtentY        =   5265
+         View            =   3
+         LabelEdit       =   1
+         LabelWrap       =   -1  'True
+         HideSelection   =   -1  'True
+         FullRowSelect   =   -1  'True
+         _Version        =   393217
+         ForeColor       =   -2147483640
+         BackColor       =   -2147483643
+         BorderStyle     =   1
+         Appearance      =   1
+         NumItems        =   4
+         BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+            Text            =   "scope"
+            Object.Width           =   2540
+         EndProperty
+         BeginProperty ColumnHeader(2) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+            SubItemIndex    =   1
+            Text            =   "name"
+            Object.Width           =   2540
+         EndProperty
+         BeginProperty ColumnHeader(3) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+            SubItemIndex    =   2
+            Text            =   "type"
+            Object.Width           =   2540
+         EndProperty
+         BeginProperty ColumnHeader(4) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+            SubItemIndex    =   3
+            Text            =   "value"
+            Object.Width           =   2540
+         EndProperty
+      End
+      Begin MSComctlLib.ListView lvCallStack 
+         Height          =   2985
+         Left            =   -74865
+         TabIndex        =   5
+         Top             =   135
+         Width           =   13470
+         _ExtentX        =   23760
+         _ExtentY        =   5265
+         View            =   3
+         LabelEdit       =   1
+         LabelWrap       =   -1  'True
+         HideSelection   =   -1  'True
+         FullRowSelect   =   -1  'True
+         _Version        =   393217
+         ForeColor       =   -2147483640
+         BackColor       =   -2147483643
+         BorderStyle     =   1
+         Appearance      =   1
+         NumItems        =   2
+         BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+            Text            =   "Line"
+            Object.Width           =   1235
+         EndProperty
+         BeginProperty ColumnHeader(2) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+            SubItemIndex    =   1
+            Text            =   "Function"
+            Object.Width           =   2540
+         EndProperty
+      End
    End
    Begin SCIVB_LITE.SciSimple scivb 
       Height          =   5865
@@ -112,7 +137,130 @@ Begin VB.Form Form1
       _ExtentX        =   24077
       _ExtentY        =   10345
    End
-   Begin MSComctlLib.ImageList ilToolbars 
+   Begin MSComctlLib.ImageList ilToolbar 
+      Left            =   10305
+      Top             =   0
+      _ExtentX        =   1005
+      _ExtentY        =   1005
+      BackColor       =   -2147483643
+      ImageWidth      =   15
+      ImageHeight     =   15
+      MaskColor       =   12632256
+      _Version        =   393216
+      BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
+         NumListImages   =   11
+         BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":0054
+            Key             =   "Run"
+         EndProperty
+         BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":0160
+            Key             =   "Start Debugger"
+         EndProperty
+         BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":026A
+            Key             =   "Break"
+         EndProperty
+         BeginProperty ListImage4 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":0374
+            Key             =   "Stop"
+         EndProperty
+         BeginProperty ListImage5 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":047E
+            Key             =   "Toggle Breakpoint"
+         EndProperty
+         BeginProperty ListImage6 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":0588
+            Key             =   "Clear All Breakpoints"
+         EndProperty
+         BeginProperty ListImage7 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":0692
+            Key             =   "Step In"
+         EndProperty
+         BeginProperty ListImage8 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":079C
+            Key             =   "Step Over"
+         EndProperty
+         BeginProperty ListImage9 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":08A6
+            Key             =   "Step Out"
+         EndProperty
+         BeginProperty ListImage10 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":09B0
+            Key             =   "Run to Cursor"
+         EndProperty
+         BeginProperty ListImage11 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":0ABA
+            Key             =   ""
+         EndProperty
+      EndProperty
+   End
+   Begin MSComctlLib.Toolbar tbarDebug 
+      Height          =   330
+      Left            =   180
+      TabIndex        =   1
+      Top             =   225
+      Width           =   3870
+      _ExtentX        =   6826
+      _ExtentY        =   582
+      ButtonWidth     =   609
+      ButtonHeight    =   582
+      Style           =   1
+      _Version        =   393216
+      BeginProperty Buttons {66833FE8-8583-11D1-B16A-00C0F0283628} 
+         NumButtons      =   13
+         BeginProperty Button1 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Key             =   "Run"
+            Object.ToolTipText     =   "Run"
+         EndProperty
+         BeginProperty Button2 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Key             =   "Start Debugger"
+            Object.ToolTipText     =   "Start Debugger"
+         EndProperty
+         BeginProperty Button3 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Key             =   "Break"
+            Object.ToolTipText     =   "Break"
+         EndProperty
+         BeginProperty Button4 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Key             =   "Stop"
+            Object.ToolTipText     =   "Stop"
+         EndProperty
+         BeginProperty Button5 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Style           =   3
+         EndProperty
+         BeginProperty Button6 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Key             =   "Toggle Breakpoint"
+            Object.ToolTipText     =   "Toggle Breakpoint"
+         EndProperty
+         BeginProperty Button7 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Key             =   "Clear All Breakpoints"
+            Object.ToolTipText     =   "Clear All Breakpoiunts"
+         EndProperty
+         BeginProperty Button8 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Style           =   3
+         EndProperty
+         BeginProperty Button9 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Key             =   "Step In"
+            Object.ToolTipText     =   "Step In"
+         EndProperty
+         BeginProperty Button10 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Key             =   "Step Over"
+            Object.ToolTipText     =   "Step Over"
+         EndProperty
+         BeginProperty Button11 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Key             =   "Step Out"
+            Object.ToolTipText     =   "Step Out"
+         EndProperty
+         BeginProperty Button12 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Key             =   "Run to Cursor"
+            Object.ToolTipText     =   "Run to Cursor"
+         EndProperty
+         BeginProperty Button13 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Style           =   3
+         EndProperty
+      EndProperty
+   End
+   Begin MSComctlLib.ImageList ilToolbars_Disabled 
       Left            =   11025
       Top             =   0
       _ExtentX        =   1005
@@ -123,255 +271,48 @@ Begin VB.Form Form1
       MaskColor       =   12632256
       _Version        =   393216
       BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
-         NumListImages   =   21
+         NumListImages   =   10
          BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0000
-            Key             =   "Toggle Bookmark"
+            Picture         =   "Form1.frx":0BC6
+            Key             =   "Run"
          EndProperty
          BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":010A
-            Key             =   "Execute"
+            Picture         =   "Form1.frx":0CD2
+            Key             =   "Break"
          EndProperty
          BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0216
-            Key             =   "Next Bookmark"
-         EndProperty
-         BeginProperty ListImage4 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0320
-            Key             =   "Previous Bookmark"
-         EndProperty
-         BeginProperty ListImage5 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":042A
-            Key             =   "Clear All Bookmarks"
-         EndProperty
-         BeginProperty ListImage6 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0534
-            Key             =   "Comment Block"
-         EndProperty
-         BeginProperty ListImage7 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":063E
-            Key             =   "UnCommentBlock"
-         EndProperty
-         BeginProperty ListImage8 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0748
-            Key             =   "Tab Left"
-         EndProperty
-         BeginProperty ListImage9 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0852
-            Key             =   "Tab Right"
-         EndProperty
-         BeginProperty ListImage10 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":095C
-            Key             =   "Parse code"
-         EndProperty
-         BeginProperty ListImage11 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0A66
-            Key             =   "Run"
-         EndProperty
-         BeginProperty ListImage12 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0B70
-            Key             =   "Break"
-         EndProperty
-         BeginProperty ListImage13 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0C7A
-            Key             =   "Stop"
-         EndProperty
-         BeginProperty ListImage14 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0D84
-            Key             =   "Toggle Breakpoint"
-         EndProperty
-         BeginProperty ListImage15 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0E8E
+            Picture         =   "Form1.frx":0DDE
             Key             =   "Clear All Breakpoints"
          EndProperty
-         BeginProperty ListImage16 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0F98
-            Key             =   "Step In"
-         EndProperty
-         BeginProperty ListImage17 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":10A2
-            Key             =   "Step Over"
-         EndProperty
-         BeginProperty ListImage18 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":11AC
-            Key             =   "Step Out"
-         EndProperty
-         BeginProperty ListImage19 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":12B6
-            Key             =   "Immediate"
-         EndProperty
-         BeginProperty ListImage20 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":13C0
-            Key             =   "Callstack"
-         EndProperty
-         BeginProperty ListImage21 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":14CA
-            Key             =   "Set Next"
-         EndProperty
-      EndProperty
-   End
-   Begin MSComctlLib.Toolbar tbarDebug 
-      Height          =   315
-      Left            =   180
-      TabIndex        =   3
-      Top             =   225
-      Width           =   3870
-      _ExtentX        =   6826
-      _ExtentY        =   556
-      ButtonWidth     =   582
-      ButtonHeight    =   556
-      Style           =   1
-      ImageList       =   "ilToolbars"
-      _Version        =   393216
-      BeginProperty Buttons {66833FE8-8583-11D1-B16A-00C0F0283628} 
-         NumButtons      =   15
-         BeginProperty Button1 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Key             =   "Execute"
-            Object.ToolTipText     =   "Execute"
-            ImageKey        =   "Execute"
-         EndProperty
-         BeginProperty Button2 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Key             =   "Run"
-            Object.ToolTipText     =   "Run"
-            ImageKey        =   "Run"
-         EndProperty
-         BeginProperty Button3 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Key             =   "Break"
-            Object.ToolTipText     =   "Break"
-            ImageKey        =   "Break"
-         EndProperty
-         BeginProperty Button4 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Key             =   "Stop"
-            Object.ToolTipText     =   "Stop"
-            ImageKey        =   "Stop"
-         EndProperty
-         BeginProperty Button5 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Style           =   3
-         EndProperty
-         BeginProperty Button6 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Key             =   "Breakpoint"
-            Object.ToolTipText     =   "Toggle Breakpoint"
-            ImageKey        =   "Toggle Breakpoint"
-         EndProperty
-         BeginProperty Button7 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Key             =   "Clear Breakpoints"
-            Object.ToolTipText     =   "Clear All Breakpoiunts"
-            ImageKey        =   "Clear All Breakpoints"
-         EndProperty
-         BeginProperty Button8 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Style           =   3
-         EndProperty
-         BeginProperty Button9 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Key             =   "Step In"
-            Object.ToolTipText     =   "Step In"
-            ImageKey        =   "Step In"
-         EndProperty
-         BeginProperty Button10 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Key             =   "Step Over"
-            Object.ToolTipText     =   "Step Over"
-            ImageKey        =   "Step Over"
-         EndProperty
-         BeginProperty Button11 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Key             =   "Step Out"
-            Object.ToolTipText     =   "Step Out"
-            ImageKey        =   "Step Out"
-         EndProperty
-         BeginProperty Button12 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+         BeginProperty ListImage4 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":0EEA
             Key             =   "Run to Cursor"
-            Object.ToolTipText     =   "Run to Cursor"
-            ImageKey        =   "Set Next"
          EndProperty
-         BeginProperty Button13 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Style           =   3
+         BeginProperty ListImage5 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":0FF6
+            Key             =   "Step Over"
          EndProperty
-         BeginProperty Button14 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Object.Visible         =   0   'False
-            Key             =   "Immediate"
-            Object.ToolTipText     =   "Immediate Window"
-            ImageKey        =   "Immediate"
-            Style           =   1
+         BeginProperty ListImage6 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":1102
+            Key             =   "Step Out"
          EndProperty
-         BeginProperty Button15 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-            Object.Visible         =   0   'False
-            Key             =   "Callstack"
-            Object.ToolTipText     =   "Callstack"
-            ImageKey        =   "Callstack"
-            Style           =   1
+         BeginProperty ListImage7 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":120E
+            Key             =   "Step In"
          EndProperty
-      EndProperty
-   End
-   Begin MSComctlLib.StatusBar sbStatus 
-      Align           =   2  'Align Bottom
-      Height          =   255
-      Left            =   0
-      TabIndex        =   4
-      Top             =   11745
-      Width           =   13905
-      _ExtentX        =   24527
-      _ExtentY        =   450
-      _Version        =   393216
-      BeginProperty Panels {8E3867A5-8586-11D1-B16A-00C0F0283628} 
-         NumPanels       =   2
-         BeginProperty Panel1 {8E3867AB-8586-11D1-B16A-00C0F0283628} 
-            AutoSize        =   1
-            Bevel           =   0
-            Object.Width           =   21458
-            Text            =   "Ready"
-            TextSave        =   "Ready"
-            Key             =   "Status"
-            Object.ToolTipText     =   "Shows status of script"
+         BeginProperty ListImage8 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":131A
+            Key             =   "Stop"
          EndProperty
-         BeginProperty Panel2 {8E3867AB-8586-11D1-B16A-00C0F0283628} 
-            AutoSize        =   2
-            Text            =   "1x1"
-            TextSave        =   "1x1"
-            Key             =   "SelStart"
+         BeginProperty ListImage9 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":1426
+            Key             =   "Start Debugger"
+         EndProperty
+         BeginProperty ListImage10 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "Form1.frx":1530
+            Key             =   "Toggle Breakpoint"
          EndProperty
       EndProperty
-   End
-   Begin MSComctlLib.ListView lvCallStack 
-      Height          =   1815
-      Left            =   7695
-      TabIndex        =   8
-      Top             =   9630
-      Width           =   6090
-      _ExtentX        =   10742
-      _ExtentY        =   3201
-      View            =   3
-      LabelEdit       =   1
-      LabelWrap       =   -1  'True
-      HideSelection   =   -1  'True
-      FullRowSelect   =   -1  'True
-      _Version        =   393217
-      ForeColor       =   -2147483640
-      BackColor       =   -2147483643
-      BorderStyle     =   1
-      Appearance      =   1
-      NumItems        =   2
-      BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         Text            =   "Line"
-         Object.Width           =   1235
-      EndProperty
-      BeginProperty ColumnHeader(2) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-         SubItemIndex    =   1
-         Text            =   "Function"
-         Object.Width           =   2540
-      EndProperty
-   End
-   Begin VB.Label lblStatus 
-      Height          =   285
-      Left            =   4185
-      TabIndex        =   9
-      Top             =   270
-      Width           =   6540
-   End
-   Begin VB.Label Label1 
-      Caption         =   "Output"
-      Height          =   240
-      Left            =   180
-      TabIndex        =   1
-      Top             =   6525
-      Width           =   1860
    End
    Begin VB.Menu mnuFile 
       Caption         =   "File"
@@ -420,12 +361,9 @@ Public hasImports As Boolean
 
 Const SC_MARK_CIRCLE = 0
 Const SC_MARK_ARROW = 2
+Const SC_MARK_BACKGROUND = 22
 'http://www.scintilla.org/aprilw/SciLexer.bas
-'
-'if we subclass scivb.sciHWND we can use Dwelltime for mouse over variable popups, and
-'we can capture gutterclick events to set breakpoints..then if i like it enough, I can
-'break compatability on the ocx to add them in permanent if need be..or just keep as external
-'extension module..
+
 
 Dim selCallStackItem As ListItem
 Dim selVariable As ListItem
@@ -630,20 +568,23 @@ End Sub
 
 
 
+
+Private Sub TabStrip1_Click()
+
+End Sub
+
 Private Sub tbarDebug_ButtonClick(ByVal Button As MSComctlLib.Button)
 
     Select Case Button.key
-        Case "Execute":   If running Then DebuggerCmd "R" Else ExecuteScript
-        Case "Run":       If running Then DebuggerCmd "R" Else ExecuteScript True
-        Case "Stop":      DebuggerCmd "q"
-        Case "Step In":   DebuggerCmd "s"
-        Case "Step Over": DebuggerCmd "S"
-        Case "Step Out":  DebuggerCmd "o"
-        Case "Run to Cursor": RunToLine scivb.CurrentLine + 1
-        Case "Breakpoint": ToggleBreakPoint
-        Case "Clear Breakpoints": RemoveAllBreakpoints
-        'Case "Immediate"
-        'Case "Callstack"
+        Case "Run":               If running Then DebuggerCmd "R" Else ExecuteScript
+        Case "Start Debugger":    If running Then DebuggerCmd "R" Else ExecuteScript True
+        Case "Stop":              DebuggerCmd "q"
+        Case "Step In":           DebuggerCmd "s"
+        Case "Step Over":         DebuggerCmd "S"
+        Case "Step Out":          DebuggerCmd "o"
+        Case "Run to Cursor":     RunToLine scivb.CurrentLine + 1
+        Case "Toggle Breakpoint": ToggleBreakPoint
+        Case "Clear All Breakpoints": RemoveAllBreakpoints
     End Select
     
 End Sub
@@ -661,27 +602,44 @@ Private Sub ExecuteScript(Optional withDebugger As Boolean)
     If scivb.isDirty Then scivb.SaveFile loadedFile
     
     running = True
+    SetToolBarIcons
     lblStatus = IIf(withDebugger, "Debugging", "Running")
     
     rv = run_script(loadedFile, IIf(withDebugger, 1, 0))
     
-'    If rv <> 0 Then
-'        buf = String(255, " ")
-'        Call GetErrorString(rv, buf, 255)
-'        txtOut = txtOut & vbCrLf & "Error: " & buf
-'    End If
+    'if user closed form while debugger running..we must exit now or form_load again hidden..
+    If shuttingDown Then Exit Sub
     
     lblStatus = "Idle"
     running = False
     LockEditor False
-    scivb.HighLightActiveLine = False
+    SetToolBarIcons
     scivb.DeleteMarker lastEIP, 1
     ClearUIBreakpoints
     If hasImports Then scivb.LoadFile loadedFile
     
 End Sub
 
+Private Sub SetToolBarIcons()
+    Dim b As Button
+    
+    Set tbarDebug.ImageList = Nothing
+    Set tbarDebug.ImageList = IIf(running, ilToolbar, ilToolbars_Disabled)
+    
+    For Each b In tbarDebug.Buttons
+        If Len(b.key) > 0 Then
+            b.Image = b.key
+            If b.key <> "Run" And b.key <> "Start Debugger" Then
+                b.Enabled = running
+            End If
+        End If
+    Next
+    
+End Sub
+
 Private Sub Form_Load()
+    
+   SetToolBarIcons
     
     mnuCallStackPopup.Visible = False
     hsbLib = LoadLibrary(App.path & "\engine\sb_engine.dll")
@@ -706,8 +664,9 @@ Private Sub Form_Load()
     scivb.DirectSCI.MarkerSetFore 1, vbBlack 'current eip
     scivb.DirectSCI.MarkerSetBack 1, vbYellow
   
-    lvCallStack.ColumnHeaders(2).Width = lvCallStack.Width - lvCallStack.ColumnHeaders(2).Left - 100
-    lvVars.ColumnHeaders(lvVars.ColumnHeaders.Count).Width = lvVars.Width - lvVars.ColumnHeaders(lvVars.ColumnHeaders.Count).Left - 100
+    scivb.DirectSCI.MarkerDefine 3, SC_MARK_BACKGROUND
+    scivb.DirectSCI.MarkerSetFore 3, vbBlack 'current eip
+    scivb.DirectSCI.MarkerSetBack 3, vbYellow
     
     'App.Path & "\scripts\com_voice_test.sb"
     'LoadFile App.Path & "\scripts\functions.txt"
@@ -740,11 +699,20 @@ Private Sub Form_Resize()
     On Error Resume Next
     With scivb
         .Width = Me.Width - .Left - 200
-        '.Height = Me.Height - .Top - 500
+        ts.Width = .Width
+        txtOut.Width = .Width - 200
+        lvVars.Width = txtOut.Width
+        lvCallStack.Width = txtOut.Width
+        ts.Top = Me.Height - ts.Height - 800
+        .Height = Me.Height - .Top - ts.Height - 1000
+        lvCallStack.ColumnHeaders(2).Width = lvCallStack.Width - lvCallStack.ColumnHeaders(2).Left - 100
+        lvVars.ColumnHeaders(lvVars.ColumnHeaders.Count).Width = lvVars.Width - lvVars.ColumnHeaders(lvVars.ColumnHeaders.Count).Left - 100
     End With
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
+    shuttingDown = True
+    If running Then DebuggerCmd "q"
     Call SaveMySetting("includeDir", includeDir)
     Call SaveMySetting("moduleDir", moduleDir)
     FreeLibrary hsbLib
@@ -754,14 +722,15 @@ Public Sub SyncUI()
     
     Dim curline As Long
     
-    scivb.DeleteMarker lastEIP, 1
+    scivb.DeleteMarker lastEIP, 1 'remove the yellow arrow
+    scivb.DeleteMarker lastEIP, 3 'remove the yellow line backcolor
     
     curline = GetCurrentDebugLine(hDebugObject)
     scivb.SetMarker curline, 1
+    scivb.SetMarker curline, 3
     lastEIP = curline
     
     scivb.GotoLine curline
-    scivb.HighLightActiveLine = True
     scivb.SetFocus
     
     RefreshVariables
