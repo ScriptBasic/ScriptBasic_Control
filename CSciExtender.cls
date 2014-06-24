@@ -155,4 +155,21 @@ Public Function WordUnderMouse(pos As Long) As String
     
 End Function
 
+Sub LockEditor(Optional locked As Boolean = True)
+    Dim i As Long
+    
+    With owner
+        If locked Then
+            .ReadOnly = True
+            .DirectSCI.StyleSetBack 32, &HF0F0F0
+            For i = 0 To 127
+                .DirectSCI.StyleSetBack i, &HF0F0F0
+            Next i
+        Else
+            .ReadOnly = False
+            .SetHighlighter "VB" 'sets back to defaults..
+        End If
+    End With
+ 
+End Sub
 

@@ -1,5 +1,5 @@
-Form1 = 11, 4, 823, 616, , 153, 6, 965, 618, C
-Module1 = 41, 21, 1279, 815, Z
+Form1 = 161, 18, 1215, 887, Z, 153, 6, 965, 618, C
+Module1 = 41, 21, 1279, 815, C
 CVariable = 157, 138, 1187, 796, C
 CBreakpoint = 88, 88, 1092, 672, C
 cCallStack = 88, 88, 1092, 672, C
@@ -8,4 +8,5 @@ modBreakpoints = 132, 132, 840, 733,
 modHostObjs = 132, 132, 959, 733, 
 frmOptions = 110, 110, 749, 685, C, 66, 66, 705, 641, C
 modGeneral = 154, 154, 793, 729, 
-CSciExtender = 0, 0, 0, 0, C
+CSciExtender = 154, 154, 1228, 826, C
+modIntellisense = 198, 198, 1310, 870, C

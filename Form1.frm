@@ -410,23 +410,6 @@ Private Sub RefreshCallStack()
     
 End Sub
 
-Sub LockEditor(Optional locked As Boolean = True)
-    Dim i As Long
-    
-    With scivb
-        If locked Then
-            .ReadOnly = True
-            .DirectSCI.StyleSetBack 32, &HF0F0F0
-            For i = 0 To 127
-                .DirectSCI.StyleSetBack i, &HF0F0F0
-            Next i
-        Else
-            .ReadOnly = False
-            .SetHighlighter "VB" 'sets back to defaults..
-        End If
-    End With
- 
-End Sub
 
 Private Sub lvCallStack_ItemClick(ByVal Item As MSComctlLib.ListItem)
     scivb.GotoLine CLng(Item.Text)
@@ -510,7 +493,7 @@ Private Sub scivb_DoubleClick()
     End If
 End Sub
 
-Private Sub scivb_MouseUp(Button As Integer, Shift As Integer, X As Long, Y As Long)
+Private Sub scivb_MouseUp(Button As Integer, Shift As Integer, x As Long, Y As Long)
     If scivb.SelLength > 0 And scivb.SelLength < 20 Then
         Dim word As String
         word = Trim(scivb.SelText)
@@ -542,7 +525,8 @@ Private Sub scivb_KeyUp(KeyCode As Long, Shift As Long)
     Dim txt As String
     Dim curPos As Long
     Dim prevChar As String
-
+    Dim methods As String
+    
     If KeyCode = 186 Then
         curPos = scivb.GetCaretInLine()
         txt = scivb.GetLineText(scivb.CurrentLine)
@@ -555,11 +539,13 @@ Private Sub scivb_KeyUp(KeyCode As Long, Shift As Long)
         curWord = scivb.CurrentWord
         scivb.GotoCol curPos
 
-        If curWord = "nt" Then
-
-            scivb.ShowAutoComplete ":RegRead :RegDel :RegWrite :MsgBox :ShutDown :ListProcesses :StartService :StopService :PauseService :ContinueService :HardLink"
-
+        On Error Resume Next
+        
+        If Len(curWord) > 0 Then
+            methods = modules(curWord)
+            If Err.Number = 0 Then scivb.ShowAutoComplete methods
         End If
+
     End If
 
 
@@ -597,7 +583,7 @@ Private Sub ExecuteScript(Optional withDebugger As Boolean)
     
     txtOut.Text = Empty
     
-    LockEditor
+    sciext.LockEditor
     If scivb.isDirty Then scivb.SaveFile loadedFile
     
     running = True
@@ -611,7 +597,7 @@ Private Sub ExecuteScript(Optional withDebugger As Boolean)
     
     lblStatus = "Idle"
     running = False
-    LockEditor False
+    sciext.LockEditor False
     SetToolBarIcons
     scivb.DeleteMarker lastEIP, 1
     ClearUIBreakpoints
@@ -628,6 +614,7 @@ Private Sub SetToolBarIcons()
     For Each b In tbarDebug.Buttons
         If Len(b.key) > 0 Then
             b.Image = b.key
+            b.ToolTipText = b.key
             If b.key <> "Run" And b.key <> "Start Debugger" Then
                 b.Enabled = running
             End If
@@ -655,8 +642,9 @@ Private Sub Form_Load()
     SetConfig includeDir, moduleDir
 
     SetCallBacks AddressOf vb_stdout, AddressOf GetDebuggerCommand, AddressOf HostResolver
+    InitIntellisense App.path & "\dependancies\modules.txt"
     scivb.LoadHighlighter App.path & "\dependancies\vb.bin"
-
+ 
     scivb.DirectSCI.HideSelection False
     scivb.DirectSCI.MarkerDefine 2, SC_MARK_CIRCLE
     scivb.DirectSCI.MarkerSetFore 2, vbRed 'set breakpoint color
@@ -688,9 +676,9 @@ Private Sub Form_Load()
 
 End Sub
 
-Sub LoadFile(fPath As String)
+Sub LoadFile(fpath As String)
    
-   loadedFile = fPath
+   loadedFile = fpath
    scivb.DeleteAllMarkers
    scivb.LoadFile loadedFile
    Set breakpoints = New Collection

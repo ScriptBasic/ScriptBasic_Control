@@ -1,4 +1,13 @@
 Attribute VB_Name = "modGeneral"
+Function ReadFile(filename)
+  f = FreeFile
+  temp = ""
+   Open filename For Binary As #f        ' Open file.(can be text or image)
+     temp = Input(FileLen(filename), #f) ' Get entire Files data
+   Close #f
+   ReadFile = temp
+End Function
+
 Function FileExists(path) As Boolean
   On Error Resume Next
   If Len(path) = 0 Then Exit Function
