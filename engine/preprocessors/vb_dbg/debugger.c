@@ -35,6 +35,17 @@ This program implements a simple debugger "preprocessor" for ScriptBasic.
 
 #define snprintf _snprintf
 
+enum Debug_Commands{
+    dc_NotSet = 0,
+    dc_Run = 1,
+    dc_StepInto = 3,
+    dc_StepOut = 4,
+    dc_StepOver = 5,
+    dc_RunToLine = 6,
+	dc_Quit = 7,
+	dc_Manual = 8
+};
+
 int LineNumberForNode(pDebuggerObject pDO, int node)
 {
   if( node < 1 || node > pDO->cNodes ) return 0;
@@ -863,25 +874,6 @@ void scomm_Init(pDebuggerObject pDO)
 
 }
 
-/*POD
-=section WeAreAt
-=H Send prompt to the debugger station
-
-This function is called by the debugger when it stops before executing
-a BASIC line. This function can be used to give some information to the
-client, displaying lines around the actual one, values of variables and so on.
-
-/*FUNCTION*/
-void scomm_WeAreAt(pDebuggerObject pDO,long i)
-{
-
-  char cBuffer[100];
-  int cbBuffer;
-
-  sprintf(cBuffer,"Current-Line: %u\r\n",i+1);
-  vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
-}
-
 /*
 scripts using import statement combine the source files into one flat file.
 for debugging we need to load this flat file so our line numbers match..
@@ -950,11 +942,10 @@ int _stdcall dbg_isBpSet(pDebuggerObject pDO, int line)
 
 int MyExecBefore(pExecuteObject pEo)
 {
-  long i,j,lThisLine, lThis;
+  long lThisLine;
   pPrepext pEXT;
   pDebuggerObject pDO;
-  char lbuf[80];
-  char cmd;
+  enum Debug_Commands cmd;
   char cBuffer[1025];
   int cbBuffer;
 
@@ -974,25 +965,56 @@ int MyExecBefore(pExecuteObject pEo)
 		if( pDO->Run2Line && pDO->Nodes[pDO->lPC-1].lSourceLine != pDO->Run2Line )return 0;
   }
 
-  //scomm_WeAreAt(pDO,lThisLine);
   pDO->StackListPointer = pDO->DbgStack;
 
   while(1){
-
-	    lThis = GetCurrentDebugLine(pDO); 
-	    scomm_WeAreAt(pDO,lThis);
 	                     
-		cbBuffer = vbDbgHandler(&cBuffer[0], 1024);  //--------> blocks while waiting to receive a command from user
-        cmd = cBuffer[0];
-
+		//cBuf used to be to get the command, now unused..we will leave it in though in case we need args someday...
+		cmd = vbDbgHandler(&cBuffer[0], 1024);  //--------> blocks while waiting to receive a command from user
 
 		switch( cmd ){
 
-			  case 'D':/* step the stack list pointer to the bottom */
+			  case dc_Quit:/* quit the program execution */
+						scomm_Message(pDO,"DEBUG_QUIT");
+						pEo->pszModuleError = "Debugger Operator Forced Exit.";
+						return COMMAND_ERROR_PREPROCESSOR_ABORT;
+
+			  case dc_StepInto:/*step a single line and step into functions */
+						pDO->Run2CallStack = pDO->CallStackDepth+1;
+						pDO->Run2Line = 0;
+						return 0; /* step one step forward */
+
+			  case dc_StepOut:/* run program until it gets out of the current function */
+						pDO->Run2CallStack = pDO->CallStackDepth ? pDO->CallStackDepth - 1 : 0 ;
+						pDO->Run2Line = 0;
+						return 0; /* step one step forward */
+
+			  case dc_StepOver:
+						pDO->Run2CallStack = pDO->CallStackDepth;
+						pDO->Run2Line = 0;
+						return 0; /* step one step forward but remain on the same level */
+
+			  case dc_Run:
+						 pDO->Run2CallStack = pDO->CallStackDepth; /* on the current level */
+						 pDO->Run2Line = -1; /* a nonzero value that can not be a valid line number */
+						 return 0;
+						  
+			  case dc_Manual: return 0; //manually set (like RunToLine export) just return..
+						 
+
+		  }  
+    }  
+    
+	return 0;
+}
+
+/* unused commands from original..
+
+			  case 'D':/* step the stack list pointer to the bottom * /
 						 pDO->StackListPointer = pDO->DbgStack;
 						 continue;
 
-			  case 'u':/* step the stack list pointer up */
+			  case 'u':/* step the stack list pointer up * /
 						if( pDO->StackListPointer )
 						{
 						  pDO->StackListPointer = pDO->StackListPointer->up;
@@ -1000,7 +1022,7 @@ int MyExecBefore(pExecuteObject pEo)
 						else scomm_Message(pDO,"No way up more");
 						continue;
 
-			  case 'd':/* step the stack list pointer down */
+			  case 'd':/* step the stack list pointer down * /
 						if( pDO->StackListPointer && pDO->StackListPointer->down )
 							pDO->StackListPointer = pDO->StackListPointer->down;
 						else
@@ -1012,44 +1034,13 @@ int MyExecBefore(pExecuteObject pEo)
 							scomm_Message(pDO,"No way down more");
 						continue;
 
-			  case 'q':/* quit the program execution */
-						scomm_Message(pDO,"DEBUG_QUIT");
-						pEo->pszModuleError = "Debugger Operator Forced Exit.";
-						return COMMAND_ERROR_PREPROCESSOR_ABORT;
-
-			  case 's':/*step a single line and step into functions */
-						pDO->Run2CallStack = pDO->CallStackDepth+1;
-						pDO->Run2Line = 0;
-						return 0; /* step one step forward */
-
-			  case 'o':/* run program until it gets out of the current function */
-						pDO->Run2CallStack = pDO->CallStackDepth ? pDO->CallStackDepth - 1 : 0 ;
-						pDO->Run2Line = 0;
-						return 0; /* step one step forward */
-
-			  case 'S':
-						pDO->Run2CallStack = pDO->CallStackDepth;
-						pDO->Run2Line = 0;
-						return 0; /* step one step forward but remain on the same level */
-
 			  case 'r':
-						pDO->Run2CallStack = -1;/* any level deep */
-						pDO->Run2Line = -1;/* a nonzero value that can not be a valid line number */
+						pDO->Run2CallStack = -1;/* any level deep * /
+						pDO->Run2Line = -1;/* a nonzero value that can not be a valid line number * /
 						return 0;  
 
-			  case 'R':
-						 pDO->Run2CallStack = pDO->CallStackDepth; /* on the current level */
-						 pDO->Run2Line = -1; /* a nonzero value that can not be a valid line number */
-						 return 0;
-						  
-			  case 'm': return 0; //manually set (like RunToLine export) just return..
-						 
+*/
 
-		  } //end switch
-    } //end while
-    
-	return 0;
-}
 
 /*
 return values: 

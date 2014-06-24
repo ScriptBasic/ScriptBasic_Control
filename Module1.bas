@@ -35,7 +35,7 @@ Private Declare Function dbg_SourceLineCount Lib "sb_engine" (ByVal hDebug As Lo
 Public hProgram As Long
 Public hDebugObject As Long     'handle to the current debug object - pDO
 Public readyToReturn As Boolean
-Public dbg_cmd As String
+Public dbg_cmd As Debug_Commands
 Public running As Boolean
 Public variables As New Collection 'of CVariable
 Public callStack As New Collection 'of CCallStack
@@ -65,6 +65,17 @@ Enum sb_VarTypes
     VTYPE_UNDEF = 5
 End Enum
 
+Enum Debug_Commands
+    dc_NotSet = 0
+    dc_Run = 1
+    dc_stepinto = 3
+    dc_StepOut = 4
+    dc_StepOver = 5
+    dc_RunToLine = 6
+    dc_Quit = 7
+    dc_Manual = 8
+End Enum
+
 Function LoadFlatFile() As Boolean
     
     Dim tmp As String
@@ -86,7 +97,7 @@ End Function
 
 Public Sub RunToLine(lineNo As Long)
     dbg_RunToLine hDebugObject, lineNo
-    DebuggerCmd "m"
+    DebuggerCmd dc_Manual
 End Sub
 
 Public Function EnumCallStack() As Collection
@@ -120,7 +131,13 @@ Public Function VariableType(varName As String) As String
     
 End Function
 
-Public Sub DebuggerCmd(cmd As String)
+Public Sub DebuggerCmd(cmd As Debug_Commands)
+    
+    With Form1
+        .scivb.DeleteMarker .lastEIP, 1 'remove the yellow arrow
+        .scivb.DeleteMarker .lastEIP, 3 'remove the yellow line backcolor
+    End With
+    
     dbg_cmd = cmd
     readyToReturn = True
 End Sub
@@ -196,7 +213,7 @@ Public Function GetDebuggerCommand(ByVal buf As Long, ByVal sz As Long) As Long
     Dim b() As Byte
     Dim Source As String, curline As Long
     
-    dbg_cmd = Empty
+    dbg_cmd = dc_NotSet
     
     'there are some lines we dont want to stop and show as execution to the user,
     'such as declares and function starts
@@ -207,12 +224,12 @@ Public Function GetDebuggerCommand(ByVal buf As Long, ByVal sz As Long) As Long
         If InStr(Source, " ") > 1 Then
             Source = Left(Source, InStr(Source, " ") - 1)
             If Source = "declare" Or Source = "function" Then
-                dbg_cmd = "s"
+                dbg_cmd = dc_stepinto
             End If
         End If
     End If
     
-    If dbg_cmd = Empty Then
+    If dbg_cmd = dc_NotSet Then
         Form1.SyncUI
         
         'we block here until the UI sets the readyToReturn = true
@@ -224,16 +241,18 @@ Public Function GetDebuggerCommand(ByVal buf As Long, ByVal sz As Long) As Long
         Wend
     End If
     
-    If Len(dbg_cmd) < sz Then
-        dbg_cmd = dbg_cmd & Chr(0)
-        ReDim b(Len(dbg_cmd))
-        b() = StrConv(dbg_cmd, vbFromUnicode)
-        CopyMemory ByVal buf, b(0), Len(dbg_cmd)
-        GetDebuggerCommand = Len(dbg_cmd)
-    Else
-        GetDebuggerCommand = 0
-        MsgBox "Shouldnt happen!"
-    End If
+    GetDebuggerCommand = dbg_cmd 'now were enum based..
+    
+'    If Len(dbg_cmd) < sz Then
+'        dbg_cmd = dbg_cmd & Chr(0)
+'        ReDim b(Len(dbg_cmd))
+'        b() = StrConv(dbg_cmd, vbFromUnicode)
+'        CopyMemory ByVal buf, b(0), Len(dbg_cmd)
+'        GetDebuggerCommand = Len(dbg_cmd)
+'    Else
+'        GetDebuggerCommand = 0
+'        MsgBox "Shouldnt happen!"
+'    End If
     
 End Function
 

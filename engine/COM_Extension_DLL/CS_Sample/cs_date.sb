@@ -1,0 +1,11 @@
+import com.inc
+
+cs = CreateObject("Sample.Sample")
+
+if cs = 0 then 
+	print "Failed to create the C# com object did you register the dll with regasm and have .NET installed?"
+	return
+end if 
+
+d = CallByName(cs, "GetDate")
+print "User Selected date: ", d

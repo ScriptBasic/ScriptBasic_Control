@@ -1,3 +1,4 @@
+#module nt::
 RegRead(string regpath)
 RegDel(string regpath)
 RegWrite(string regpath)
@@ -9,5 +10,144 @@ StopService("Service name")
 PauseService("Service name")
 ContinueService("Service name")
 HardLink("existing file","new filename")
- 
 
+
+#built in commands (review args for accuracy)
+ABS(var)
+ACOS(var)
+ACOSECANT(var)
+ACTAN(var)
+ADDDAY(time,int)
+ADDHOUR(time,int)
+ADDMINUTE(time,int)
+ADDMONTH(time,int)
+ADDRESS( myFunc() )
+ADDSECOND(time,int)
+ADDWEEK(time,int)
+ADDYEAR(time,int)
+ASC(string)
+ASECANT(var)
+ASIN(var)
+ATAN(var)
+ATN(var)
+CHDIR(path)
+CHOMP(string)
+CHR(code)
+CLOSE(fn)
+COMMAND()
+CONF("conf.key")
+COS(var)
+COSECANT(var)
+COTAN(var)
+COTAN2(var)
+CRYPT(string,salt)
+CURDIR()
+DAY([date])
+DELETE(file/dir)
+DELTREE(file/dir)
+ENVIRON("envsymbol")
+EOD(dn)
+EOF(n)
+ERROR()
+EVEN(int) as boolean
+EXECUTE("executable_program", time_out,pid_v)
+EXP
+FILEACCESSTIME(file_name)
+FILECOPY filename,filename
+FILECREATETIME(file_name)
+FILEEXISTS(file_name)
+FILELEN(file_name)
+FILEMODIFYTIME(file_name)
+FIX(var)
+FORMAT(format, ...)
+FORMATDATE(format, ...)
+FILEOWNER(FileName)
+FRAC
+FREEFILE()
+GMTIME
+GMTOLOCALTIME
+HCOS
+HCOSECANT
+HCTAN
+HEX(n)
+HOSTNAME()
+HOUR
+HSECANT
+HSIN
+HTAN
+ICALL n,v1,v2, ... ,vn
+INPUT(n,fn)
+INSTR(base_string, search_string [, position ] )
+INSTRREV(base_string,search_string [ ,position ] )
+INT
+ISARRAY
+ISDEF
+ISDIRECTORY(file_name)
+ISEMPTY
+ISINTEGER
+ISNUMERIC
+ISREAL
+ISFILE(file_name)
+ISSTRING
+ISUNDEF
+JOIN(joiner,str1,str2,...)
+JOKER(n)
+KILL(pid)
+LBOUND
+LCASE()
+LEFT(string,len)
+LEN()
+LINE INPUT
+LOC()
+LOCATLTOGMTIME
+LOCK REGION # fn FROM start TO end FOR mode
+LOF()
+LOG
+LOG10
+LTRIM()
+MID(string, start [,len ])
+MINUTE(time)
+MKDIR directory_name
+MONTH(time)
+NAME(filename,filename)
+NEXTFILE(dn)
+NOW()
+OCT(n)
+ODD(var)
+OPTION("symbol")
+pack("format",v1,v2,...,vn)
+PI()
+POW(var)
+RANDOMIZE([seed])
+REPLACE(base_string, search_string, replace_string [,number_of_replaces] [,position])
+REWIND(fn)
+RIGHT(string,len)
+RND(var)
+ROUND(var)
+RTRIM(var)
+SEC(var)
+SECANT(var)
+SIN(var)
+SLEEP(n)
+SPACE(n)
+SPLIT( string BY string TO var_1,var_2,var_3,...,var_n)
+SPLITA( string BY string TO array)
+SQR(var)
+STOP()
+STR(n)
+STRING(n,code)
+STRREVERSE(string)
+SYSTEM(executable_program)
+TAN(var)
+TAN2(var)
+TIMEVALUE
+TRIM()
+TRUNCATE(fn, new_length)
+TYPE(var)
+UBOUND(ary)
+UCASE(string)
+UNDEF(variable)
+VAL(strtoint)
+WEEKDAY(time)
+YEAR(time)
+YEARDAY(time)

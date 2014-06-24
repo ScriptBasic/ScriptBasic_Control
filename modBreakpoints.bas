@@ -26,6 +26,10 @@ Function isExecutableLine(lineNo As Long) As Boolean
     If Left(tmp, 1) = "'" Then GoTo fail 'is comment
     If Left(tmp, 5) = "local" Then GoTo fail
     If Left(tmp, 5) = "const" Then GoTo fail
+    If Left(tmp, 8) = "function" Then GoTo fail  'functio/sub start lines are hit more than you expect, once as it skips over it, so we block it as bp cause confusing..
+    If Left(tmp, 3) = "sub" Then GoTo fail
+    If Left(tmp, 3) = "rem" Then GoTo fail
+    
     
     isExecutableLine = True
 Exit Function
@@ -71,7 +75,7 @@ Public Sub SetBreakpoint(lineNo As Long)
     
     Set b = New CBreakpoint
     b.lineNo = lineNo
-    b.source = Form1.scivb.GetLineText(lineNo)
+    b.Source = Form1.scivb.GetLineText(lineNo)
     breakpoints.Add b, "bp:" & lineNo
     
     Form1.scivb.SetMarker lineNo
@@ -101,7 +105,7 @@ End Sub
 Sub InitDebuggerBpx()
     Dim b As CBreakpoint
     For Each b In breakpoints
-        If b.source = Form1.scivb.GetLineText(b.lineNo) Then
+        If b.Source = Form1.scivb.GetLineText(b.lineNo) Then
             dbg_ModifyBreakpoint hDebugObject, b.lineNo + 1, 1
             Form1.scivb.SetMarker b.lineNo
         End If

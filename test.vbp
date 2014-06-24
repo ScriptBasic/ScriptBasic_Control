@@ -3,7 +3,6 @@ Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\WINDOWS\system32\st
 Reference=*\G{60FF6824-F68B-4DF1-9ECF-6F0893AAD2B8}#1.2#0#..\libs\Subclass\spSubclass.dll#SandSprite_SubClass Component
 Object={FBE17B58-A1F0-4B91-BDBD-C9AB263AC8B0}#78.0#0; scivb_lite.ocx
 Object={831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0; MSCOMCTL.OCX
-Object={BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0; TABCTL32.OCX
 Form=Form1.frm
 Module=Module1; Module1.bas
 Class=CVariable; CVariable.cls

@@ -1,0 +1,53 @@
+REGEDIT4
+
+[HKEY_CLASSES_ROOT\Sample.Sample]
+@="Sample.Sample"
+
+[HKEY_CLASSES_ROOT\Sample.Sample\CLSID]
+@="{3EADC1CF-A528-31CB-B949-1067988380D1}"
+
+[HKEY_CLASSES_ROOT\CLSID\{3EADC1CF-A528-31CB-B949-1067988380D1}]
+@="Sample.Sample"
+
+[HKEY_CLASSES_ROOT\CLSID\{3EADC1CF-A528-31CB-B949-1067988380D1}\InprocServer32]
+@="mscoree.dll"
+"ThreadingModel"="Both"
+"Class"="Sample.Sample"
+"Assembly"="Sample, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+"RuntimeVersion"="v2.0.50727"
+
+[HKEY_CLASSES_ROOT\CLSID\{3EADC1CF-A528-31CB-B949-1067988380D1}\InprocServer32\1.0.0.0]
+"Class"="Sample.Sample"
+"Assembly"="Sample, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+"RuntimeVersion"="v2.0.50727"
+
+[HKEY_CLASSES_ROOT\CLSID\{3EADC1CF-A528-31CB-B949-1067988380D1}\ProgId]
+@="Sample.Sample"
+
+[HKEY_CLASSES_ROOT\CLSID\{3EADC1CF-A528-31CB-B949-1067988380D1}\Implemented Categories\{62C8FE65-4EBB-45E7-B440-6E39B2CDBF29}]
+
+[HKEY_CLASSES_ROOT\Sample.Form1]
+@="Sample.Form1"
+
+[HKEY_CLASSES_ROOT\Sample.Form1\CLSID]
+@="{609FB5A3-796A-339D-BF1A-775AAC2BD1BD}"
+
+[HKEY_CLASSES_ROOT\CLSID\{609FB5A3-796A-339D-BF1A-775AAC2BD1BD}]
+@="Sample.Form1"
+
+[HKEY_CLASSES_ROOT\CLSID\{609FB5A3-796A-339D-BF1A-775AAC2BD1BD}\InprocServer32]
+@="mscoree.dll"
+"ThreadingModel"="Both"
+"Class"="Sample.Form1"
+"Assembly"="Sample, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+"RuntimeVersion"="v2.0.50727"
+
+[HKEY_CLASSES_ROOT\CLSID\{609FB5A3-796A-339D-BF1A-775AAC2BD1BD}\InprocServer32\1.0.0.0]
+"Class"="Sample.Form1"
+"Assembly"="Sample, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+"RuntimeVersion"="v2.0.50727"
+
+[HKEY_CLASSES_ROOT\CLSID\{609FB5A3-796A-339D-BF1A-775AAC2BD1BD}\ProgId]
+@="Sample.Form1"
+
+[HKEY_CLASSES_ROOT\CLSID\{609FB5A3-796A-339D-BF1A-775AAC2BD1BD}\Implemented Categories\{62C8FE65-4EBB-45E7-B440-6E39B2CDBF29}]

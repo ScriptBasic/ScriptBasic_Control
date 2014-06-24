@@ -1,138 +1,108 @@
 VERSION 5.00
 Object = "{FBE17B58-A1F0-4B91-BDBD-C9AB263AC8B0}#78.0#0"; "scivb_lite.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Begin VB.Form Form1 
    Caption         =   "Form1"
-   ClientHeight    =   10170
+   ClientHeight    =   8310
    ClientLeft      =   60
-   ClientTop       =   630
-   ClientWidth     =   13905
+   ClientTop       =   -975
+   ClientWidth     =   11880
    KeyPreview      =   -1  'True
    LinkTopic       =   "Form1"
-   ScaleHeight     =   10170
-   ScaleWidth      =   13905
+   ScaleHeight     =   8310
+   ScaleWidth      =   11880
    StartUpPosition =   2  'CenterScreen
-   Begin TabDlg.SSTab ts 
-      Height          =   3525
-      Left            =   135
+   Begin MSComctlLib.ListView lvVars 
+      Height          =   1050
+      Left            =   11745
+      TabIndex        =   5
+      Top             =   5895
+      Width           =   1860
+      _ExtentX        =   3281
+      _ExtentY        =   1852
+      View            =   3
+      LabelEdit       =   1
+      LabelWrap       =   -1  'True
+      HideSelection   =   -1  'True
+      FullRowSelect   =   -1  'True
+      _Version        =   393217
+      ForeColor       =   -2147483640
+      BackColor       =   -2147483643
+      BorderStyle     =   1
+      Appearance      =   1
+      NumItems        =   4
+      BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         Text            =   "scope"
+         Object.Width           =   2540
+      EndProperty
+      BeginProperty ColumnHeader(2) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   1
+         Text            =   "name"
+         Object.Width           =   2540
+      EndProperty
+      BeginProperty ColumnHeader(3) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   2
+         Text            =   "type"
+         Object.Width           =   2540
+      EndProperty
+      BeginProperty ColumnHeader(4) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   3
+         Text            =   "value"
+         Object.Width           =   2540
+      EndProperty
+   End
+   Begin MSComctlLib.ListView lvCallStack 
+      Height          =   1185
+      Left            =   9810
+      TabIndex        =   3
+      Top             =   5850
+      Width           =   1815
+      _ExtentX        =   3201
+      _ExtentY        =   2090
+      View            =   3
+      LabelEdit       =   1
+      LabelWrap       =   -1  'True
+      HideSelection   =   -1  'True
+      FullRowSelect   =   -1  'True
+      _Version        =   393217
+      ForeColor       =   -2147483640
+      BackColor       =   -2147483643
+      BorderStyle     =   1
+      Appearance      =   1
+      NumItems        =   2
+      BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         Text            =   "Line"
+         Object.Width           =   1235
+      EndProperty
+      BeginProperty ColumnHeader(2) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   1
+         Text            =   "Function"
+         Object.Width           =   2540
+      EndProperty
+   End
+   Begin VB.TextBox txtOut 
+      BeginProperty Font 
+         Name            =   "Courier"
+         Size            =   9.75
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   1185
+      Left            =   6525
+      MultiLine       =   -1  'True
+      ScrollBars      =   3  'Both
       TabIndex        =   2
-      Top             =   6525
-      Width           =   13695
-      _ExtentX        =   24156
-      _ExtentY        =   6218
-      _Version        =   393216
-      TabOrientation  =   1
-      Style           =   1
-      TabHeight       =   520
-      TabCaption(0)   =   "Output"
-      TabPicture(0)   =   "Form1.frx":0000
-      Tab(0).ControlEnabled=   -1  'True
-      Tab(0).Control(0)=   "txtOut"
-      Tab(0).Control(0).Enabled=   0   'False
-      Tab(0).ControlCount=   1
-      TabCaption(1)   =   "Variables"
-      TabPicture(1)   =   "Form1.frx":001C
-      Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "lvVars"
-      Tab(1).ControlCount=   1
-      TabCaption(2)   =   "Call Stack"
-      TabPicture(2)   =   "Form1.frx":0038
-      Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "lvCallStack"
-      Tab(2).ControlCount=   1
-      Begin VB.TextBox txtOut 
-         BeginProperty Font 
-            Name            =   "Courier"
-            Size            =   9.75
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Height          =   2985
-         Left            =   90
-         MultiLine       =   -1  'True
-         ScrollBars      =   3  'Both
-         TabIndex        =   3
-         Top             =   90
-         Width           =   13515
-      End
-      Begin MSComctlLib.ListView lvVars 
-         Height          =   2985
-         Left            =   -74910
-         TabIndex        =   4
-         Top             =   135
-         Width           =   13515
-         _ExtentX        =   23839
-         _ExtentY        =   5265
-         View            =   3
-         LabelEdit       =   1
-         LabelWrap       =   -1  'True
-         HideSelection   =   -1  'True
-         FullRowSelect   =   -1  'True
-         _Version        =   393217
-         ForeColor       =   -2147483640
-         BackColor       =   -2147483643
-         BorderStyle     =   1
-         Appearance      =   1
-         NumItems        =   4
-         BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-            Text            =   "scope"
-            Object.Width           =   2540
-         EndProperty
-         BeginProperty ColumnHeader(2) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-            SubItemIndex    =   1
-            Text            =   "name"
-            Object.Width           =   2540
-         EndProperty
-         BeginProperty ColumnHeader(3) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-            SubItemIndex    =   2
-            Text            =   "type"
-            Object.Width           =   2540
-         EndProperty
-         BeginProperty ColumnHeader(4) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-            SubItemIndex    =   3
-            Text            =   "value"
-            Object.Width           =   2540
-         EndProperty
-      End
-      Begin MSComctlLib.ListView lvCallStack 
-         Height          =   2985
-         Left            =   -74865
-         TabIndex        =   5
-         Top             =   135
-         Width           =   13470
-         _ExtentX        =   23760
-         _ExtentY        =   5265
-         View            =   3
-         LabelEdit       =   1
-         LabelWrap       =   -1  'True
-         HideSelection   =   -1  'True
-         FullRowSelect   =   -1  'True
-         _Version        =   393217
-         ForeColor       =   -2147483640
-         BackColor       =   -2147483643
-         BorderStyle     =   1
-         Appearance      =   1
-         NumItems        =   2
-         BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-            Text            =   "Line"
-            Object.Width           =   1235
-         EndProperty
-         BeginProperty ColumnHeader(2) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
-            SubItemIndex    =   1
-            Text            =   "Function"
-            Object.Width           =   2540
-         EndProperty
-      End
+      Top             =   5760
+      Width           =   3165
    End
    Begin SCIVB_LITE.SciSimple scivb 
       Height          =   5865
-      Left            =   135
+      Left            =   90
       TabIndex        =   0
-      Top             =   585
+      Top             =   630
       Width           =   13650
       _ExtentX        =   24077
       _ExtentY        =   10345
@@ -150,47 +120,47 @@ Begin VB.Form Form1
       BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
          NumListImages   =   11
          BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0054
+            Picture         =   "Form1.frx":0000
             Key             =   "Run"
          EndProperty
          BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0160
+            Picture         =   "Form1.frx":010C
             Key             =   "Start Debugger"
          EndProperty
          BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":026A
+            Picture         =   "Form1.frx":0216
             Key             =   "Break"
          EndProperty
          BeginProperty ListImage4 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0374
+            Picture         =   "Form1.frx":0320
             Key             =   "Stop"
          EndProperty
          BeginProperty ListImage5 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":047E
+            Picture         =   "Form1.frx":042A
             Key             =   "Toggle Breakpoint"
          EndProperty
          BeginProperty ListImage6 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0588
+            Picture         =   "Form1.frx":0534
             Key             =   "Clear All Breakpoints"
          EndProperty
          BeginProperty ListImage7 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0692
+            Picture         =   "Form1.frx":063E
             Key             =   "Step In"
          EndProperty
          BeginProperty ListImage8 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":079C
+            Picture         =   "Form1.frx":0748
             Key             =   "Step Over"
          EndProperty
          BeginProperty ListImage9 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":08A6
+            Picture         =   "Form1.frx":0852
             Key             =   "Step Out"
          EndProperty
          BeginProperty ListImage10 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":09B0
+            Picture         =   "Form1.frx":095C
             Key             =   "Run to Cursor"
          EndProperty
          BeginProperty ListImage11 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0ABA
+            Picture         =   "Form1.frx":0A66
             Key             =   ""
          EndProperty
       EndProperty
@@ -273,44 +243,70 @@ Begin VB.Form Form1
       BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
          NumListImages   =   10
          BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0BC6
+            Picture         =   "Form1.frx":0B72
             Key             =   "Run"
          EndProperty
          BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0CD2
+            Picture         =   "Form1.frx":0C7E
             Key             =   "Break"
          EndProperty
          BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0DDE
+            Picture         =   "Form1.frx":0D8A
             Key             =   "Clear All Breakpoints"
          EndProperty
          BeginProperty ListImage4 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0EEA
+            Picture         =   "Form1.frx":0E96
             Key             =   "Run to Cursor"
          EndProperty
          BeginProperty ListImage5 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":0FF6
+            Picture         =   "Form1.frx":0FA2
             Key             =   "Step Over"
          EndProperty
          BeginProperty ListImage6 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":1102
+            Picture         =   "Form1.frx":10AE
             Key             =   "Step Out"
          EndProperty
          BeginProperty ListImage7 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":120E
+            Picture         =   "Form1.frx":11BA
             Key             =   "Step In"
          EndProperty
          BeginProperty ListImage8 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":131A
+            Picture         =   "Form1.frx":12C6
             Key             =   "Stop"
          EndProperty
          BeginProperty ListImage9 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":1426
+            Picture         =   "Form1.frx":13D2
             Key             =   "Start Debugger"
          EndProperty
          BeginProperty ListImage10 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "Form1.frx":1530
+            Picture         =   "Form1.frx":14DC
             Key             =   "Toggle Breakpoint"
+         EndProperty
+      EndProperty
+   End
+   Begin MSComctlLib.TabStrip ts 
+      Height          =   3120
+      Left            =   180
+      TabIndex        =   4
+      Top             =   6615
+      Width           =   13650
+      _ExtentX        =   24077
+      _ExtentY        =   5503
+      Placement       =   1
+      _Version        =   393216
+      BeginProperty Tabs {1EFB6598-857C-11D1-B16A-00C0F0283628} 
+         NumTabs         =   3
+         BeginProperty Tab1 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
+            Caption         =   "Output"
+            ImageVarType    =   2
+         EndProperty
+         BeginProperty Tab2 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
+            Caption         =   "Variables"
+            ImageVarType    =   2
+         EndProperty
+         BeginProperty Tab3 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
+            Caption         =   "CallStack"
+            ImageVarType    =   2
          EndProperty
       EndProperty
    End
@@ -356,7 +352,7 @@ Private Declare Sub SetCallBacks Lib "sb_engine" (ByVal msgProc As Long, ByVal d
 
 Dim loadedFile As String
 Dim hsbLib As Long
-Dim lastEIP As Long
+Public lastEIP As Long
 Public hasImports As Boolean
 
 Const SC_MARK_CIRCLE = 0
@@ -517,10 +513,13 @@ End Sub
 Private Sub scivb_MouseUp(Button As Integer, Shift As Integer, X As Long, Y As Long)
     If scivb.SelLength > 0 And scivb.SelLength < 20 Then
         Dim word As String
-        word = scivb.SelText
+        word = Trim(scivb.SelText)
+        word = Replace(word, vbTab, "")
         If Len(word) < 20 Then
             Me.Caption = "  " & scivb.hilightWord(word, , vbTextCompare) & " instances of '" & word & " ' found"
         End If
+    Else
+        scivb.hilightClear
     End If
 End Sub
 
@@ -529,12 +528,12 @@ Private Sub scivb_KeyDown(KeyCode As Long, Shift As Long)
     'Debug.Print KeyCode & " " & Shift
     Select Case KeyCode
         Case vbKeyF2: ToggleBreakPoint
-        Case vbKeyF5: If running Then DebuggerCmd "R" Else ExecuteScript True
-        Case vbKeyF7: DebuggerCmd "s" 'step into
-        Case vbKeyF8: DebuggerCmd "S" 'step over
-        Case vbKeyF9: DebuggerCmd "o" 'step out
+        Case vbKeyF5: If running Then DebuggerCmd dc_Run Else ExecuteScript True
+        Case vbKeyF7: DebuggerCmd dc_stepinto
+        Case vbKeyF8: DebuggerCmd dc_StepOver
+        Case vbKeyF9: DebuggerCmd dc_StepOut
     End Select
-    
+
 End Sub
 
 Private Sub scivb_KeyUp(KeyCode As Long, Shift As Long)
@@ -543,7 +542,7 @@ Private Sub scivb_KeyUp(KeyCode As Long, Shift As Long)
     Dim txt As String
     Dim curPos As Long
     Dim prevChar As String
-    
+
     If KeyCode = 186 Then
         curPos = scivb.GetCaretInLine()
         txt = scivb.GetLineText(scivb.CurrentLine)
@@ -551,11 +550,11 @@ Private Sub scivb_KeyUp(KeyCode As Long, Shift As Long)
         If curPos < 3 Then Exit Sub
         prevChar = Mid(txt, curPos - 1, 1)
         If prevChar <> ":" Then Exit Sub
-        
+
         scivb.GotoCol curPos - 2
         curWord = scivb.CurrentWord
         scivb.GotoCol curPos
-        
+
         If curWord = "nt" Then
 
             scivb.ShowAutoComplete ":RegRead :RegDel :RegWrite :MsgBox :ShutDown :ListProcesses :StartService :StopService :PauseService :ContinueService :HardLink"
@@ -576,12 +575,12 @@ End Sub
 Private Sub tbarDebug_ButtonClick(ByVal Button As MSComctlLib.Button)
 
     Select Case Button.key
-        Case "Run":               If running Then DebuggerCmd "R" Else ExecuteScript
-        Case "Start Debugger":    If running Then DebuggerCmd "R" Else ExecuteScript True
-        Case "Stop":              DebuggerCmd "q"
-        Case "Step In":           DebuggerCmd "s"
-        Case "Step Over":         DebuggerCmd "S"
-        Case "Step Out":          DebuggerCmd "o"
+        Case "Run":               If running Then DebuggerCmd dc_Run Else ExecuteScript
+        Case "Start Debugger":    If running Then DebuggerCmd dc_Run Else ExecuteScript True
+        Case "Stop":              DebuggerCmd dc_Quit
+        Case "Step In":           DebuggerCmd dc_stepinto
+        Case "Step Over":         DebuggerCmd dc_StepOver
+        Case "Step Out":          DebuggerCmd dc_StepOut
         Case "Run to Cursor":     RunToLine scivb.CurrentLine + 1
         Case "Toggle Breakpoint": ToggleBreakPoint
         Case "Clear All Breakpoints": RemoveAllBreakpoints
@@ -638,51 +637,55 @@ Private Sub SetToolBarIcons()
 End Sub
 
 Private Sub Form_Load()
+
+    SetToolBarIcons
     
-   SetToolBarIcons
-    
+    lvVars.Visible = False
+    lvCallStack.Visible = False
+     
     mnuCallStackPopup.Visible = False
     hsbLib = LoadLibrary(App.path & "\engine\sb_engine.dll")
-    
+
     If hsbLib = 0 Then
         MsgBox "Failed to load sb_engine.dll by explicit path?"
     End If
-    
+
     includeDir = GetMySetting("includeDir", App.path & "\include\")
     moduleDir = GetMySetting("moduleDir", App.path & "\modules\")
     SetConfig includeDir, moduleDir
 
     SetCallBacks AddressOf vb_stdout, AddressOf GetDebuggerCommand, AddressOf HostResolver
     scivb.LoadHighlighter App.path & "\dependancies\vb.bin"
-    
+
     scivb.DirectSCI.HideSelection False
     scivb.DirectSCI.MarkerDefine 2, SC_MARK_CIRCLE
     scivb.DirectSCI.MarkerSetFore 2, vbRed 'set breakpoint color
     scivb.DirectSCI.MarkerSetBack 2, vbRed
-    
+
     scivb.DirectSCI.MarkerDefine 1, SC_MARK_ARROW
     scivb.DirectSCI.MarkerSetFore 1, vbBlack 'current eip
     scivb.DirectSCI.MarkerSetBack 1, vbYellow
-  
+
     scivb.DirectSCI.MarkerDefine 3, SC_MARK_BACKGROUND
     scivb.DirectSCI.MarkerSetFore 3, vbBlack 'current eip
     scivb.DirectSCI.MarkerSetBack 3, vbYellow
-    
+
     'App.Path & "\scripts\com_voice_test.sb"
     'LoadFile App.Path & "\scripts\functions.txt"
-    
+
     'AddObject "Form1", Me
     'AddString "test", "this is my string from vb!"
     'LoadFile App.Path & "\scripts\GetHostObject.sb"
-    
+
     scivb.DirectSCI.AutoCSetIgnoreCase True
     scivb.DisplayCallTips = True
     Call scivb.LoadCallTips(App.path & "\dependancies\calltips.txt")
-    LoadFile App.path & "\scripts\importNT.sb"
-    
+    'LoadFile App.path & "\scripts\importNT.sb"
+    scivb.ReadOnly = False
+
     Set sciext = New CSciExtender
     sciext.Init scivb
-    
+
 End Sub
 
 Sub LoadFile(fPath As String)
@@ -707,12 +710,17 @@ Private Sub Form_Resize()
         .Height = Me.Height - .Top - ts.Height - 1000
         lvCallStack.ColumnHeaders(2).Width = lvCallStack.Width - lvCallStack.ColumnHeaders(2).Left - 100
         lvVars.ColumnHeaders(lvVars.ColumnHeaders.Count).Width = lvVars.Width - lvVars.ColumnHeaders(lvVars.ColumnHeaders.Count).Left - 100
+        With txtOut
+            .Move ts.Left + 100, ts.Top + 150, ts.Width - 200, ts.Height - 500
+            lvVars.Move .Left, .Top, .Width, .Height
+            lvCallStack.Move .Left, .Top, .Width, .Height
+        End With
     End With
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
     shuttingDown = True
-    If running Then DebuggerCmd "q"
+    If running Then DebuggerCmd dc_Quit
     Call SaveMySetting("includeDir", includeDir)
     Call SaveMySetting("moduleDir", moduleDir)
     FreeLibrary hsbLib
@@ -722,8 +730,8 @@ Public Sub SyncUI()
     
     Dim curline As Long
     
-    scivb.DeleteMarker lastEIP, 1 'remove the yellow arrow
-    scivb.DeleteMarker lastEIP, 3 'remove the yellow line backcolor
+    'scivb.DeleteMarker lastEIP, 1 'remove the yellow arrow
+    'scivb.DeleteMarker lastEIP, 3 'remove the yellow line backcolor
     
     curline = GetCurrentDebugLine(hDebugObject)
     scivb.SetMarker curline, 1
@@ -741,3 +749,27 @@ End Sub
 Public Function Alert(msg As String)
     MsgBox msg
 End Function
+
+Private Sub ts_Click()
+    Dim i As Long
+    i = ts.SelectedItem.Index
+    txtOut.Visible = IIf(i = 1, True, False)
+    lvVars.Visible = IIf(i = 2, True, False)
+    lvCallStack.Visible = IIf(i = 3, True, False)
+End Sub
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
