@@ -1,7 +1,10 @@
 
 
-
-- subclass scivb for gutter click (toggle breakpoint) and mouse dwell (popup variable value)
-
+- bug: calltips x( is showing msgbox() wtf?
+- clean up project directory/remove dupes
+- make COM module only external now?
+- on parse error goto line in editor
+- print access violation if no args?
+- line input vb inputbox..
 
 

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <string>
 
 #include "basext.h"
 #include "scriba.h" 
@@ -25,6 +26,7 @@ extern "C" void*  vb_dbg_preproc;
 
 #define EXPORT comment(linker, "/EXPORT:"__FUNCTION__"="__FUNCDNAME__)
 extern LPWSTR __C2W(char *szString);
+extern std::string __B2S(BSTR bString);
 
 void __stdcall SetDefaultDirs(char* incDir, char* modDir){
 #pragma EXPORT
@@ -34,11 +36,12 @@ void __stdcall SetDefaultDirs(char* incDir, char* modDir){
 	pszDefaultModuleDir  = strdup(modDir);
 }
 
-void __stdcall SetCallBacks(void* lpfnMsgHandler, void* lpfnDbgHandler, void* lpfnHostResolver){
+void __stdcall SetCallBacks(void* lpfnMsgHandler, void* lpfnDbgHandler, void* lpfnHostResolver, void* lpfnLineInput){
 #pragma EXPORT
 	vbStdOut     = (vbCallback)lpfnMsgHandler;
 	vbDbgHandler = (vbDbgCallback)lpfnDbgHandler;
 	vbHostResolver = (vbHostResolverCallback)lpfnHostResolver;
+	vbLineInput = (vbDbgCallback)lpfnLineInput;
 }
 
 int __stdcall GetErrorString(unsigned int iErrorCode, char* buf, int bufSz){
@@ -49,6 +52,30 @@ int __stdcall GetErrorString(unsigned int iErrorCode, char* buf, int bufSz){
   if(sz < bufSz) strcpy(buf,en_error_messages[iErrorCode]);
   return sz;
    
+}
+
+int __stdcall sbSetVariable(pSbProgram pProgram, int isLong, BSTR* bvarName, BSTR* bbuf){
+#pragma EXPORT
+
+	int serial, rv;
+	
+	if(bvarName==0 || bbuf==0) return 0;
+
+	std::string varName = __B2S(*bvarName);
+	std::string buf = __B2S(*bbuf);
+ 	
+	serial = scriba_LookupVariableByName(pProgram, (char*)varName.c_str() );
+	if(serial==0) return 0;
+
+	if(isLong==1){
+		long lVal = atol( buf.c_str() );
+		rv = scriba_SetVariable(pProgram,serial, SBT_LONG, lVal, 0, 0, 0);
+	}else{
+		rv = scriba_SetVariable(pProgram,serial, SBT_STRING, 0, 0, (char*)buf.c_str(), buf.length() );
+	}
+
+	return rv;
+ 
 }
 
 int __stdcall run_script(char* fPath, int use_debugger)
@@ -62,6 +89,8 @@ int __stdcall run_script(char* fPath, int use_debugger)
 
   pProgram = scriba_new(NULL,NULL);
   scriba_SetFileName(pProgram, fPath);
+
+  if(!pProgram) return -1;
 
   if(use_debugger){
 		iError = scriba_LoadInternalPreprocessorByFunction(pProgram, "vb_dbg", &vb_dbg_preproc);

@@ -28,6 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "filesys.h"
 #include "match.h"
 #include "matchc.h"
+#include "vb.h"
 
 #define THISFILEP  pFCO->Descriptor[FileNumber].fp
 #define THISSOCKET pFCO->Descriptor[FileNumber].sp
@@ -472,12 +473,17 @@ NOTIMPLEMENTED;
   ASSERTOKE;
   DEREFERENCE(LetThisVariable)
 
-
-  s = ReadFileLine(pEo,stdin,&lCharactersRead,(int (*)(void *))pEo->fpStdinFunction);
+  if(vbLineInput){
+	  s = (char*)malloc(1024);
+	  lCharactersRead = vbLineInput(s, 1024);
+  }else{
+	  s = ReadFileLine(pEo,stdin,&lCharactersRead,(int (*)(void *))pEo->fpStdinFunction);
+  }
   if( s == NULL )ERROR(COMMAND_ERROR_MEMORY_LOW);
   Result = NEWSTRING(lCharactersRead);
   memcpy(STRINGVALUE(Result),s,lCharactersRead);
-  FREE(s);
+
+  if(vbLineInput) free(s); else FREE(s);
 
   /* if this variable had value assigned to it then release that value */
   if( *LetThisVariable )memory_ReleaseVariable(pEo->pMo,*LetThisVariable);
@@ -606,21 +612,31 @@ NOTIMPLEMENTED;
       }else fp = stdin;
 
     }else{
-    if( pEo->fpStdinFunction != NULL ){
-      pfExtIn = pEo->fpStdinFunction;
-      RESULT = NEWMORTALSTRING(BytesToRead);
-      ASSERTNULL(RESULT)
-      s = STRINGVALUE(RESULT);
-      CharsRead = 0;
-      while( BytesToRead && ( ch = pfExtIn(pEo->pEmbedder) ) != EOF ){
-        *s++ = ch;
-        BytesToRead --;
-        CharsRead ++;
+		 /*if(vbLineInput){
+			s = (char*)malloc(1024);
+			RESULT = NEWMORTALSTRING(BytesToRead);
+			ASSERTNULL(RESULT)
+			s = STRINGVALUE(RESULT);
+			lCharactersRead = vbLineInput(s, BytesToRead);
+			STRLEN(RESULT) = lCharactersRead;
+			RETURN;
+		 }
+		 else */
+		if( pEo->fpStdinFunction != NULL ){
+			  pfExtIn = pEo->fpStdinFunction;
+			  RESULT = NEWMORTALSTRING(BytesToRead);
+			  ASSERTNULL(RESULT)
+			  s = STRINGVALUE(RESULT);
+			  CharsRead = 0;
+			  while( BytesToRead && ( ch = pfExtIn(pEo->pEmbedder) ) != EOF ){
+				*s++ = ch;
+				BytesToRead --;
+				CharsRead ++;
+			  }
+			  STRLEN(RESULT) = CharsRead;
+			  RETURN;
         }
-      STRLEN(RESULT) = CharsRead;
-      RETURN;
-      }
-    fp = stdin;
+		fp = stdin;
     }
   RESULT = NEWMORTALSTRING(BytesToRead);
   ASSERTNULL(RESULT)

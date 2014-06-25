@@ -1,4 +1,4 @@
-Attribute VB_Name = "Module1"
+Attribute VB_Name = "modSBApi"
 Public Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Destination As Any, Source As Any, ByVal length As Long)
 Public Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 
@@ -31,6 +31,8 @@ Private Declare Sub SetDefaultDirs Lib "sb_engine" (ByRef incDir As Byte, ByRef 
 Private Declare Sub dbg_WriteFlatSourceFile Lib "sb_engine" (ByVal hDebug As Long, ByRef fPath As Byte)
 Private Declare Function dbg_SourceLineCount Lib "sb_engine" (ByVal hDebug As Long) As Long
 '
+'int __stdcall SetVariable(pSbProgram pProgram, int isLong, BSTR* bvarName, BSTR* bbuf){
+Private Declare Function sbSetVariable Lib "sb_engine" (ByVal hProgram As Long, ByVal isLong As Long, ByVal bstrVarName As Long, ByVal bstrValue As Long) As Long
 
 Public hProgram As Long
 Public hDebugObject As Long     'handle to the current debug object - pDO
@@ -75,6 +77,30 @@ Enum Debug_Commands
     dc_Quit = 7
     dc_Manual = 8
 End Enum
+
+Function SetVariable(ByVal name As String, ByVal Value As String) As Boolean
+    
+    On Error Resume Next
+    Dim v As Long
+    Dim isNumeric As Long
+    
+    If InStr(name, "::") < 1 Then name = "main::" & name
+    
+    If Left(Value, 2) = "0x" Then
+        v = CLng("&h" & Mid(Value, 3))
+        If Err.Number = 0 Then
+            Value = v
+            isNumeric = 1
+        End If
+    Else
+        v = CLng(Value)
+        If Err.Number = 0 Then isNumeric = 1
+    End If
+    
+    SetVariable = sbSetVariable(hProgram, isNumeric, VarPtr(name), VarPtr(Value))
+    
+End Function
+
 
 Function LoadFlatFile() As Boolean
     
@@ -208,6 +234,27 @@ Public Function GetVariableValue(varName As String) As String
     
 End Function
 
+Public Function VbLineInput(ByVal buf As Long, ByVal sz As Long) As Long
+    Dim b() As Byte
+    Dim retVal As String
+    VbLineInput = 0 'return value default..
+
+    retVal = InputBox("Script is requesting input value:", "Script Basic Line Input")
+    If Len(retVal) = 0 Then Exit Function
+    
+    If Len(retVal) < sz Then
+        retVal = retVal & Chr(0)
+        ReDim b(Len(retVal))
+        b() = StrConv(retVal, vbFromUnicode)
+        CopyMemory ByVal buf, b(0), Len(retVal)
+        VbLineInput = Len(retVal) - 1
+    Else
+        MsgBox "Sorry VbLineInput is limited to " & sz & " characters", vbInformation
+    End If
+  
+End Function
+
+
 Public Function GetDebuggerCommand(ByVal buf As Long, ByVal sz As Long) As Long
         
     Dim b() As Byte
@@ -283,7 +330,7 @@ Public Sub HandleDebugMessage(msg As String)
         Case "Local-Variable-Name"
             Set v = New CVariable
             v.name = cmd(1)
-            v.value = GetVariableValue(v.name)
+            v.Value = GetVariableValue(v.name)
             v.varType = VariableType(v.name)
             variables.Add v
             handled = True
@@ -292,7 +339,7 @@ Public Sub HandleDebugMessage(msg As String)
             Set v = New CVariable
             v.isGlobal = True
             v.name = cmd(1)
-            v.value = GetVariableValue(v.name)
+            v.Value = GetVariableValue(v.name)
             v.varType = VariableType(v.name)
             variables.Add v
             handled = True
@@ -309,7 +356,7 @@ Public Sub HandleDebugMessage(msg As String)
             Set v = New CVariable
             v.Index = CLng(cmd(1))
             v.varType = VariableTypeToString(CLng(cmd(2)))
-            v.value = cmd(3) 'if is array then aryPointer will be parsed from value..
+            v.Value = cmd(3) 'if is array then aryPointer will be parsed from value..
             variables.Add v
             handled = True
         

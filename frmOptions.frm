@@ -89,6 +89,7 @@ Private Sub cmdSave_Click()
     If Right(moduleDir, 1) <> "\" Then moduleDir = moduleDir & "\"
     Call SaveMySetting("includeDir", includeDir)
     Call SaveMySetting("moduleDir", moduleDir)
+    InitIntellisense includeDir
     SetConfig includeDir, moduleDir
     Unload Me
 End Sub

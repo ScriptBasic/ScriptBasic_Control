@@ -24,6 +24,7 @@ typedef int (__stdcall *vbHostResolverCallback)(char*, int, int);
 extern vbCallback vbStdOut;
 extern vbDbgCallback vbDbgHandler;
 extern vbHostResolverCallback vbHostResolver;
+extern vbDbgCallback vbLineInput; //fpStdinFunction is character based input, we need a full string retrieval for gui..
 
 //we override these to force all outputs to the vb gui. not sure the internal hook thing
 //catches all

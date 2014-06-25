@@ -1,4 +1,4 @@
-import com.inc
+import com.bas
 
 'in the VB6 GUI
 'this one uses SBCallBackEx which supports multiple types and args

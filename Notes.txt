@@ -1,0 +1,9 @@
+
+ the intellisense list is built by parsing the *.bas files in the user specified /include directory.
+ the [name].bas must match the included module [name] directive
+
+ to show the intellisense list couple conditions: the file must be "include [name].bas" or "import [name].bas"
+ in the script. the single space is important, case is not.
+
+ the function prototypes are saved in the /dependancies/calltips.txt edit as desired.
+

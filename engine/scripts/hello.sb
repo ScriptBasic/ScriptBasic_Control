@@ -1,4 +1,4 @@
-'declare sub trial alias "trial" lib "test.exe"
+
 
 a = 1
 b = 2
@@ -6,10 +6,10 @@ c = 3
 
 print "Hello World!"
 print
-b = trial()
+
 print "b=",b,"\n"
 
-print trial() 
+
 
 print "\n\nPress ENTER..."
 line input a

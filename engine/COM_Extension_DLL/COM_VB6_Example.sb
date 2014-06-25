@@ -1,4 +1,4 @@
-import com.inc
+import com.bas
 
 obj = CreateObject("VB6.Sample") 
 

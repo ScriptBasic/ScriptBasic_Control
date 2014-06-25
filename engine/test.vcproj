@@ -615,26 +615,6 @@
 				Name="preprocessors"
 				>
 				<Filter
-					Name="sdbg"
-					>
-					<File
-						RelativePath=".\preprocessors\sdbg\sdbg.h"
-						>
-					</File>
-					<File
-						RelativePath=".\preprocessors\sdbg\sdbg_comm.h"
-						>
-					</File>
-					<File
-						RelativePath=".\preprocessors\sdbg\sdbg_con.c"
-						>
-					</File>
-					<File
-						RelativePath=".\preprocessors\sdbg\sdbg_interface.c"
-						>
-					</File>
-				</Filter>
-				<Filter
 					Name="dbg"
 					>
 					<File

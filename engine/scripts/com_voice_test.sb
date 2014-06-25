@@ -1,25 +1,19 @@
-declare sub CreateObject alias "CreateObject" lib "test.exe"
-declare sub CallByName alias "CallByName" lib "test.exe"
-declare sub ReleaseObject alias "ReleaseObject" lib "test.exe"
-
-const VbGet = 2
-const VbLet = 4
-const VbMethod = 1
-const VbSet = 8
+import com.bas
 
 'you can load objects either by ProgID or CLSID
-obj = CreateObject("SAPI.SpVoice") 
-'obj = CreateObject("{96749377-3391-11D2-9EE3-00C04F797396}")
+obj = com::CreateObject("SAPI.SpVoice") 
+'obj = com::CreateObject("{96749377-3391-11D2-9EE3-00C04F797396}")
 
 if obj = 0 then 
 	print "CreateObject failed!\n"
-else
-	CallByName(obj, "rate", VbLet, 2)
-	CallByName(obj, "volume", VbLet, 60)
-	CallByName(obj, "speak", VbMethod, "This is my test")
-	ReleaseObject(obj)
-	print "Release called obj reference is now: ", obj, "\n"
+    end
 end if 
+
+com::CallByName(obj, "rate", VbLet, 2)
+com::CallByName(obj, "volume", VbLet, 60)
+com::CallByName(obj, "speak", VbMethod, "This is my test")
+com::ReleaseObject(obj)
+print "Release called obj reference is now: ", obj, "\n"
 
 print "\n\nPress ENTER..."
 line input a

@@ -1,18 +1,20 @@
-import com.inc
+import com.bas
 
 function myFunc
 	print "called in script basic!\n"
 	myFunc = 7777
 end function
 
-obj = CreateObject("VB6.Sample") 
+obj = com::CreateObject("VB6.Sample") 
 
 if obj = 0 then 
     print "CreateObject failed!\n"
-else
-    retVal = CallByName(obj, "TestCallBack", VbMethod, ADDRESS(myFunc()) )
-    print "TestCallBack returned ", retVal, "\n" 
-    ReleaseObject(obj)
-    print "test complete!\n"
+    end
 end if 
+
+retVal = com::CallByName(obj, "LaunchCallBackForm", VbMethod, ADDRESS(myFunc()) )
+print "LaunchCallBackForm returned ", retVal, "\n" 
+com::ReleaseObject(obj)
+print "test complete!\n"
+ 
 

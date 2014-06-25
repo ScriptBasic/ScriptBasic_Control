@@ -3,14 +3,14 @@ Object = "{FBE17B58-A1F0-4B91-BDBD-C9AB263AC8B0}#78.0#0"; "scivb_lite.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form Form1 
    Caption         =   "Form1"
-   ClientHeight    =   8310
+   ClientHeight    =   9870
    ClientLeft      =   60
    ClientTop       =   -975
-   ClientWidth     =   11880
+   ClientWidth     =   13905
    KeyPreview      =   -1  'True
    LinkTopic       =   "Form1"
-   ScaleHeight     =   8310
-   ScaleWidth      =   11880
+   ScaleHeight     =   9870
+   ScaleWidth      =   13905
    StartUpPosition =   2  'CenterScreen
    Begin MSComctlLib.ListView lvVars 
       Height          =   1050
@@ -312,6 +312,9 @@ Begin VB.Form Form1
    End
    Begin VB.Menu mnuFile 
       Caption         =   "File"
+      Begin VB.Menu mnuNewFile 
+         Caption         =   "New"
+      End
       Begin VB.Menu mnuOpen 
          Caption         =   "Open"
       End
@@ -331,6 +334,12 @@ Begin VB.Form Form1
          Caption         =   "Execute Until Return"
       End
    End
+   Begin VB.Menu mnuVarsPopup 
+      Caption         =   "mnuVarsPopup"
+      Begin VB.Menu mnuVarSetValue 
+         Caption         =   "Modify Value"
+      End
+   End
 End
 Attribute VB_Name = "Form1"
 Attribute VB_GlobalNameSpace = False
@@ -347,7 +356,7 @@ Private Declare Function GetModuleHandle Lib "kernel32" Alias "GetModuleHandleA"
 
 Private Declare Function run_script Lib "sb_engine" (ByVal lpLibFileName As String, ByVal use_debugger As Long) As Long
 Private Declare Sub GetErrorString Lib "sb_engine" (ByVal iErrorCode As Long, ByVal buf As String, ByVal sz As Long)
-Private Declare Sub SetCallBacks Lib "sb_engine" (ByVal msgProc As Long, ByVal dbgCmdProc As Long, ByVal hostResolverProc As Long)
+Private Declare Sub SetCallBacks Lib "sb_engine" (ByVal msgProc As Long, ByVal dbgCmdProc As Long, ByVal hostResolverProc As Long, ByVal lineInputfunc As Long)
 
 
 Dim loadedFile As String
@@ -364,17 +373,6 @@ Const SC_MARK_BACKGROUND = 22
 Dim selCallStackItem As ListItem
 Dim selVariable As ListItem
 
-Private Sub cmdManual_Click()
-    'txtDebug.Text = Empty
-    'dbg_cmd = txtCmd.Text
-    'readyToReturn = True
-    
-    MsgBox GetVariableValue(txtCmd.Text)
-    
-End Sub
-
-
-
 Private Sub RefreshVariables()
     
     Dim li As ListItem
@@ -388,7 +386,7 @@ Private Sub RefreshVariables()
         Set li = lvVars.ListItems.Add(, , IIf(v.isGlobal, "Global", "Local"))
         li.SubItems(1) = v.name
         li.SubItems(2) = v.varType
-        li.SubItems(3) = v.value
+        li.SubItems(3) = v.Value
         If v.varType = "array" Then li.Tag = v.pAryElement
     Next
     
@@ -435,11 +433,34 @@ Private Sub lvVars_ItemClick(ByVal Item As MSComctlLib.ListItem)
     Set selVariable = Item
 End Sub
 
+Private Sub lvVars_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    If Button = 2 Then PopupMenu mnuVarsPopup
+End Sub
+
 Private Sub mnuExecuteTillReturn_Click()
     MsgBox "todo: disable all breakpoints,run to line selCallStackItem.text + 1, reenable breakpoints", vbInformation
 End Sub
 
  
+Private Sub mnuNewFile_Click()
+
+    If scivb.isDirty Then
+            If MsgBox("Editor has changed save contents?", vbInformation + vbYesNo) = vbYes Then
+                If Len(loadedFile) = 0 Then
+                    loadedFile = dlg.SaveDialog(AllFiles, "default.sb")
+                    If Len(loadedFile) = 0 Then Exit Sub
+                End If
+                scivb.SaveFile loadedFile
+            End If
+    End If
+        
+    scivb.Text = Empty
+    loadedFile = dlg.OpenDialog(AllFiles)
+    If Len(loadedFile) = 0 Then Exit Sub
+    scivb.LoadFile loadedFile
+    
+End Sub
+
 Private Sub mnuOpen_Click()
     Dim f As String
     f = dlg.OpenDialog(AllFiles)
@@ -455,6 +476,27 @@ End Sub
 
 Private Sub mnuSave_Click()
     scivb.SaveFile loadedFile
+End Sub
+
+Private Sub mnuVarSetValue_Click()
+    If selVariable Is Nothing Then Exit Sub
+    Dim name As String, Value As String, newVal As String
+    If selVariable.SubItems(2) = "array" Then
+        MsgBox "Array variables must be set on the array element viewer form..", vbInformation
+        Exit Sub 'unless they want to change the var type here? todo
+    End If
+    name = selVariable.SubItems(1)
+    Value = selVariable.SubItems(3)
+    
+    If Left(Value, 1) = """" Then Value = Mid(Value, 2)
+    If Right(Value, 1) = """" Then Value = Mid(Value, 1, Len(Value) - 1)
+    
+    newVal = InputBox("Modify variable " & name, , Value)
+    If Len(newVal) > 0 And newVal <> Value Then
+        SetVariable name, newVal
+        RefreshVariables
+    End If
+    
 End Sub
 
 Private Sub sciext_MarginClick(lLine As Long, Position As Long, margin As Long, modifiers As Long)
@@ -493,7 +535,7 @@ Private Sub scivb_DoubleClick()
     End If
 End Sub
 
-Private Sub scivb_MouseUp(Button As Integer, Shift As Integer, x As Long, Y As Long)
+Private Sub scivb_MouseUp(Button As Integer, Shift As Integer, X As Long, Y As Long)
     If scivb.SelLength > 0 And scivb.SelLength < 20 Then
         Dim word As String
         word = Trim(scivb.SelText)
@@ -527,7 +569,7 @@ Private Sub scivb_KeyUp(KeyCode As Long, Shift As Long)
     Dim prevChar As String
     Dim methods As String
     
-    If KeyCode = 186 Then
+    If KeyCode = 186 Then ': character
         curPos = scivb.GetCaretInLine()
         txt = scivb.GetLineText(scivb.CurrentLine)
 
@@ -540,10 +582,11 @@ Private Sub scivb_KeyUp(KeyCode As Long, Shift As Long)
         scivb.GotoCol curPos
 
         On Error Resume Next
-        
         If Len(curWord) > 0 Then
-            methods = modules(curWord)
-            If Err.Number = 0 Then scivb.ShowAutoComplete methods
+            If isIncludeFile(curWord) And isFileIncluded(curWord, scivb.Text) Then
+                methods = modules(curWord)
+                If Err.Number = 0 Then scivb.ShowAutoComplete methods
+            End If
         End If
 
     End If
@@ -580,6 +623,10 @@ Private Sub ExecuteScript(Optional withDebugger As Boolean)
     Dim rv As Long
     Dim buf As String
     
+    If Len(loadedFile) = 0 Then
+        loadedFile = dlg.SaveDialog(AllFiles, "default.sb")
+        If Len(loadedFile) = 0 Then Exit Sub
+    End If
     
     txtOut.Text = Empty
     
@@ -631,6 +678,8 @@ Private Sub Form_Load()
     lvCallStack.Visible = False
      
     mnuCallStackPopup.Visible = False
+    mnuVarsPopup.Visible = False
+    
     hsbLib = LoadLibrary(App.path & "\engine\sb_engine.dll")
 
     If hsbLib = 0 Then
@@ -639,12 +688,12 @@ Private Sub Form_Load()
 
     includeDir = GetMySetting("includeDir", App.path & "\include\")
     moduleDir = GetMySetting("moduleDir", App.path & "\modules\")
+    InitIntellisense includeDir
     SetConfig includeDir, moduleDir
 
-    SetCallBacks AddressOf vb_stdout, AddressOf GetDebuggerCommand, AddressOf HostResolver
-    InitIntellisense App.path & "\dependancies\modules.txt"
+    SetCallBacks AddressOf vb_stdout, AddressOf GetDebuggerCommand, AddressOf HostResolver, AddressOf VbLineInput
+    
     scivb.LoadHighlighter App.path & "\dependancies\vb.bin"
- 
     scivb.DirectSCI.HideSelection False
     scivb.DirectSCI.MarkerDefine 2, SC_MARK_CIRCLE
     scivb.DirectSCI.MarkerSetFore 2, vbRed 'set breakpoint color
@@ -676,9 +725,9 @@ Private Sub Form_Load()
 
 End Sub
 
-Sub LoadFile(fpath As String)
+Sub LoadFile(fPath As String)
    
-   loadedFile = fpath
+   loadedFile = fPath
    scivb.DeleteAllMarkers
    scivb.LoadFile loadedFile
    Set breakpoints = New Collection
