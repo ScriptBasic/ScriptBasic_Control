@@ -25,6 +25,15 @@ Private ucHwnd As Long
 Private owner As SciSimple
 Private Declare Sub CopyMemory Lib "kernel32.dll" Alias "RtlMoveMemory" (Destination As Any, Source As Any, ByVal length As Long)
 
+Private Type POINTAPI
+    x As Long
+    y As Long
+End Type
+
+Private Declare Function GetCursorPos Lib "User32" (lpPoint As POINTAPI) As Long
+Private Declare Function WindowFromPoint Lib "User32" (ByVal xPoint As Long, ByVal yPoint As Long) As Long
+Private Declare Function GetClassName Lib "User32" Alias "GetClassNameA" (ByVal hwnd As Long, ByVal lpClassName As String, ByVal nMaxCount As Long) As Long
+         
 Private Const WM_NOTIFY = &H4E
 Private Const SCI_LINEFROMPOSITION = 2166
 Private Const SCN_MARGINCLICK = 2010
@@ -55,12 +64,12 @@ Private Type SCNotification
     foldLevelPrev As Long
     margin As Long
     listType As Long
-    X As Long
-    Y As Long
+    x As Long
+    y As Long
 End Type
 
-Private Declare Function GetFocus Lib "user32" () As Long
-Private Declare Function GetParent Lib "user32" (ByVal hwnd As Long) As Long
+Private Declare Function GetFocus Lib "User32" () As Long
+Private Declare Function GetParent Lib "User32" (ByVal hwnd As Long) As Long
 
 Private Function GetUCHwnd(ctrl As Control) As Long
     
@@ -172,4 +181,19 @@ Sub LockEditor(Optional locked As Boolean = True)
     End With
  
 End Sub
+
+Function isMouseOverCallTip() As Boolean
+    Dim p As POINTAPI
+    Dim hWin As Long
+    Dim sz As Long
+    Dim sClassName As String * 100
+    
+    On Error Resume Next
+    
+    GetCursorPos p
+    hWin = WindowFromPoint(p.x, p.y)
+    sz = GetClassName(hWin, sClassName, 100)
+    If Left(sClassName, sz) = "CallTip" Then isMouseOverCallTip = True
+    
+End Function
 

@@ -12,6 +12,12 @@ Begin VB.Form Form1
    ScaleHeight     =   9870
    ScaleWidth      =   13905
    StartUpPosition =   2  'CenterScreen
+   Begin VB.Timer tmrHideCallTip 
+      Enabled         =   0   'False
+      Interval        =   600
+      Left            =   9720
+      Top             =   135
+   End
    Begin MSComctlLib.ListView lvVars 
       Height          =   1050
       Left            =   11745
@@ -93,7 +99,7 @@ Begin VB.Form Form1
       Height          =   1185
       Left            =   6525
       MultiLine       =   -1  'True
-      ScrollBars      =   3  'Both
+      ScrollBars      =   2  'Vertical
       TabIndex        =   2
       Top             =   5760
       Width           =   3165
@@ -353,11 +359,9 @@ Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryA" (ByVal 
 Private Declare Function FreeLibrary Lib "kernel32" (ByVal hLibModule As Long) As Long
 Private Declare Function GetModuleHandle Lib "kernel32" Alias "GetModuleHandleA" (ByVal lpModuleName As String) As Long
 
-
 Private Declare Function run_script Lib "sb_engine" (ByVal lpLibFileName As String, ByVal use_debugger As Long) As Long
 Private Declare Sub GetErrorString Lib "sb_engine" (ByVal iErrorCode As Long, ByVal buf As String, ByVal sz As Long)
 Private Declare Sub SetCallBacks Lib "sb_engine" (ByVal msgProc As Long, ByVal dbgCmdProc As Long, ByVal hostResolverProc As Long, ByVal lineInputfunc As Long)
-
 
 Dim loadedFile As String
 Dim hsbLib As Long
@@ -415,6 +419,7 @@ Private Sub lvCallStack_ItemClick(ByVal Item As MSComctlLib.ListItem)
 End Sub
 
 Private Sub lvVars_DblClick()
+
     If selVariable Is Nothing Then Exit Sub
     If selVariable.SubItems(2) <> "array" Then Exit Sub
     
@@ -433,7 +438,7 @@ Private Sub lvVars_ItemClick(ByVal Item As MSComctlLib.ListItem)
     Set selVariable = Item
 End Sub
 
-Private Sub lvVars_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub lvVars_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
     If Button = 2 Then PopupMenu mnuVarsPopup
 End Sub
 
@@ -479,12 +484,17 @@ Private Sub mnuSave_Click()
 End Sub
 
 Private Sub mnuVarSetValue_Click()
+
+    If Not running Then Exit Sub
     If selVariable Is Nothing Then Exit Sub
+    
     Dim name As String, Value As String, newVal As String
+    
     If selVariable.SubItems(2) = "array" Then
-        MsgBox "Array variables must be set on the array element viewer form..", vbInformation
+        lvVars_DblClick
         Exit Sub 'unless they want to change the var type here? todo
     End If
+    
     name = selVariable.SubItems(1)
     Value = selVariable.SubItems(3)
     
@@ -505,7 +515,7 @@ Private Sub sciext_MarginClick(lLine As Long, Position As Long, margin As Long, 
 End Sub
 
 Private Sub sciext_MouseDwellEnd(lLine As Long, Position As Long)
-    scivb.StopCallTip
+   If running Then tmrHideCallTip.Enabled = True
 End Sub
 
 Private Sub sciext_MouseDwellStart(lLine As Long, Position As Long)
@@ -517,7 +527,10 @@ Private Sub sciext_MouseDwellStart(lLine As Long, Position As Long)
     If running Then
          curWord = sciext.WordUnderMouse(Position)
          For Each li In lvVars.ListItems
-            If li.SubItems(1) = curWord Then 'they have moused over a variable..
+            If LCase(li.SubItems(1)) = LCase(curWord) Then 'they have moused over a variable..
+                Set selVariable = li
+                scivb.SelStart = Position 'so call tip shows right under it..
+                scivb.SelLength = 0
                 scivb.ShowCallTip curWord & " = " & li.SubItems(3)
                 Exit For
             End If
@@ -525,6 +538,82 @@ Private Sub sciext_MouseDwellStart(lLine As Long, Position As Long)
     End If
     
         
+End Sub
+
+Private Sub scivb_AutoCompleteEvent(className As String)
+    'Debug.Print className
+    Dim matches() As String
+    Dim prevWord As String
+    Dim orgPos As Long
+    Dim curPos As Long
+    
+    'first lets see if it scoped to a specific module
+    curPos = scivb.DirectSCI.GetCurPos()
+    curPos = curPos - Len(className) - 2
+    If curPos > 4 Then
+        If Mid(scivb.Text, curPos + 1, 2) = "::" Then 'its an module lookup
+            orgPos = scivb.DirectSCI.GetCurPos()
+            scivb.SetCurrentPosition curPos
+            prevWord = scivb.CurrentWord
+            scivb.SetCurrentPosition orgPos
+            If ShowAutoCompleteForModule(prevWord, className) Then Exit Sub
+        End If
+    End If
+        
+    'now search the built in api for partial matches to whats already typed..
+    matches() = GetAutoCompleteString(className)
+    If Not AryIsEmpty(matches) Then
+        If UBound(matches) = 0 Then
+            'only one match so just auto complete it..
+            scivb.SelStart = scivb.SelStart - Len(className)
+            scivb.SelLength = Len(className)
+            scivb.SelText = matches(0)
+        Else
+            'show all matches for partial string
+            scivb.ShowAutoComplete Join(matches, " ")
+        End If
+    Else
+        'ok no partial matches, lets just show entire api list..
+        If Not AryIsEmpty(FunctionPrototypes) Then
+            scivb.ShowAutoComplete Join(FunctionPrototypes, " ")
+        End If
+    End If
+    
+End Sub
+
+Private Function ShowAutoCompleteForModule(modName As String, fragment As String) As Boolean
+    On Error Resume Next
+    Dim methods As String
+    Dim matches() As String
+     
+    If Len(modName) = 0 Then Exit Function
+    If Not isIncludeFile(modName) Then Exit Function
+    If Not isFileIncluded(modName, scivb.Text) Then Exit Function
+    
+    methods = modules(modName)
+    If Err.Number <> 0 Then Exit Function
+    
+    If Len(fragment) = 0 Then
+        scivb.ShowAutoComplete methods 'ctrl-space after [module]::
+        ShowAutoCompleteForModule = True
+    Else
+        matches() = GetAutoCompleteStringForModule(methods, fragment) 'example nt::msg[ctrl-space]
+        If Not AryIsEmpty(matches) Then
+            If UBound(matches) = 0 Then
+                scivb.SelStart = scivb.SelStart - Len(modName) - 1
+                scivb.SelLength = Len(modName) + 1
+                scivb.SelText = matches(0)
+            Else
+                scivb.ShowAutoComplete ":" & Join(matches, ":")
+            End If
+            ShowAutoCompleteForModule = True
+        End If
+    End If
+        
+End Function
+
+Private Sub scivb_CallTipClick(Position As Long)
+    If running Then mnuVarSetValue_Click
 End Sub
 
 Private Sub scivb_DoubleClick()
@@ -535,7 +624,7 @@ Private Sub scivb_DoubleClick()
     End If
 End Sub
 
-Private Sub scivb_MouseUp(Button As Integer, Shift As Integer, X As Long, Y As Long)
+Private Sub scivb_MouseUp(Button As Integer, Shift As Integer, x As Long, y As Long)
     If scivb.SelLength > 0 And scivb.SelLength < 20 Then
         Dim word As String
         word = Trim(scivb.SelText)
@@ -617,11 +706,34 @@ Private Sub tbarDebug_ButtonClick(ByVal Button As MSComctlLib.Button)
     
 End Sub
 
-
+Private Sub CheckError()
+    On Error Resume Next
+    Dim a As Long, b As Long, x, lLine As Long
+    
+    a = InStr(txtOut, "Line:")
+    
+    If InStr(txtOut, "Error:") > 0 And a > 0 Then
+        a = a + 1 + Len("Line:")
+        b = InStr(a, txtOut, " ")
+        If b > a Then
+            x = Mid(txtOut, a, b - a)
+            lLine = CLng(x)
+            If Err.Number = 0 Then
+                lLine = lLine - 1 '0 based
+                scivb.GotoLine lLine
+                scivb.SelLength = Len(scivb.GetLineText(lLine)) - 2
+            End If
+        End If
+    End If
+    
+ 
+End Sub
 Private Sub ExecuteScript(Optional withDebugger As Boolean)
 
     Dim rv As Long
     Dim buf As String
+    
+    If Len(Trim(scivb.Text)) = 0 Then Exit Sub
     
     If Len(loadedFile) = 0 Then
         loadedFile = dlg.SaveDialog(AllFiles, "default.sb")
@@ -638,16 +750,23 @@ Private Sub ExecuteScript(Optional withDebugger As Boolean)
     lblStatus = IIf(withDebugger, "Debugging", "Running")
     
     rv = run_script(loadedFile, IIf(withDebugger, 1, 0))
-    
+     
     'if user closed form while debugger running..we must exit now or form_load again hidden..
     If shuttingDown Then Exit Sub
     
+    CheckError
+    
     lblStatus = "Idle"
     running = False
-    sciext.LockEditor False
     SetToolBarIcons
-    scivb.DeleteMarker lastEIP, 1
+    
     ClearUIBreakpoints
+    sciext.LockEditor False
+    scivb.DeleteMarker lastEIP, 1
+    
+    Set selVariable = Nothing
+    Set selCallStackItem = Nothing
+    
     If hasImports Then scivb.LoadFile loadedFile
     
 End Sub
@@ -693,6 +812,7 @@ Private Sub Form_Load()
 
     SetCallBacks AddressOf vb_stdout, AddressOf GetDebuggerCommand, AddressOf HostResolver, AddressOf VbLineInput
     
+    LoadFunctionPrototypes App.path & "\dependancies\calltips.txt"
     scivb.LoadHighlighter App.path & "\dependancies\vb.bin"
     scivb.DirectSCI.HideSelection False
     scivb.DirectSCI.MarkerDefine 2, SC_MARK_CIRCLE
@@ -725,9 +845,9 @@ Private Sub Form_Load()
 
 End Sub
 
-Sub LoadFile(fPath As String)
+Sub LoadFile(fpath As String)
    
-   loadedFile = fPath
+   loadedFile = fpath
    scivb.DeleteAllMarkers
    scivb.LoadFile loadedFile
    Set breakpoints = New Collection
@@ -767,9 +887,6 @@ Public Sub SyncUI()
     
     Dim curline As Long
     
-    'scivb.DeleteMarker lastEIP, 1 'remove the yellow arrow
-    'scivb.DeleteMarker lastEIP, 3 'remove the yellow line backcolor
-    
     curline = GetCurrentDebugLine(hDebugObject)
     scivb.SetMarker curline, 1
     scivb.SetMarker curline, 3
@@ -786,6 +903,14 @@ End Sub
 Public Function Alert(msg As String)
     MsgBox msg
 End Function
+
+'we use a timer for this to give them a chance to click on the calltip to edit the variable..
+Private Sub tmrHideCallTip_Timer()
+    If sciext.isMouseOverCallTip() Then Exit Sub
+    tmrHideCallTip.Enabled = False
+    scivb.StopCallTip
+    Set selVariable = Nothing
+End Sub
 
 Private Sub ts_Click()
     Dim i As Long

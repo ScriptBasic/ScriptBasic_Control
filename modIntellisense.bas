@@ -2,6 +2,73 @@ Attribute VB_Name = "modIntellisense"
 
 Public modules As New Collection
 Public IncludeFiles() As String
+Public FunctionPrototypes() As String
+
+
+Function GetAutoCompleteString(partial As String) As String()
+    Dim x, matches() As String, i As Long
+    
+    If AryIsEmpty(FunctionPrototypes) Then Exit Function
+    If Len(partial) = 0 Then Exit Function
+    
+    For i = 0 To UBound(FunctionPrototypes)
+        x = LCase(FunctionPrototypes(i))
+        If Left(x, Len(partial)) = LCase(partial) Then
+            push matches, FunctionPrototypes(i)
+        End If
+    Next
+    
+    GetAutoCompleteString = matches()
+    
+End Function
+
+Function GetAutoCompleteStringForModule(methods As String, partial As String) As String()
+    Dim x, matches() As String, i As Long
+    Dim m() As String
+    
+    If Len(methods) = 0 Then Exit Function
+    If Len(partial) = 0 Then Exit Function
+    
+    m() = Split(methods, ":")
+    If AryIsEmpty(m) Then Exit Function
+
+    For i = 0 To UBound(m)
+        If Len(m(i)) > 0 Then
+            x = LCase(Trim(m(i)))
+            If Left(x, Len(partial)) = LCase(partial) Then
+                push matches, m(i)
+            End If
+        End If
+    Next
+    
+    GetAutoCompleteStringForModule = matches()
+    
+End Function
+
+Function LoadFunctionPrototypes(fpath As String)
+
+  Erase FunctionPrototypes
+  If Not FileExists(fpath) Then Exit Function
+  
+  Dim tmp() As String, x
+  Const endMarker = "#modules"
+  
+  tmp = Split(ReadFile(fpath), vbCrLf)
+  For Each x In tmp
+        x = Trim(x)
+        If Left(x, Len(endMarker)) = endMarker Then Exit For
+        If Len(x) > 0 And Left(x, 1) <> "#" And Left(x, 1) <> "'" Then
+            a = InStr(x, "(")
+            If a > 2 Then x = Mid(x, 1, a - 1)
+            push FunctionPrototypes, x
+        End If
+        
+  Next
+  
+  LoadFunctionPrototypes = UBound(FunctionPrototypes)
+  
+End Function
+
 
 Function isIncludeFile(ByVal nameSpace As String) As Boolean
     On Error Resume Next
@@ -48,20 +115,20 @@ Function InitIntellisense(includeDir As String) As Boolean
     Dim f
     
     IncludeFiles() = GetFolderFiles(includeDir, ".bas", False)
-    For Each fPath In IncludeFiles
-        tmp = ReadFile(includeDir & "\" & fPath)
+    For Each fpath In IncludeFiles
+        tmp = ReadFile(includeDir & "\" & fpath)
         tmp = Replace(tmp, Chr(&HD), Empty)
         tmp = Split(tmp, vbLf)
-        For Each X In tmp
-            X = Replace(X, vbTab, " ")
-            While InStr(X, "  ") > 0
-                X = Replace(X, "  ", " ")
+        For Each x In tmp
+            x = Replace(x, vbTab, " ")
+            While InStr(x, "  ") > 0
+                x = Replace(x, "  ", " ")
             Wend
-            X = Trim(X)
-            If Len(X) = 0 Then GoTo skipLine
-            If Left(X, 1) = "#" Or Left(X, 1) = "'" Then GoTo skipLine 'its a comment ignore this line..
+            x = Trim(x)
+            If Len(x) = 0 Then GoTo skipLine
+            If Left(x, 1) = "#" Or Left(x, 1) = "'" Then GoTo skipLine 'its a comment ignore this line..
             
-            words = Split(X, " ")
+            words = Split(x, " ")
             If LCase(words(0)) = "module" Then curModule = LCase(words(1))
             If Len(curModule) = 0 Then GoTo skipLine 'dont start recording till were in the module declare..
             

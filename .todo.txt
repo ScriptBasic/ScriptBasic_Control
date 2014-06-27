@@ -1,10 +1,7 @@
 
-
-- bug: calltips x( is showing msgbox() wtf?
+- ctrl space should bring up list of built in functions..
 - clean up project directory/remove dupes
 - make COM module only external now?
-- on parse error goto line in editor
-- print access violation if no args?
-- line input vb inputbox..
+- print command causes heap corruption if no args?
 
 
