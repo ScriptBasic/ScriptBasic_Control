@@ -14,9 +14,9 @@ Attribute VB_Exposed = False
 Option Explicit
 'http://www.scintilla.org/aprilw/SciLexer.bas
 
-Public Event MarginClick(lLine As Long, Position As Long, margin As Long, modifiers As Long)
-Public Event MouseDwellStart(lLine As Long, Position As Long)
-Public Event MouseDwellEnd(lLine As Long, Position As Long)
+Public Event MarginClick(lline As Long, Position As Long, margin As Long, modifiers As Long)
+Public Event MouseDwellStart(lline As Long, Position As Long)
+Public Event MouseDwellEnd(lline As Long, Position As Long)
 'Public Event UpdateUI()
 
 Private WithEvents sc As clsSubClass
@@ -129,7 +129,7 @@ Private Sub HandleSciMsg(tHdr As NMHDR, scMsg As SCNotification)
     Dim chl As String, strMatch As String
     Dim lPos As Long
     Dim pos As Long, pos2 As Long
-    Dim lLine As Long
+    Dim lline As Long
     
     Select Case tHdr.Code
                                 
@@ -137,30 +137,61 @@ Private Sub HandleSciMsg(tHdr As NMHDR, scMsg As SCNotification)
             '                    RaiseEvent UpdateUI 'PosChanged was depreceated and removed...
                                 
             Case SCN_MARGINCLICK
-                                lLine = owner.DirectSCI.SendEditor(SCI_LINEFROMPOSITION, scMsg.Position)
-                                RaiseEvent MarginClick(lLine, scMsg.Position, scMsg.margin, scMsg.modifiers)
+                                lline = owner.DirectSCI.SendEditor(SCI_LINEFROMPOSITION, scMsg.Position)
+                                RaiseEvent MarginClick(lline, scMsg.Position, scMsg.margin, scMsg.modifiers)
                                 
             Case SCN_DWELLSTART
-                                lLine = owner.DirectSCI.SendEditor(SCI_LINEFROMPOSITION, scMsg.Position)
-                                RaiseEvent MouseDwellStart(lLine, scMsg.Position)
+                                lline = owner.DirectSCI.SendEditor(SCI_LINEFROMPOSITION, scMsg.Position)
+                                RaiseEvent MouseDwellStart(lline, scMsg.Position)
             Case SCN_DWELLEND
-                                lLine = owner.DirectSCI.SendEditor(SCI_LINEFROMPOSITION, scMsg.Position)
-                                RaiseEvent MouseDwellEnd(lLine, scMsg.Position)
+                                lline = owner.DirectSCI.SendEditor(SCI_LINEFROMPOSITION, scMsg.Position)
+                                RaiseEvent MouseDwellEnd(lline, scMsg.Position)
 
     End Select
     
 End Sub
 
-Public Function WordUnderMouse(pos As Long) As String
+Public Function WordUnderMouse(pos As Long, Optional ignoreWhiteSpace As Boolean = False) As String
     Dim sWord As Long, eWord As Long
     
     On Error Resume Next
+    'behavior warning.. space characters are counted as words we should count space chars
+    'back from pos and pos -= spaceCount
+    
+    If ignoreWhiteSpace Then pos = pos - GetSpaceCountBack(pos)
     
     With owner
         sWord = .DirectSCI.WordStartPosition(pos, True) + 1
         eWord = .DirectSCI.WordEndPosition(pos, True) + 1
         WordUnderMouse = Mid(.Text, sWord, eWord - sWord)
     End With
+    
+End Function
+
+'gets the number of spaces counting back to next non white space character
+Private Function GetSpaceCountBack(pos As Long)
+    On Error Resume Next
+    Dim lline As Long, curpos As Long, lText As String, i As Long
+    Dim lStart As Long, curCol As Long, b() As Byte, count As Long
+    
+    lline = owner.DirectSCI.LineFromPosition(pos)
+    lText = owner.GetLineText(lline)
+    lStart = owner.PositionFromLine(lline)
+    curCol = pos - lStart
+    
+    lText = Left(lText, curCol)
+    If Len(lText) = 0 Then Exit Function
+    
+    b() = StrConv(lText, vbFromUnicode)
+    For i = UBound(b) To 0 Step -1
+        If b(i) = &H20 Or b(i) = 9 Then
+            count = count + 1
+        Else
+            Exit For
+        End If
+    Next
+    
+    GetSpaceCountBack = count
     
 End Function
 

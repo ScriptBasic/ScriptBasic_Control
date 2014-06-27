@@ -428,7 +428,7 @@ Private Sub lvVars_DblClick()
     
     varName = selVariable.SubItems(1)
     Set c = EnumArrayVariables(varName)
-    If c.Count > 0 Then
+    If c.count > 0 Then
         frmAryDump.DumpArrayValues varName, c
     End If
     
@@ -509,16 +509,16 @@ Private Sub mnuVarSetValue_Click()
     
 End Sub
 
-Private Sub sciext_MarginClick(lLine As Long, Position As Long, margin As Long, modifiers As Long)
+Private Sub sciext_MarginClick(lline As Long, Position As Long, margin As Long, modifiers As Long)
     'Debug.Print "MarginClick: line,pos,margin,modifiers", lLine, Position, margin, modifiers
-    ToggleBreakPoint lLine
+    ToggleBreakPoint lline
 End Sub
 
-Private Sub sciext_MouseDwellEnd(lLine As Long, Position As Long)
+Private Sub sciext_MouseDwellEnd(lline As Long, Position As Long)
    If running Then tmrHideCallTip.Enabled = True
 End Sub
 
-Private Sub sciext_MouseDwellStart(lLine As Long, Position As Long)
+Private Sub sciext_MouseDwellStart(lline As Long, Position As Long)
     'Debug.Print "MouseDwell: " & lLine & " CurWord: " & sciext.WordUnderMouse(Position)
     
     Dim li As ListItem
@@ -545,15 +545,37 @@ Private Sub scivb_AutoCompleteEvent(className As String)
     Dim matches() As String
     Dim prevWord As String
     Dim orgPos As Long
-    Dim curPos As Long
+    Dim curpos As Long
     
-    'first lets see if it scoped to a specific module
-    curPos = scivb.DirectSCI.GetCurPos()
-    curPos = curPos - Len(className) - 2
-    If curPos > 4 Then
-        If Mid(scivb.Text, curPos + 1, 2) = "::" Then 'its an module lookup
+    'first lets see if this is an import/include statement
+    prevWord = LCase(sciext.WordUnderMouse(scivb.SelStart - Len(className) - 1, True))
+    If prevWord = "include" Or prevWord = "import" Then
+        matches() = GetAutoCompleteStringForIncludes(className)
+        If Not AryIsEmpty(matches) Then
+            If UBound(matches) = 0 Then
+                'only one match so just auto complete it..
+                scivb.SelStart = scivb.SelStart - Len(className)
+                scivb.SelLength = Len(className)
+                scivb.SelText = matches(0)
+            Else
+                'show all matches for partial string
+                scivb.ShowAutoComplete Join(matches, " ")
+            End If
+        Else
+               'show all include files
+                scivb.ShowAutoComplete Join(IncludeFiles, " ")
+        End If
+        Exit Sub
+    End If
+    
+    
+    'now lets see if it scoped to a specific module
+    curpos = scivb.DirectSCI.GetCurPos()
+    curpos = curpos - Len(className) - 2
+    If curpos > 4 Then
+        If Mid(scivb.Text, curpos + 1, 2) = "::" Then 'its an module lookup
             orgPos = scivb.DirectSCI.GetCurPos()
-            scivb.SetCurrentPosition curPos
+            scivb.SetCurrentPosition curpos
             prevWord = scivb.CurrentWord
             scivb.SetCurrentPosition orgPos
             If ShowAutoCompleteForModule(prevWord, className) Then Exit Sub
@@ -654,21 +676,21 @@ Private Sub scivb_KeyUp(KeyCode As Long, Shift As Long)
 
     Dim curWord As String
     Dim txt As String
-    Dim curPos As Long
+    Dim curpos As Long
     Dim prevChar As String
     Dim methods As String
     
     If KeyCode = 186 Then ': character
-        curPos = scivb.GetCaretInLine()
+        curpos = scivb.GetCaretInLine()
         txt = scivb.GetLineText(scivb.CurrentLine)
 
-        If curPos < 3 Then Exit Sub
-        prevChar = Mid(txt, curPos - 1, 1)
+        If curpos < 3 Then Exit Sub
+        prevChar = Mid(txt, curpos - 1, 1)
         If prevChar <> ":" Then Exit Sub
 
-        scivb.GotoCol curPos - 2
+        scivb.GotoCol curpos - 2
         curWord = scivb.CurrentWord
-        scivb.GotoCol curPos
+        scivb.GotoCol curpos
 
         On Error Resume Next
         If Len(curWord) > 0 Then
@@ -683,12 +705,6 @@ Private Sub scivb_KeyUp(KeyCode As Long, Shift As Long)
 
 End Sub
 
-
-
-
-Private Sub TabStrip1_Click()
-
-End Sub
 
 Private Sub tbarDebug_ButtonClick(ByVal Button As MSComctlLib.Button)
 
@@ -708,7 +724,7 @@ End Sub
 
 Private Sub CheckError()
     On Error Resume Next
-    Dim a As Long, b As Long, x, lLine As Long
+    Dim a As Long, b As Long, x, lline As Long
     
     a = InStr(txtOut, "Line:")
     
@@ -717,11 +733,11 @@ Private Sub CheckError()
         b = InStr(a, txtOut, " ")
         If b > a Then
             x = Mid(txtOut, a, b - a)
-            lLine = CLng(x)
+            lline = CLng(x)
             If Err.Number = 0 Then
-                lLine = lLine - 1 '0 based
-                scivb.GotoLine lLine
-                scivb.SelLength = Len(scivb.GetLineText(lLine)) - 2
+                lline = lline - 1 '0 based
+                scivb.GotoLine lline
+                scivb.SelLength = Len(scivb.GetLineText(lline)) - 2
             End If
         End If
     End If
@@ -866,7 +882,7 @@ Private Sub Form_Resize()
         ts.Top = Me.Height - ts.Height - 800
         .Height = Me.Height - .Top - ts.Height - 1000
         lvCallStack.ColumnHeaders(2).Width = lvCallStack.Width - lvCallStack.ColumnHeaders(2).Left - 100
-        lvVars.ColumnHeaders(lvVars.ColumnHeaders.Count).Width = lvVars.Width - lvVars.ColumnHeaders(lvVars.ColumnHeaders.Count).Left - 100
+        lvVars.ColumnHeaders(lvVars.ColumnHeaders.count).Width = lvVars.Width - lvVars.ColumnHeaders(lvVars.ColumnHeaders.count).Left - 100
         With txtOut
             .Move ts.Left + 100, ts.Top + 150, ts.Width - 200, ts.Height - 500
             lvVars.Move .Left, .Top, .Width, .Height

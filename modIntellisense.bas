@@ -4,6 +4,23 @@ Public modules As New Collection
 Public IncludeFiles() As String
 Public FunctionPrototypes() As String
 
+Function GetAutoCompleteStringForIncludes(partial As String) As String()
+    Dim x, matches() As String, i As Long
+    
+    If AryIsEmpty(IncludeFiles) Then Exit Function
+    If Len(partial) = 0 Then Exit Function
+    
+    For i = 0 To UBound(IncludeFiles)
+        x = LCase(IncludeFiles(i))
+        If Left(x, Len(partial)) = LCase(partial) Then
+            push matches, IncludeFiles(i)
+        End If
+    Next
+    
+    GetAutoCompleteStringForIncludes = matches()
+    
+End Function
+
 
 Function GetAutoCompleteString(partial As String) As String()
     Dim x, matches() As String, i As Long

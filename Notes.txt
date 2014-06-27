@@ -6,4 +6,14 @@
  in the script. the single space is important, case is not.
 
  the function prototypes are saved in the /dependancies/calltips.txt edit as desired.
+ calltips for functions within modules should be below the #modules line show they dont
+ show up in general intellisense lists.
+
+ autocomplete is aware of module scoped functions and can match off of partial strings.
+ if only one match is found for partial string, it will auto complete it for you automatically.
+
+ when debugging, mouse over a variable for its current run time value. Click on the call tip
+ of the value to edit the value. Strings and longs are supported.
+
+
 

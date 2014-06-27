@@ -9,4 +9,4 @@ modHostObjs = 132, 132, 959, 733,
 frmOptions = 110, 110, 749, 685, , 66, 66, 705, 641, C
 modGeneral = 154, 154, 793, 729, 
 CSciExtender = 154, 154, 1228, 826, 
-modIntellisense = 198, 198, 1310, 870, 
+modIntellisense = 198, 198, 1310, 870, C
