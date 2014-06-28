@@ -17,7 +17,7 @@ LineStyle[3] = 3
 LineStyle[4] = "red"
 LineStyle[5] = "green"
 
-function func2(v0)
+function func2(v0,v3)
 local v1
 local v2
 	v1 = "a"
@@ -27,7 +27,7 @@ local v2
 end function
 
 function func1(v0)
-    func2 v0
+    func2 v0, 3
 end function
 
 func1 g_a 

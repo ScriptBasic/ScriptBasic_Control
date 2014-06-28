@@ -519,11 +519,15 @@ Private Sub lvVars_DblClick()
     
     Dim c As Collection
     Dim varName As String
+    Dim v As CVariable
     
+    On Error Resume Next
+    Set v = selVariable.Tag
+
     varName = selVariable.SubItems(1)
     Set c = EnumArrayVariables(varName)
     If c.count > 0 Then
-        frmAryDump.DumpArrayValues varName, c
+        frmAryDump.DumpArrayValues varName, c, v.pAryElement
     End If
     
 End Sub
@@ -585,15 +589,22 @@ Private Sub mnuVarSetValue_Click()
     Dim Value As String, newVal As String
     Dim v As CVariable
     
-    If selVariable.SubItems(2) = "array" Then
+    On Error Resume Next
+    
+    Set v = selVariable.Tag
+    
+    If v Is Nothing Then
+        MsgBox "Variable tag not set?"
+        Exit Sub
+    End If
+    
+    If v.varType = "array" Then
         lvVars_DblClick
         Exit Sub 'unless they want to change the var type here? todo?
     End If
     
-    On Error Resume Next
-    Set v = selVariable.Tag
-    If v Is Nothing Then
-        MsgBox "Variable tag not set?"
+    If v.varType = "ref" Then
+        MsgBox "Can not edit ref variables edit the parent variable directly..", vbInformation
         Exit Sub
     End If
     
@@ -1009,6 +1020,7 @@ Private Sub Form_Unload(Cancel As Integer)
     Call SaveMySetting("includeDir", includeDir)
     Call SaveMySetting("moduleDir", moduleDir)
     FormPos Me, True, True
+    SetCallBacks 0, 0, 0, 0
     FreeLibrary hsbLib
 End Sub
 
@@ -1043,7 +1055,7 @@ End Sub
 
 Private Sub ts_Click()
     Dim i As Long
-    i = ts.SelectedItem.index
+    i = ts.SelectedItem.Index
     txtOut.Visible = IIf(i = 1, True, False)
     lvErrors.Visible = IIf(i = 2, True, False)
     lvVars.Visible = IIf(i = 3, True, False)

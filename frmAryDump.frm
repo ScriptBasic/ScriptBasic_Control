@@ -56,8 +56,12 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+'int __stdcall dbg_SetAryValByPointer(pDebuggerObject pDO, VARIABLE v, int index, int isLong, BSTR* bbuf)
+Private Declare Function dbg_SetAryValByPointer Lib "sb_engine" (ByVal hDebug As Long, ByVal pAry As Long, ByVal Index As Long, ByVal isLong As Long, ByVal bstrValue As Long) As Long
+
 Dim selVariable As ListItem
 Dim g_varName As String
+Dim pAryPtr As Long
 
 Private Sub Form_Load()
 
@@ -69,9 +73,12 @@ Private Sub Form_Load()
     
 End Sub
 
-Sub DumpArrayValues(varName As String, c As Collection)
+Sub DumpArrayValues(varName As String, c As Collection, mAryPtr As Long)
     Dim v As CVariable
     Dim li As ListItem
+    
+    If mAryPtr = 0 Then mAryPtr = VariableFromName(varName)
+    pAryPtr = mAryPtr
     
     g_varName = varName
     lv.ListItems.Clear
@@ -105,7 +112,7 @@ Private Sub lv_DblClick()
     Set c = EnumArrayVariables(v.pAryElement)
     If c.count > 0 Then
         Set f = New frmAryDump
-        f.DumpArrayValues varName, c
+        f.DumpArrayValues varName, c, v.pAryElement
         f.Move f.Left + 300, f.Top + 300
     End If
     
@@ -125,14 +132,52 @@ Private Sub mnuModifyValue_Click()
     
     If selVariable Is Nothing Then Exit Sub
     
-    If selVariable.SubItems(1) = "array" Then
+    Dim v As CVariable
+    Dim isNumeric As Long
+    Dim c As Collection
+    Dim Value As String
+    Dim newVal As String
+    
+    Set v = selVariable.Tag
+    
+    If v.varType = "array" Then
         MsgBox "Can not modify a parent array object directly", vbInformation
         Exit Sub
     End If
+
+    If v.varType = "ref" Then
+        MsgBox "Can not edit ref variables edit the parent variable directly..", vbInformation
+        Exit Sub
+    End If
     
-    Dim v As CVariable
-    Set v = selVariable.Tag
+    Value = v.Value
+    If Left(Value, 1) = """" Then Value = Mid(Value, 2)
+    If Right(Value, 1) = """" Then Value = Mid(Value, 1, Len(Value) - 1)
     
+    newVal = InputBox("Modify variable " & name, , Value)
+    If Len(newVal) = 0 Or newVal = Value Then Exit Sub
+    
+    If Left(newVal, 2) = "0x" Then
+        x = CLng("&h" & Mid(newVal, 3))
+        If Err.Number = 0 Then
+            newVal = x
+            isNumeric = 1
+        End If
+    Else
+        x = CLng(newVal)
+        If Err.Number = 0 Then isNumeric = 1
+    End If
+        
+    dbg_SetAryValByPointer hDebugObject, pAryPtr, v.Index, isNumeric, VarPtr(newVal)
+     
+    If InStr(g_varName, "[") > 0 Then
+        'its not the top level array var, but a recirsive one..
+        Set c = EnumArrayVariables(pAryPtr)
+    Else
+        Set c = EnumArrayVariables(g_varName)
+    End If
+    
+    If c.count > 0 Then DumpArrayValues g_varName, c, pAryPtr
     
 End Sub
 

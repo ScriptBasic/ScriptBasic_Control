@@ -924,7 +924,7 @@ void scomm_Message(pDebuggerObject pDO, char *pszMessage)
   char cBuffer[1025];
   int cbBuffer;
   snprintf(cBuffer,1024,"Message: %s\r\n",pszMessage);
-  vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
+  if(vbStdOut) vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 }
 
 void _stdcall dbg_RunToLine(pDebuggerObject pDO, int line)
@@ -1108,11 +1108,11 @@ int __stdcall dbg_SetLocalVariable(pDebuggerObject pDO, long index, int isLong, 
 		 memcpy(locals->Value.aValue[index]->Value.pValue, buf, size);  
 	 }
 	 
-	 return SCRIBA_ERROR_SUCCESS;
+	 rv = SCRIBA_ERROR_SUCCESS;
 
 cleanup:
 	 free(buf);
-	 return 0;
+	 return rv;
 }
 
 
@@ -1126,6 +1126,54 @@ int __stdcall dbg_getVarVal(pDebuggerObject pDO, char* varName, char* buf, int *
 {
 #pragma EXPORT
 	return SPrintVarByName(pDO,pDO->pEo, varName, buf, &bufsz);
+}
+
+int __stdcall dbg_SetAryValByPointer(pDebuggerObject pDO, VARIABLE v, int index, int isLong, BSTR* bbuf)
+{
+#pragma EXPORT
+	VARIABLE v2 = NULL;
+	int low, high, i;
+   	char* buf;
+	int rv = 0;
+    int size = 0;
+	int lVal=0;
+
+	if(v==NULL) return;
+	if(TYPE(v) != VTYPE_ARRAY) return 0;
+	if(bbuf==0) return;
+
+	low = ARRAYLOW(v);
+	high = ARRAYHIGH(v);
+
+	index = index - low;
+	if(index < 0 || index > high ) return 0;
+	
+	buf = __B2C(*bbuf);
+	size = strlen(buf);
+
+	v2 = v->Value.aValue[index];  
+	if( v2 != NULL )
+	{
+		memory_ReleaseVariable(pDO->pEo->pMo, v2);
+		v->Value.aValue[index] = NULL;
+	}
+
+	 if(isLong){
+		 lVal = atol(buf);
+		 v->Value.aValue[index] = memory_NewLong(pDO->pEo->pMo);
+		 if( v->Value.aValue[index] == NULL ){ rv= SCRIBA_ERROR_MEMORY_LOW; goto cleanup;}
+		 v->Value.aValue[index]->Value.lValue = lVal;
+	 }else{
+		 v->Value.aValue[index] = memory_NewString(pDO->pEo->pMo, size);
+		 if( v->Value.aValue[index] == NULL ){ rv= SCRIBA_ERROR_MEMORY_LOW; goto cleanup;}
+		 memcpy(v->Value.aValue[index]->Value.pValue, buf, size);  
+	 }
+	 
+	 rv = SCRIBA_ERROR_SUCCESS;
+
+cleanup:
+	 free(buf);
+	 return rv;
 }
 
 void __stdcall dbg_EnumAryVarsByPointer(pDebuggerObject pDO, VARIABLE v)

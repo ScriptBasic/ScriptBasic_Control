@@ -35,7 +35,10 @@ Private Declare Function dbg_SourceLineCount Lib "sb_engine" (ByVal hDebug As Lo
 Private Declare Function sbSetGlobalVariable Lib "sb_engine" (ByVal hProgram As Long, ByVal isLong As Long, ByVal bstrVarName As Long, ByVal bstrValue As Long) As Long
 
 'int __stdcall dbg_SetLocalVariable(pDebuggerObject pDO, long index, int isLong, BSTR *bbuf)
-Private Declare Function dbg_SetLocalVariable Lib "sb_engine" (ByVal hDebug As Long, ByVal index As Long, ByVal isLong As Long, ByVal bstrValue As Long) As Long
+Private Declare Function dbg_SetLocalVariable Lib "sb_engine" (ByVal hDebug As Long, ByVal Index As Long, ByVal isLong As Long, ByVal bstrValue As Long) As Long
+
+'VARIABLE __stdcall dbg_VariableFromName(pDebuggerObject pDO, char *pszName)
+Private Declare Function dbg_VariableFromName Lib "sb_engine" (ByVal hDebug As Long, ByVal strName As Long) As Long
 
 
 Public hProgram As Long
@@ -82,6 +85,16 @@ Enum Debug_Commands
     dc_Manual = 8
 End Enum
 
+Function VariableFromName(name As String) As Long
+    Dim b() As Byte
+    
+    If Len(name) = 0 Then Exit Function
+    
+    b() = StrConv(name & Chr(0), vbUnicode)
+    VariableFromName = dbg_VariableFromName(hDebugObject, VarPtr(b(0)))
+    
+End Function
+
 Function SetVariable(v As CVariable, ByVal Value As String) As Boolean
     
     On Error Resume Next
@@ -106,7 +119,7 @@ Function SetVariable(v As CVariable, ByVal Value As String) As Boolean
     If v.isGlobal Then
         SetVariable = sbSetGlobalVariable(hProgram, isNumeric, VarPtr(name), VarPtr(Value))
     Else
-        SetVariable = dbg_SetLocalVariable(hDebugObject, v.index, isNumeric, VarPtr(Value))
+        SetVariable = dbg_SetLocalVariable(hDebugObject, v.Index, isNumeric, VarPtr(Value))
     End If
     
 End Function
@@ -349,7 +362,7 @@ Public Sub HandleDebugMessage(msg As String)
             
         Case "Local-Variable-Name"
             Set v = New CVariable
-            v.index = CLng(cmd(1))
+            v.Index = CLng(cmd(1))
             v.name = cmd(2)
             v.Value = GetVariableValue(v.name)
             v.varType = VariableType(v.name)
@@ -367,7 +380,7 @@ Public Sub HandleDebugMessage(msg As String)
             
         Case "Call-Stack"
             Set c = New cCallStack
-            c.index = callStack.count
+            c.Index = callStack.count
             c.lineNo = CLng(cmd(1))
             c.func = cmd(2)
             callStack.Add c
@@ -375,7 +388,7 @@ Public Sub HandleDebugMessage(msg As String)
             
         Case "Array-Variable" '"Array-Variable:%d:%d:%d:%s", i, TYPE(v2), v2, buf);
             Set v = New CVariable
-            v.index = CLng(cmd(1))
+            v.Index = CLng(cmd(1))
             v.varType = VariableTypeToString(CLng(cmd(2)))
             v.pAryElement = cmd(3)
             v.Value = cmd(4) 'if is array then aryPointer will be parsed from value..

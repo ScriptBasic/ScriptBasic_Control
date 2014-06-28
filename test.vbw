@@ -1,9 +1,9 @@
 frmMain = 141, 8, 1289, 948, , 153, 6, 1129, 854, C
 modSBApi = 85, 70, 1201, 868, 
-CVariable = 157, 138, 1187, 796, 
+CVariable = 157, 138, 1187, 796, C
 CBreakpoint = 88, 88, 1092, 672, C
 cCallStack = 88, 88, 1092, 672, C
-frmAryDump = 198, 198, 1224, 766, , 200, 92, 1226, 660, C
+frmAryDump = 198, 198, 1224, 766, Z, 200, 92, 1226, 660, C
 modBreakpoints = 132, 132, 840, 733, 
 modHostObjs = 132, 132, 959, 733, 
 frmOptions = 110, 110, 749, 685, , 66, 66, 705, 641, C
