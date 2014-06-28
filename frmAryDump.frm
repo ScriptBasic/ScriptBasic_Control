@@ -170,12 +170,12 @@ Private Sub mnuModifyValue_Click()
         
     dbg_SetAryValByPointer hDebugObject, pAryPtr, v.Index, isNumeric, VarPtr(newVal)
      
-    If InStr(g_varName, "[") > 0 Then
+    'If InStr(g_varName, "[") > 0 Then
         'its not the top level array var, but a recirsive one..
         Set c = EnumArrayVariables(pAryPtr)
-    Else
-        Set c = EnumArrayVariables(g_varName)
-    End If
+    'Else
+    '    Set c = EnumArrayVariables(g_varName)
+    'End If
     
     If c.count > 0 Then DumpArrayValues g_varName, c, pAryPtr
     

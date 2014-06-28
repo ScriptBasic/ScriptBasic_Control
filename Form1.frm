@@ -935,7 +935,10 @@ Private Sub Form_Load()
     hsbLib = LoadLibrary(App.path & "\engine\sb_engine.dll")
 
     If hsbLib = 0 Then
-        MsgBox "Failed to load sb_engine.dll by explicit path?"
+        hsbLib = LoadLibrary(App.path & "\sb_engine.dll")
+        If hsbLib = 0 Then
+            MsgBox "Failed to load sb_engine.dll by explicit path?", vbInformation
+        End If
     End If
 
     includeDir = GetMySetting("includeDir", App.path & "\include\")
@@ -960,7 +963,11 @@ Private Sub Form_Load()
     scivb.DirectSCI.MarkerSetFore 3, vbBlack 'current eip
     scivb.DirectSCI.MarkerSetBack 3, vbYellow
 
-    LoadFile App.path & "\scripts\com_voice_test.sb"
+    If GetMySetting("firstrun", 1) = 1 Then
+        LoadFile App.path & "\scripts\com_voice_test.sb"
+        SaveMySetting "firstrun", 0
+    End If
+    
     'LoadFile App.path & "\scripts\functions.txt"
 
     'AddObject "frmMain", Me

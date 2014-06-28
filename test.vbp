@@ -51,4 +51,4 @@ DebugStartupOption=0
 AutoRefresh=1
 
 [fastBuild]
-fullPath=D:\_code\ScriptBasic_Control\vbHost.exe
+fullPath=D:\_code\ScriptBasic_Control\SBDebug.exe
