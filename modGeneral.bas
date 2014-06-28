@@ -111,7 +111,7 @@ End Sub
 
 Sub push(ary, Value) 'this modifies parent ary object
     On Error GoTo Init
-    X = UBound(ary) '<-throws Error If Not initalized
+    x = UBound(ary) '<-throws Error If Not initalized
     ReDim Preserve ary(UBound(ary) + 1)
     ary(UBound(ary)) = Value
     Exit Sub
@@ -120,9 +120,32 @@ End Sub
 
 Function AryIsEmpty(ary) As Boolean
   On Error GoTo oops
-    X = UBound(ary)
+    x = UBound(ary)
     AryIsEmpty = False
   Exit Function
 oops: AryIsEmpty = True
 End Function
+
+Sub FormPos(fform As Form, Optional andSize As Boolean = False, Optional save_mode As Boolean = False)
+    
+    On Error Resume Next
+    
+    Dim f, sz
+    f = Split(",Left,Top,Height,Width", ",")
+    
+    If fform.WindowState = vbMinimized Then Exit Sub
+    If andSize = False Then sz = 2 Else sz = 4
+    
+    For i = 1 To sz
+        If save_mode Then
+            ff = CallByName(fform, f(i), VbGet)
+            SaveSetting App.EXEName, fform.name & ".FormPos", f(i), ff
+        Else
+            def = CallByName(fform, f(i), VbGet)
+            ff = GetSetting(App.EXEName, fform.name & ".FormPos", f(i), def)
+            CallByName fform, f(i), VbLet, ff
+        End If
+    Next
+    
+End Sub
 

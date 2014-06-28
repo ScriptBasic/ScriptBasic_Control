@@ -28,7 +28,7 @@ Private Declare Sub SetDefaultDirs Lib "sb_engine" (ByRef incDir As Byte, ByRef 
 
 'scripts that use import directive internally turn into one long flat script file. for debugging
 'we must dump them to file and then load them for display so line numbers line up..
-Private Declare Sub dbg_WriteFlatSourceFile Lib "sb_engine" (ByVal hDebug As Long, ByRef fPath As Byte)
+Private Declare Sub dbg_WriteFlatSourceFile Lib "sb_engine" (ByVal hDebug As Long, ByRef fpath As Byte)
 Private Declare Function dbg_SourceLineCount Lib "sb_engine" (ByVal hDebug As Long) As Long
 '
 'int __stdcall SetVariable(pSbProgram pProgram, int isLong, BSTR* bvarName, BSTR* bbuf){
@@ -112,10 +112,10 @@ Function LoadFlatFile() As Boolean
     dbg_WriteFlatSourceFile hDebugObject, b(0)
     
     If FileExists(tmp) Then
-        Form1.hasImports = True
-        Form1.scivb.ReadOnly = False
-        LoadFlatFile = Form1.scivb.LoadFile(tmp)
-        Form1.scivb.ReadOnly = True
+        frmMain.hasImports = True
+        frmMain.scivb.ReadOnly = False
+        LoadFlatFile = frmMain.scivb.LoadFile(tmp)
+        frmMain.scivb.ReadOnly = True
         flatFile = tmp
     End If
     
@@ -134,34 +134,42 @@ Public Function EnumCallStack() As Collection
     
 End Function
 
-Public Function VariableTypeToString(X As sb_VarTypes) As String
+Public Function VariableTypeToString(x As sb_VarTypes) As String
 
     types = Array("LONG", "DOUBLE", "STRING", "ARRAY", "REF", "UNDEF")
     
-    If X < 0 Or X > 5 Then
+    If x < 0 Or x > 5 Then
         VariableTypeToString = "???"
     Else
-        VariableTypeToString = LCase(types(X))
+        VariableTypeToString = LCase(types(x))
     End If
     
 End Function
 
 Public Function VariableType(varName As String) As String
     
-    Dim X  As sb_VarTypes
+    Dim x  As sb_VarTypes
     Dim v() As Byte
     
     v() = StrConv(varName & Chr(0), vbFromUnicode)
-    X = dbg_VarTypeFromName(hDebugObject, v(0))
-    VariableType = VariableTypeToString(X)
+    x = dbg_VarTypeFromName(hDebugObject, v(0))
+    VariableType = VariableTypeToString(x)
     
 End Function
 
 Public Sub DebuggerCmd(cmd As Debug_Commands)
     
-    With Form1
+    Dim startPos As Long, endPos As Long
+    
+    With frmMain
         .scivb.DeleteMarker .lastEIP, 1 'remove the yellow arrow
         .scivb.DeleteMarker .lastEIP, 3 'remove the yellow line backcolor
+        
+        'force a refresh of the specified line or it might not catch it..
+        startPos = .scivb.PositionFromLine(.lastEIP)
+        endPos = .scivb.PositionFromLine(.lastEIP + 1)
+        .scivb.DirectSCI.Colourise startPos, endPos
+        
     End With
     
     dbg_cmd = cmd
@@ -266,7 +274,7 @@ Public Function GetDebuggerCommand(ByVal buf As Long, ByVal sz As Long) As Long
     'such as declares and function starts
     curline = GetCurrentDebugLine(hDebugObject)
     If Not BreakPointExists(curline) Then
-        Source = LCase(Form1.scivb.GetLineText(curline))
+        Source = LCase(frmMain.scivb.GetLineText(curline))
         Source = Trim(Replace(Source, vbTab, Empty))
         If InStr(Source, " ") > 1 Then
             Source = Left(Source, InStr(Source, " ") - 1)
@@ -277,7 +285,7 @@ Public Function GetDebuggerCommand(ByVal buf As Long, ByVal sz As Long) As Long
     End If
     
     If dbg_cmd = dc_NotSet Then
-        Form1.SyncUI
+        frmMain.SyncUI
         
         'we block here until the UI sets the readyToReturn = true
         'this is not a CPU hog, and form remains responsive to user actions..
@@ -323,7 +331,7 @@ Public Sub HandleDebugMessage(msg As String)
         Case "DEBUGGER_INIT" 'DEBUGGER_INIT: hDebugObj
             'reint structures here
             hDebugObject = CLng(cmd(1))
-            If Form1.scivb.DirectSCI.GetLineCount <> dbg_SourceLineCount(hDebugObject) Then LoadFlatFile
+            If frmMain.scivb.DirectSCI.GetLineCount <> dbg_SourceLineCount(hDebugObject) Then LoadFlatFile
             InitDebuggerBpx
             handled = True
             
@@ -346,7 +354,7 @@ Public Sub HandleDebugMessage(msg As String)
             
         Case "Call-Stack"
             Set c = New cCallStack
-            c.Index = callStack.Count
+            c.Index = callStack.count
             c.lineNo = CLng(cmd(1))
             c.func = cmd(2)
             callStack.Add c
@@ -370,7 +378,7 @@ Public Sub HandleDebugMessage(msg As String)
     End Select
     
     If Not handled Then
-        'Form1.txtDebug = Form1.txtDebug & msg
+        'frmMain.txtDebug = frmMain.txtDebug & msg
     End If
 
 End Sub
@@ -390,15 +398,12 @@ Public Sub vb_stdout(ByVal t As cb_type, ByVal lpMsg As Long, ByVal sz As Long)
     Select Case t
         Case cb_debugger: HandleDebugMessage msg
         Case cb_engine:   HandleEngineMessage msg
+        Case cb_error:    ParseError msg
         Case Else:
-                          If t = cb_error Then
-                                msg = "Error: " & IIf(Len(flatFile) > 0, flatFile, "") & vbCrLf & msg
-                                hadError = True
-                          End If
                           
                           If t = cb_dbgout Then msg = "DBG> " & msg
                           
-                          With Form1.txtOut
+                          With frmMain.txtOut
                                .Text = .Text & Replace(msg, vbLf, vbCrLf)
                                .Refresh
                                DoEvents
@@ -407,6 +412,46 @@ Public Sub vb_stdout(ByVal t As cb_type, ByVal lpMsg As Long, ByVal sz As Long)
     
 End Sub
 
+Private Sub ParseError(msg As String)
+    
+    Dim a As Long, b As Long, fpath As String, lNo As Long, eText As String
+    
+    'Debug.Print "Error: " & Now & " """ & msg & """"
+    On Error Resume Next
+    
+     hadError = True
+     a = InStr(msg, "File:")
+     If a > 0 Then
+        a = a + 5
+        b = InStr(a, msg, vbLf)
+        If b > 0 Then
+               fpath = Trim(Mid(msg, a, b - a))
+               If InStr(fpath, "\") > 0 Then fpath = FileNameFromPath(fpath)
+        End If
+     End If
+                                
+     a = InStr(msg, "Line: ")
+     If a > 0 Then
+        a = a + 6
+        b = InStr(a, msg, " ")
+        If b > 0 Then
+               lNo = CLng(Mid(msg, a, b - a))
+               a = InStr(b, msg, vbLf)
+               If a > b Then
+                    eText = Mid(msg, b, a - b)
+               End If
+        End If
+     End If
+                          
+     If Len(eText) = 0 Then eText = Replace(msg, vbLf, " ")
+                          
+     Dim li As ListItem
+     Set li = frmMain.lvErrors.ListItems.Add(, , lNo)
+     li.SubItems(1) = fpath
+     li.SubItems(2) = eText
+     
+     
+End Sub
 Private Sub HandleEngineMessage(msg As String)
     On Error Resume Next
     Dim tmp() As String

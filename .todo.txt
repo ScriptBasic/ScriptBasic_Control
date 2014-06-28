@@ -1,7 +1,8 @@
 
-- ctrl space should bring up list of built in functions..
+- modify value for array viewer form
+- debugger: set next
 - clean up project directory/remove dupes
 - make COM module only external now?
-- print command causes heap corruption if no args?
+- print command causes exception if no args?
 
 

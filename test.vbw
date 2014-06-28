@@ -1,5 +1,5 @@
-Form1 = 158, 13, 1306, 953, , 153, 6, 1129, 854, C
-modSBApi = 176, 176, 1230, 848, 
+frmMain = 158, 13, 1306, 953, , 153, 6, 1129, 854, C
+modSBApi = 85, 70, 1201, 868, 
 CVariable = 157, 138, 1187, 796, C
 CBreakpoint = 88, 88, 1092, 672, C
 cCallStack = 88, 88, 1092, 672, C
@@ -9,4 +9,4 @@ modHostObjs = 132, 132, 959, 733,
 frmOptions = 110, 110, 749, 685, , 66, 66, 705, 641, C
 modGeneral = 154, 154, 793, 729, 
 CSciExtender = 154, 154, 1228, 826, 
-modIntellisense = 198, 198, 1310, 870, C
+modIntellisense = 198, 198, 1310, 870, 

@@ -1,17 +1,70 @@
 VERSION 5.00
 Object = "{FBE17B58-A1F0-4B91-BDBD-C9AB263AC8B0}#78.0#0"; "scivb_lite.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Begin VB.Form Form1 
-   Caption         =   "Form1"
+Begin VB.Form frmMain 
+   Caption         =   "Script Basic IDE"
    ClientHeight    =   9870
-   ClientLeft      =   60
-   ClientTop       =   -975
+   ClientLeft      =   165
+   ClientTop       =   735
    ClientWidth     =   13905
+   BeginProperty Font 
+      Name            =   "Courier"
+      Size            =   9.75
+      Charset         =   0
+      Weight          =   400
+      Underline       =   0   'False
+      Italic          =   0   'False
+      Strikethrough   =   0   'False
+   EndProperty
    KeyPreview      =   -1  'True
    LinkTopic       =   "Form1"
    ScaleHeight     =   9870
    ScaleWidth      =   13905
-   StartUpPosition =   2  'CenterScreen
+   StartUpPosition =   3  'Windows Default
+   Begin MSComctlLib.ListView lvErrors 
+      Height          =   1050
+      Left            =   4500
+      TabIndex        =   6
+      Top             =   5850
+      Width           =   1860
+      _ExtentX        =   3281
+      _ExtentY        =   1852
+      View            =   3
+      LabelEdit       =   1
+      LabelWrap       =   -1  'True
+      HideSelection   =   -1  'True
+      FullRowSelect   =   -1  'True
+      GridLines       =   -1  'True
+      _Version        =   393217
+      ForeColor       =   -2147483640
+      BackColor       =   -2147483643
+      BorderStyle     =   1
+      Appearance      =   1
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "Courier"
+         Size            =   9.75
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      NumItems        =   3
+      BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         Text            =   "Line"
+         Object.Width           =   1411
+      EndProperty
+      BeginProperty ColumnHeader(2) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   1
+         Text            =   "File"
+         Object.Width           =   3881
+      EndProperty
+      BeginProperty ColumnHeader(3) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
+         SubItemIndex    =   2
+         Text            =   "Error"
+         Object.Width           =   2540
+      EndProperty
+   End
    Begin VB.Timer tmrHideCallTip 
       Enabled         =   0   'False
       Interval        =   600
@@ -36,6 +89,15 @@ Begin VB.Form Form1
       BackColor       =   -2147483643
       BorderStyle     =   1
       Appearance      =   1
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "Courier"
+         Size            =   9.75
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       NumItems        =   4
       BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          Text            =   "scope"
@@ -75,6 +137,15 @@ Begin VB.Form Form1
       BackColor       =   -2147483643
       BorderStyle     =   1
       Appearance      =   1
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "Courier"
+         Size            =   9.75
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       NumItems        =   2
       BeginProperty ColumnHeader(1) {BDD1F052-858B-11D1-B16A-00C0F0283628} 
          Text            =   "Line"
@@ -87,15 +158,6 @@ Begin VB.Form Form1
       EndProperty
    End
    Begin VB.TextBox txtOut 
-      BeginProperty Font 
-         Name            =   "Courier"
-         Size            =   9.75
-         Charset         =   0
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
       Height          =   1185
       Left            =   6525
       MultiLine       =   -1  'True
@@ -301,20 +363,41 @@ Begin VB.Form Form1
       Placement       =   1
       _Version        =   393216
       BeginProperty Tabs {1EFB6598-857C-11D1-B16A-00C0F0283628} 
-         NumTabs         =   3
+         NumTabs         =   4
          BeginProperty Tab1 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
             Caption         =   "Output"
             ImageVarType    =   2
          EndProperty
          BeginProperty Tab2 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
-            Caption         =   "Variables"
+            Caption         =   "Errors"
             ImageVarType    =   2
          EndProperty
          BeginProperty Tab3 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
+            Caption         =   "Variables"
+            ImageVarType    =   2
+         EndProperty
+         BeginProperty Tab4 {1EFB659A-857C-11D1-B16A-00C0F0283628} 
             Caption         =   "CallStack"
             ImageVarType    =   2
          EndProperty
       EndProperty
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "Courier"
+         Size            =   9.75
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+   End
+   Begin VB.Label lblStatus 
+      Caption         =   "Status: Idle"
+      Height          =   375
+      Left            =   4185
+      TabIndex        =   7
+      Top             =   270
+      Width           =   4560
    End
    Begin VB.Menu mnuFile 
       Caption         =   "File"
@@ -347,7 +430,7 @@ Begin VB.Form Form1
       End
    End
 End
-Attribute VB_Name = "Form1"
+Attribute VB_Name = "frmMain"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
@@ -416,6 +499,17 @@ End Sub
 Private Sub lvCallStack_ItemClick(ByVal Item As MSComctlLib.ListItem)
     scivb.GotoLine CLng(Item.Text)
     Set selCallStackItem = Item
+End Sub
+
+
+Private Sub lvErrors_ItemClick(ByVal Item As MSComctlLib.ListItem)
+    On Error Resume Next
+    Dim lline As Long
+    lline = CLng(Item.Text) - 1
+    If lline > 0 Then
+        scivb.GotoLine lline
+        scivb.SelLength = Len(scivb.GetLineText(lline)) - 2
+    End If
 End Sub
 
 Private Sub lvVars_DblClick()
@@ -554,8 +648,10 @@ Private Sub scivb_AutoCompleteEvent(className As String)
         If Not AryIsEmpty(matches) Then
             If UBound(matches) = 0 Then
                 'only one match so just auto complete it..
-                scivb.SelStart = scivb.SelStart - Len(className)
-                scivb.SelLength = Len(className)
+                'scivb.SelStart = scivb.SelStart - Len(className)
+                'scivb.SelLength = Len(className)
+                scivb.SelStart = scivb.DirectSCI.WordStartPosition(scivb.SelStart, True)
+                scivb.SelLength = scivb.DirectSCI.WordEndPosition(scivb.SelStart, True) - scivb.SelStart
                 scivb.SelText = matches(0)
             Else
                 'show all matches for partial string
@@ -573,6 +669,7 @@ Private Sub scivb_AutoCompleteEvent(className As String)
     curpos = scivb.DirectSCI.GetCurPos()
     curpos = curpos - Len(className) - 2
     If curpos > 4 Then
+        'this check wont trigger for nt::Msg[ctrl+space], only nt::
         If Mid(scivb.Text, curpos + 1, 2) = "::" Then 'its an module lookup
             orgPos = scivb.DirectSCI.GetCurPos()
             scivb.SetCurrentPosition curpos
@@ -587,8 +684,10 @@ Private Sub scivb_AutoCompleteEvent(className As String)
     If Not AryIsEmpty(matches) Then
         If UBound(matches) = 0 Then
             'only one match so just auto complete it..
-            scivb.SelStart = scivb.SelStart - Len(className)
-            scivb.SelLength = Len(className)
+            'scivb.SelStart = scivb.SelStart - Len(className)
+            'scivb.SelLength = Len(className)
+            scivb.SelStart = scivb.DirectSCI.WordStartPosition(scivb.SelStart, True)
+            scivb.SelLength = scivb.DirectSCI.WordEndPosition(scivb.SelStart, True) - scivb.SelStart
             scivb.SelText = matches(0)
         Else
             'show all matches for partial string
@@ -622,8 +721,10 @@ Private Function ShowAutoCompleteForModule(modName As String, fragment As String
         matches() = GetAutoCompleteStringForModule(methods, fragment) 'example nt::msg[ctrl-space]
         If Not AryIsEmpty(matches) Then
             If UBound(matches) = 0 Then
-                scivb.SelStart = scivb.SelStart - Len(modName) - 1
-                scivb.SelLength = Len(modName) + 1
+                'scivb.SelStart = scivb.SelStart - Len(modName) - 1
+                'scivb.SelLength = Len(modName) + 1
+                scivb.SelStart = scivb.DirectSCI.WordStartPosition(scivb.SelStart, True)
+                scivb.SelLength = scivb.DirectSCI.WordEndPosition(scivb.SelStart, True) - scivb.SelStart
                 scivb.SelText = matches(0)
             Else
                 scivb.ShowAutoComplete ":" & Join(matches, ":")
@@ -724,24 +825,17 @@ End Sub
 
 Private Sub CheckError()
     On Error Resume Next
-    Dim a As Long, b As Long, x, lline As Long
+    Dim lline As Long
     
-    a = InStr(txtOut, "Line:")
+    If lvErrors.ListItems.count = 0 Then Exit Sub
+    ts.Tabs(2).Selected = True
     
-    If InStr(txtOut, "Error:") > 0 And a > 0 Then
-        a = a + 1 + Len("Line:")
-        b = InStr(a, txtOut, " ")
-        If b > a Then
-            x = Mid(txtOut, a, b - a)
-            lline = CLng(x)
-            If Err.Number = 0 Then
-                lline = lline - 1 '0 based
-                scivb.GotoLine lline
-                scivb.SelLength = Len(scivb.GetLineText(lline)) - 2
-            End If
-        End If
+    lline = CLng(lvErrors.ListItems(1).Text) - 1
+    If lline <> 0 Then
+        scivb.GotoLine lline
+        scivb.SelLength = Len(scivb.GetLineText(lline)) - 2
     End If
-    
+           
  
 End Sub
 Private Sub ExecuteScript(Optional withDebugger As Boolean)
@@ -757,13 +851,15 @@ Private Sub ExecuteScript(Optional withDebugger As Boolean)
     End If
     
     txtOut.Text = Empty
+    lvErrors.ListItems.Clear
+    ts.Tabs(1).Selected = True
     
     sciext.LockEditor
     If scivb.isDirty Then scivb.SaveFile loadedFile
     
     running = True
     SetToolBarIcons
-    lblStatus = IIf(withDebugger, "Debugging", "Running")
+    lblStatus = "Status: " & IIf(withDebugger, "Debugging...", "Running...")
     
     rv = run_script(loadedFile, IIf(withDebugger, 1, 0))
      
@@ -772,13 +868,15 @@ Private Sub ExecuteScript(Optional withDebugger As Boolean)
     
     CheckError
     
-    lblStatus = "Idle"
+    lblStatus = "Status: Idle"
     running = False
     SetToolBarIcons
     
     ClearUIBreakpoints
     sciext.LockEditor False
     scivb.DeleteMarker lastEIP, 1
+    lvVars.ListItems.Clear
+    lvCallStack.ListItems.Clear
     
     Set selVariable = Nothing
     Set selCallStackItem = Nothing
@@ -808,10 +906,12 @@ End Sub
 Private Sub Form_Load()
 
     SetToolBarIcons
+    FormPos Me, True
     
     lvVars.Visible = False
     lvCallStack.Visible = False
-     
+    lvErrors.Visible = False
+    
     mnuCallStackPopup.Visible = False
     mnuVarsPopup.Visible = False
     
@@ -843,12 +943,12 @@ Private Sub Form_Load()
     scivb.DirectSCI.MarkerSetFore 3, vbBlack 'current eip
     scivb.DirectSCI.MarkerSetBack 3, vbYellow
 
-    'App.Path & "\scripts\com_voice_test.sb"
-    'LoadFile App.Path & "\scripts\functions.txt"
+    LoadFile App.path & "\scripts\com_voice_test.sb"
+    'LoadFile App.path & "\scripts\functions.txt"
 
-    'AddObject "Form1", Me
+    'AddObject "frmMain", Me
     'AddString "test", "this is my string from vb!"
-    'LoadFile App.Path & "\scripts\GetHostObject.sb"
+    'LoadFile App.path & "\scripts\GetHostObject.sb"
 
     scivb.DirectSCI.AutoCSetIgnoreCase True
     scivb.DisplayCallTips = True
@@ -867,6 +967,8 @@ Sub LoadFile(fpath As String)
    scivb.DeleteAllMarkers
    scivb.LoadFile loadedFile
    Set breakpoints = New Collection
+   lvErrors.ListItems.Clear
+   txtOut.Text = Empty
    
 End Sub
 
@@ -877,18 +979,22 @@ Private Sub Form_Resize()
         .Width = Me.Width - .Left - 200
         ts.Width = .Width
         txtOut.Width = .Width - 200
-        lvVars.Width = txtOut.Width
-        lvCallStack.Width = txtOut.Width
         ts.Top = Me.Height - ts.Height - 800
         .Height = Me.Height - .Top - ts.Height - 1000
-        lvCallStack.ColumnHeaders(2).Width = lvCallStack.Width - lvCallStack.ColumnHeaders(2).Left - 100
-        lvVars.ColumnHeaders(lvVars.ColumnHeaders.count).Width = lvVars.Width - lvVars.ColumnHeaders(lvVars.ColumnHeaders.count).Left - 100
         With txtOut
             .Move ts.Left + 100, ts.Top + 150, ts.Width - 200, ts.Height - 500
             lvVars.Move .Left, .Top, .Width, .Height
             lvCallStack.Move .Left, .Top, .Width, .Height
+            lvErrors.Move .Left, .Top, .Width, .Height
         End With
+        SetLastColumnWidth lvCallStack
+        SetLastColumnWidth lvVars
+        SetLastColumnWidth lvErrors
     End With
+End Sub
+
+Private Sub SetLastColumnWidth(lv As ListView)
+    lv.ColumnHeaders(lv.ColumnHeaders.count).Width = lv.Width - lv.ColumnHeaders(lv.ColumnHeaders.count).Left - 100
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
@@ -896,7 +1002,8 @@ Private Sub Form_Unload(Cancel As Integer)
     If running Then DebuggerCmd dc_Quit
     Call SaveMySetting("includeDir", includeDir)
     Call SaveMySetting("moduleDir", moduleDir)
-    FreeLibrary hsbLib
+    FormPos Me, True, True
+    'FreeLibrary hsbLib
 End Sub
 
 Public Sub SyncUI()
@@ -932,8 +1039,9 @@ Private Sub ts_Click()
     Dim i As Long
     i = ts.SelectedItem.Index
     txtOut.Visible = IIf(i = 1, True, False)
-    lvVars.Visible = IIf(i = 2, True, False)
-    lvCallStack.Visible = IIf(i = 3, True, False)
+    lvErrors.Visible = IIf(i = 2, True, False)
+    lvVars.Visible = IIf(i = 3, True, False)
+    lvCallStack.Visible = IIf(i = 4, True, False)
 End Sub
 
 

@@ -1,15 +1,15 @@
-import COM.inc
+import COM.bas
 
 'you can load objects either by ProgID or CLSID
-obj = CreateObject("SAPI.SpVoice") 
+obj = com::CreateObject("SAPI.SpVoice") 
 
 if obj = 0 then 
 	print "CreateObject failed!\n"
 else
-	CallByName(obj, "rate", VbLet, 2)
-	CallByName(obj, "volume", VbLet, 60)
-	CallByName(obj, "speak", VbMethod, "This is my test")
-	ReleaseObject(obj)
+	com::CallByName(obj, "rate", VbLet, 2)
+	com::CallByName(obj, "volume", VbLet, 60)
+	com::CallByName(obj, "speak", VbMethod, "This is my test")
+	com::ReleaseObject(obj)
 	print "Release called obj reference is now: ", obj, "\n"
 end if 
 
