@@ -31,8 +31,12 @@ Private Declare Sub SetDefaultDirs Lib "sb_engine" (ByRef incDir As Byte, ByRef 
 Private Declare Sub dbg_WriteFlatSourceFile Lib "sb_engine" (ByVal hDebug As Long, ByRef fpath As Byte)
 Private Declare Function dbg_SourceLineCount Lib "sb_engine" (ByVal hDebug As Long) As Long
 '
-'int __stdcall SetVariable(pSbProgram pProgram, int isLong, BSTR* bvarName, BSTR* bbuf){
-Private Declare Function sbSetVariable Lib "sb_engine" (ByVal hProgram As Long, ByVal isLong As Long, ByVal bstrVarName As Long, ByVal bstrValue As Long) As Long
+'int __stdcall sbSetGlobalVariable(pSbProgram pProgram, int isLong, BSTR* bvarName, BSTR* bbuf){
+Private Declare Function sbSetGlobalVariable Lib "sb_engine" (ByVal hProgram As Long, ByVal isLong As Long, ByVal bstrVarName As Long, ByVal bstrValue As Long) As Long
+
+'int __stdcall dbg_SetLocalVariable(pDebuggerObject pDO, long index, int isLong, BSTR *bbuf)
+Private Declare Function dbg_SetLocalVariable Lib "sb_engine" (ByVal hDebug As Long, ByVal index As Long, ByVal isLong As Long, ByVal bstrValue As Long) As Long
+
 
 Public hProgram As Long
 Public hDebugObject As Long     'handle to the current debug object - pDO
@@ -78,26 +82,32 @@ Enum Debug_Commands
     dc_Manual = 8
 End Enum
 
-Function SetVariable(ByVal name As String, ByVal Value As String) As Boolean
+Function SetVariable(v As CVariable, ByVal Value As String) As Boolean
     
     On Error Resume Next
-    Dim v As Long
+    Dim x As Long
     Dim isNumeric As Long
+    Dim name As String
     
+    name = v.name
     If InStr(name, "::") < 1 Then name = "main::" & name
     
     If Left(Value, 2) = "0x" Then
-        v = CLng("&h" & Mid(Value, 3))
+        x = CLng("&h" & Mid(Value, 3))
         If Err.Number = 0 Then
-            Value = v
+            Value = x
             isNumeric = 1
         End If
     Else
-        v = CLng(Value)
+        x = CLng(Value)
         If Err.Number = 0 Then isNumeric = 1
     End If
     
-    SetVariable = sbSetVariable(hProgram, isNumeric, VarPtr(name), VarPtr(Value))
+    If v.isGlobal Then
+        SetVariable = sbSetGlobalVariable(hProgram, isNumeric, VarPtr(name), VarPtr(Value))
+    Else
+        SetVariable = dbg_SetLocalVariable(hDebugObject, v.index, isNumeric, VarPtr(Value))
+    End If
     
 End Function
 
@@ -321,7 +331,9 @@ Public Sub HandleDebugMessage(msg As String)
     If Left(msg, 10) = "Call-Stack" Then
         cmd = Split(msg, ":", 3)
     ElseIf Left(msg, 14) = "Array-Variable" Then
-        cmd = Split(msg, ":", 4)
+        cmd = Split(msg, ":", 5)
+    ElseIf Left(msg, 19) = "Local-Variable-Name" Then
+        cmd = Split(msg, ":", 3)
     Else
         cmd = Split(msg, ":", 2)
     End If
@@ -337,7 +349,8 @@ Public Sub HandleDebugMessage(msg As String)
             
         Case "Local-Variable-Name"
             Set v = New CVariable
-            v.name = cmd(1)
+            v.index = CLng(cmd(1))
+            v.name = cmd(2)
             v.Value = GetVariableValue(v.name)
             v.varType = VariableType(v.name)
             variables.Add v
@@ -354,17 +367,18 @@ Public Sub HandleDebugMessage(msg As String)
             
         Case "Call-Stack"
             Set c = New cCallStack
-            c.Index = callStack.count
+            c.index = callStack.count
             c.lineNo = CLng(cmd(1))
             c.func = cmd(2)
             callStack.Add c
             handled = True
             
-        Case "Array-Variable" 'Array-Variable:%d:%d:%s , index, varType, buf);
+        Case "Array-Variable" '"Array-Variable:%d:%d:%d:%s", i, TYPE(v2), v2, buf);
             Set v = New CVariable
-            v.Index = CLng(cmd(1))
+            v.index = CLng(cmd(1))
             v.varType = VariableTypeToString(CLng(cmd(2)))
-            v.Value = cmd(3) 'if is array then aryPointer will be parsed from value..
+            v.pAryElement = cmd(3)
+            v.Value = cmd(4) 'if is array then aryPointer will be parsed from value..
             variables.Add v
             handled = True
         

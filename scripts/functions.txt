@@ -10,7 +10,6 @@ x[2,3] = "test"
 
 LineStyle[0] = 111111
 LineStyle[1] = 222222
-trial()
 print LineStyle[0]
 
 LineStyle[2] = 2

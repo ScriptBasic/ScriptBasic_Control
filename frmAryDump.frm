@@ -4,7 +4,7 @@ Begin VB.Form frmAryDump
    Caption         =   "Form2"
    ClientHeight    =   4710
    ClientLeft      =   60
-   ClientTop       =   345
+   ClientTop       =   630
    ClientWidth     =   6420
    LinkTopic       =   "Form2"
    ScaleHeight     =   4710
@@ -44,6 +44,12 @@ Begin VB.Form frmAryDump
          Object.Width           =   2540
       EndProperty
    End
+   Begin VB.Menu mnuPopup 
+      Caption         =   "mnuPopup"
+      Begin VB.Menu mnuModifyValue 
+         Caption         =   "Modify Value"
+      End
+   End
 End
 Attribute VB_Name = "frmAryDump"
 Attribute VB_GlobalNameSpace = False
@@ -55,8 +61,10 @@ Dim g_varName As String
 
 Private Sub Form_Load()
 
+    mnuPopup.Visible = False
+    
     With lv
-        .ColumnHeaders(.ColumnHeaders.Count).Width = .Width - .ColumnHeaders(.ColumnHeaders.Count).Left - 100
+        .ColumnHeaders(.ColumnHeaders.count).Width = .Width - .ColumnHeaders(.ColumnHeaders.count).Left - 100
     End With
     
 End Sub
@@ -69,10 +77,10 @@ Sub DumpArrayValues(varName As String, c As Collection)
     lv.ListItems.Clear
     
     For Each v In c
-        Set li = lv.ListItems.Add(, , v.index)
+        Set li = lv.ListItems.Add(, , v.Index)
         li.SubItems(1) = v.varType
-        li.SubItems(2) = v.value
-        If v.varType = "array" Then li.Tag = v.pAryElement
+        li.SubItems(2) = v.Value
+        Set li.Tag = v
     Next
     
     Me.Caption = "Array Dump: " & varName
@@ -82,16 +90,20 @@ End Sub
 
 Private Sub lv_DblClick()
 
+    On Error Resume Next
+    
     If selVariable Is Nothing Then Exit Sub
     If selVariable.SubItems(1) <> "array" Then Exit Sub
     
     Dim c As Collection
     Dim varName As String
     Dim f As frmAryDump
+    Dim v As CVariable
     
     varName = g_varName & "[" & selVariable.Text & "]"
-    Set c = EnumArrayVariables(selVariable.Tag)
-    If c.Count > 0 Then
+    Set v = selVariable.Tag
+    Set c = EnumArrayVariables(v.pAryElement)
+    If c.count > 0 Then
         Set f = New frmAryDump
         f.DumpArrayValues varName, c
         f.Move f.Left + 300, f.Top + 300
@@ -102,3 +114,25 @@ End Sub
 Private Sub lv_ItemClick(ByVal Item As MSComctlLib.ListItem)
      Set selVariable = Item
 End Sub
+
+Private Sub lv_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
+    If Button = 2 Then PopupMenu mnuPopup
+End Sub
+
+Private Sub mnuModifyValue_Click()
+    
+    On Error Resume Next
+    
+    If selVariable Is Nothing Then Exit Sub
+    
+    If selVariable.SubItems(1) = "array" Then
+        MsgBox "Can not modify a parent array object directly", vbInformation
+        Exit Sub
+    End If
+    
+    Dim v As CVariable
+    Set v = selVariable.Tag
+    
+    
+End Sub
+

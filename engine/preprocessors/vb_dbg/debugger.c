@@ -46,6 +46,20 @@ enum Debug_Commands{
 	dc_Manual = 8
 };
 
+char* __B2C(BSTR bString)
+{
+	int i;
+	int n = (int)SysStringLen(bString);
+	char *sz;
+	sz = (char *)malloc(n + 1);
+
+	for(i = 0; i < n; i++){
+		sz[i] = (char)bString[i];
+	}
+	sz[i] = 0;
+	return sz;
+}
+
 int LineNumberForNode(pDebuggerObject pDO, int node)
 {
   if( node < 1 || node > pDO->cNodes ) return 0;
@@ -1042,6 +1056,66 @@ int MyExecBefore(pExecuteObject pEo)
 */
 
 
+
+int __stdcall dbg_SetLocalVariable(pDebuggerObject pDO, long index, int isLong, BSTR *bbuf)
+{
+#pragma EXPORT
+
+	pUserFunction_t pUF;
+	pDebugCallStack_t StackListPointer;
+	pFixSizeMemoryObject locals;
+	VARIABLE v = NULL;
+	int lVal;
+    char* buf;
+	int rv = 0;
+    int size = 0;
+
+	if(bbuf==0) return 0;
+	buf = __B2C(*bbuf);
+	size = strlen(buf);
+
+	StackListPointer = pDO->StackListPointer;
+	if( pDO->pEo->ProgramCounter == StackListPointer->pUF->NodeId )
+	{
+			/* In this case the debug call stack was already created to handle the function,
+			   but the LocalVariables still hold the value of the caller local variables.*/
+			if( pDO->StackListPointer->up == NULL || pDO->StackListPointer->up->pUF == NULL ) goto cleanup;
+			StackListPointer = StackListPointer->up;
+	}
+
+	pUF = StackListPointer->pUF;
+	//if( !StackListPointer->LocalVariables ) goto cleanup;
+
+	locals = StackListPointer->LocalVariables;
+	//index = index - locals->ArrayLowLimit;
+    if( index < 0 || index > pUF->cLocalVariables) goto cleanup;
+
+	v = locals->Value.aValue[index];
+	if( v != NULL )
+	{
+		memory_ReleaseVariable(pDO->pEo->pMo, v);
+		locals->Value.aValue[index] = NULL;
+	}
+
+	 if(isLong){
+		 lVal = atol(buf);
+		 locals->Value.aValue[index] = memory_NewLong(pDO->pEo->pMo);
+		 if( locals->Value.aValue[index] == NULL ){ rv= SCRIBA_ERROR_MEMORY_LOW; goto cleanup;}
+		 locals->Value.aValue[index]->Value.lValue = lVal;
+	 }else{
+		 locals->Value.aValue[index] = memory_NewString(pDO->pEo->pMo, size);
+		 if( locals->Value.aValue[index] == NULL ){ rv= SCRIBA_ERROR_MEMORY_LOW; goto cleanup;}
+		 memcpy(locals->Value.aValue[index]->Value.pValue, buf, size);  
+	 }
+	 
+	 return SCRIBA_ERROR_SUCCESS;
+
+cleanup:
+	 free(buf);
+	 return 0;
+}
+
+
 /*
 return values: 
    0 = Success
@@ -1074,7 +1148,7 @@ void __stdcall dbg_EnumAryVarsByPointer(pDebuggerObject pDO, VARIABLE v)
 		if(v2 != NULL){
 			sz = 1024;
 			SPrintVariable(pDO, v2, buf, &sz);
-			snprintf(cBuffer,1110, "Array-Variable:%d:%d:%s", i, TYPE(v2), buf);
+			snprintf(cBuffer,1110, "Array-Variable:%d:%d:%d:%s", i, TYPE(v2), v2, buf);
 			vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 		}
 	}
@@ -1124,7 +1198,7 @@ void __stdcall dbg_EnumVars(pDebuggerObject pDO)
 	 if( StackListPointer->LocalVariables ){
 		for(i=StackListPointer->LocalVariables->ArrayLowLimit ; i <= StackListPointer->LocalVariables->ArrayHighLimit ; i++ )
 		{
-			snprintf(cBuffer,1024,"Local-Variable-Name:%s",pUF->ppszLocalVariables[i-1]);
+			snprintf(cBuffer,1024,"Local-Variable-Name:%d:%s", i-1, pUF->ppszLocalVariables[i-1]);
 			vbStdOut(cb_debugger, cBuffer, strlen(cBuffer));
 		}
 	 }

@@ -15,7 +15,7 @@ Public isGlobal As Boolean
 Private m_name As String
 Private m_value As Variant
 Public varType As String
-Public index As Long 'for arrays
+Public Index As Long 'for arrays this is array index, for local variables this is its offset it local var table..
 Public pAryElement As Long
 
 Property Let name(v As String)
@@ -26,7 +26,7 @@ Property Get name() As String
     name = m_name
 End Property
 
-Property Let value(v As String)
+Property Let Value(v As String)
     If Left(v, 5) = "ARRAY" And InStr(v, "@ 0x") > 0 Then
         tmp = Split(v, "@ 0x")
         m_value = tmp(0)
@@ -36,6 +36,6 @@ Property Let value(v As String)
     End If
 End Property
 
-Property Get value() As String
-    value = m_value
+Property Get Value() As String
+    Value = m_value
 End Property

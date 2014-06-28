@@ -54,7 +54,7 @@ int __stdcall GetErrorString(unsigned int iErrorCode, char* buf, int bufSz){
    
 }
 
-int __stdcall sbSetVariable(pSbProgram pProgram, int isLong, BSTR* bvarName, BSTR* bbuf){
+int __stdcall sbSetGlobalVariable(pSbProgram pProgram, int isLong, BSTR* bvarName, BSTR* bbuf){
 #pragma EXPORT
 
 	int serial, rv;
@@ -77,6 +77,32 @@ int __stdcall sbSetVariable(pSbProgram pProgram, int isLong, BSTR* bvarName, BST
 	return rv;
  
 }
+
+/*
+int __stdcall sbSetVariableByPointer(pSbProgram pProgram, int isLong, VARIABLE v, BSTR* bbuf){
+#pragma EXPORT
+
+	int serial, rv;
+	
+	if(bvarName==0 || bbuf==0) return 0;
+
+	std::string varName = __B2S(*bvarName);
+	std::string buf = __B2S(*bbuf);
+ 	
+	serial = scriba_LookupVariableByName(pProgram, (char*)varName.c_str() );
+	if(serial==0) return 0;
+
+	if(isLong==1){
+		long lVal = atol( buf.c_str() );
+		rv = scriba_SetVariable(pProgram,serial, SBT_LONG, lVal, 0, 0, 0);
+	}else{
+		rv = scriba_SetVariable(pProgram,serial, SBT_STRING, 0, 0, (char*)buf.c_str(), buf.length() );
+	}
+
+	return rv;
+ 
+}
+*/
 
 int __stdcall run_script(char* fPath, int use_debugger)
 {

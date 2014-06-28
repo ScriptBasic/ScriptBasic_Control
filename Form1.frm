@@ -474,7 +474,7 @@ Private Sub RefreshVariables()
         li.SubItems(1) = v.name
         li.SubItems(2) = v.varType
         li.SubItems(3) = v.Value
-        If v.varType = "array" Then li.Tag = v.pAryElement
+        Set li.Tag = v
     Next
     
 End Sub
@@ -582,22 +582,28 @@ Private Sub mnuVarSetValue_Click()
     If Not running Then Exit Sub
     If selVariable Is Nothing Then Exit Sub
     
-    Dim name As String, Value As String, newVal As String
+    Dim Value As String, newVal As String
+    Dim v As CVariable
     
     If selVariable.SubItems(2) = "array" Then
         lvVars_DblClick
-        Exit Sub 'unless they want to change the var type here? todo
+        Exit Sub 'unless they want to change the var type here? todo?
     End If
     
-    name = selVariable.SubItems(1)
-    Value = selVariable.SubItems(3)
+    On Error Resume Next
+    Set v = selVariable.Tag
+    If v Is Nothing Then
+        MsgBox "Variable tag not set?"
+        Exit Sub
+    End If
     
+    Value = selVariable.SubItems(3)
     If Left(Value, 1) = """" Then Value = Mid(Value, 2)
     If Right(Value, 1) = """" Then Value = Mid(Value, 1, Len(Value) - 1)
     
     newVal = InputBox("Modify variable " & name, , Value)
     If Len(newVal) > 0 And newVal <> Value Then
-        SetVariable name, newVal
+        SetVariable v, newVal
         RefreshVariables
     End If
     
@@ -1003,7 +1009,7 @@ Private Sub Form_Unload(Cancel As Integer)
     Call SaveMySetting("includeDir", includeDir)
     Call SaveMySetting("moduleDir", moduleDir)
     FormPos Me, True, True
-    'FreeLibrary hsbLib
+    FreeLibrary hsbLib
 End Sub
 
 Public Sub SyncUI()
@@ -1037,7 +1043,7 @@ End Sub
 
 Private Sub ts_Click()
     Dim i As Long
-    i = ts.SelectedItem.Index
+    i = ts.SelectedItem.index
     txtOut.Visible = IIf(i = 1, True, False)
     lvErrors.Visible = IIf(i = 2, True, False)
     lvVars.Visible = IIf(i = 3, True, False)
