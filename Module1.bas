@@ -40,6 +40,9 @@ Private Declare Function dbg_SetLocalVariable Lib "sb_engine" (ByVal hDebug As L
 'VARIABLE __stdcall dbg_VariableFromName(pDebuggerObject pDO, char *pszName)
 Private Declare Function dbg_VariableFromName Lib "sb_engine" (ByVal hDebug As Long, ByVal strName As String) As Long
 
+'breaks at next instruction..
+Public Declare Sub dbg_Break Lib "sb_engine" (ByVal hDebug As Long)
+
 
 Public hProgram As Long
 Public hDebugObject As Long     'handle to the current debug object - pDO
@@ -62,6 +65,7 @@ Enum cb_type
     cb_debugger = 2
     cb_engine = 3
     cb_error = 4
+    cb_refreshUI = 5
 End Enum
 
 Enum sb_VarTypes
@@ -392,6 +396,15 @@ Public Sub vb_stdout(ByVal t As cb_type, ByVal lpMsg As Long, ByVal sz As Long)
     Dim msg As String
     
     If shuttingDown Then Exit Sub
+    
+    If t = cb_refreshUI Then
+        frmMain.Refresh
+        DoEvents
+        Sleep 10
+        Exit Sub
+    End If
+    
+    If lpMsg = 0 Or sz = 0 Then Exit Sub
     
     ReDim b(sz)
     CopyMemory b(0), ByVal lpMsg, sz

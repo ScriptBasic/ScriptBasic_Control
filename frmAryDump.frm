@@ -10,14 +10,22 @@ Begin VB.Form frmAryDump
    ScaleHeight     =   4710
    ScaleWidth      =   6420
    StartUpPosition =   2  'CenterScreen
+   Begin VB.CheckBox chkAssociative 
+      Caption         =   "Display as Associative Array"
+      Height          =   285
+      Left            =   135
+      TabIndex        =   1
+      Top             =   135
+      Width           =   2355
+   End
    Begin MSComctlLib.ListView lv 
-      Height          =   4515
+      Height          =   4110
       Left            =   90
       TabIndex        =   0
-      Top             =   90
+      Top             =   495
       Width           =   6225
       _ExtentX        =   10980
-      _ExtentY        =   7964
+      _ExtentY        =   7250
       View            =   3
       LabelEdit       =   1
       LabelWrap       =   -1  'True
@@ -62,6 +70,11 @@ Private Declare Function dbg_SetAryValByPointer Lib "sb_engine" (ByVal hDebug As
 Dim selVariable As ListItem
 Dim g_varName As String
 Dim pAryPtr As Long
+Dim cVars As Collection
+
+Private Sub chkAssociative_Click()
+    DumpArrayValues g_varName, cVars, pAryPtr
+End Sub
 
 Private Sub Form_Load()
 
@@ -78,17 +91,32 @@ Sub DumpArrayValues(varName As String, c As Collection, mAryPtr As Long)
     Dim li As ListItem
     
     If mAryPtr = 0 Then mAryPtr = VariableFromName(varName)
-    pAryPtr = mAryPtr
     
+    pAryPtr = mAryPtr
     g_varName = varName
+    Set cVars = c
+    
     lv.ListItems.Clear
     
-    For Each v In c
-        Set li = lv.ListItems.Add(, , v.Index)
-        li.SubItems(1) = v.varType
-        li.SubItems(2) = v.Value
-        Set li.Tag = v
-    Next
+    If chkAssociative.Value = 0 Then
+        For Each v In c
+            Set li = lv.ListItems.Add(, , v.Index)
+            li.SubItems(1) = v.varType
+            li.SubItems(2) = v.Value
+            Set li.Tag = v
+        Next
+    Else
+        For i = 1 To c.count
+            Set v = c(i)
+            If (i - 1) Mod 2 = 0 Then
+                Set li = lv.ListItems.Add(, , v.Value)
+            Else
+                 li.SubItems(1) = v.varType
+                 li.SubItems(2) = v.Value
+                 Set li.Tag = v
+            End If
+        Next
+    End If
     
     Me.Caption = "Array Dump: " & varName
     Me.Show
@@ -100,7 +128,11 @@ Private Sub lv_DblClick()
     On Error Resume Next
     
     If selVariable Is Nothing Then Exit Sub
-    If selVariable.SubItems(1) <> "array" Then Exit Sub
+    
+    If selVariable.SubItems(1) <> "array" Then
+        mnuModifyValue_Click
+        Exit Sub
+    End If
     
     Dim c As Collection
     Dim varName As String
@@ -154,7 +186,7 @@ Private Sub mnuModifyValue_Click()
     If Left(Value, 1) = """" Then Value = Mid(Value, 2)
     If Right(Value, 1) = """" Then Value = Mid(Value, 1, Len(Value) - 1)
     
-    newVal = InputBox("Modify variable " & name, , Value)
+    newVal = InputBox("Modify variable " & v.name, , Value)
     If Len(newVal) = 0 Or newVal = Value Then Exit Sub
     
     If Left(newVal, 2) = "0x" Then

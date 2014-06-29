@@ -35,6 +35,8 @@ This program implements a simple debugger "preprocessor" for ScriptBasic.
 
 #define snprintf _snprintf
 
+int steps_since_refresh = 0;
+
 enum Debug_Commands{
     dc_NotSet = 0,
     dc_Run = 1,
@@ -609,6 +611,7 @@ static pDebuggerObject new_DebuggerObject(pPrepext pEXT){
   pDO = pEXT->pST->Alloc(sizeof(DebuggerObject),pEXT->pMemorySegment);
   if( pDO == NULL )return NULL;
 
+  steps_since_refresh = 0;
   pDO->pEXT = pEXT;
   pDO->cGlobalVariables = 0;
   pDO->ppszGlobalVariables = NULL;
@@ -627,6 +630,7 @@ static pDebuggerObject new_DebuggerObject(pPrepext pEXT){
 
   pDO->Run2CallStack = 0;
   pDO->Run2Line = 0;
+  pDO->BreakNext = 0;
 
   return pDO;
   }
@@ -940,6 +944,12 @@ int _stdcall dbg_LineCount(pDebuggerObject pDO)
 	return pDO->cSourceLines;
 }
 
+void _stdcall dbg_Break(pDebuggerObject pDO)
+{
+#pragma EXPORT
+	pDO->BreakNext = 1;
+}
+
 void _stdcall dbg_ModifyBreakpoint(pDebuggerObject pDO, int line, int value)
 {
 #pragma EXPORT
@@ -972,11 +982,22 @@ int MyExecBefore(pExecuteObject pEo)
   if( pDO->DbgStack )pDO->DbgStack->LocalVariables = pEo->LocalVariables;
 
   lThisLine = GetSourceLineNumber(pDO,pEo->ProgramCounter);
+  steps_since_refresh++;
+
+  //so tight loops dont free UI and give user chance to hit break if endless loop running..
+  if( (steps_since_refresh % 100 == 0) && vbStdOut){
+	  vbStdOut(cb_refreshUI, 0, 0);
+	  steps_since_refresh = 0;
+  }
 
   if( pDO->SourceLines[lThisLine].BreakPoint == 0 ){
 		/* if we are executing some step over function */
-		if( pDO->Run2CallStack != -1 && pDO->Run2CallStack < pDO->CallStackDepth )return 0;
-		if( pDO->Run2Line && pDO->Nodes[pDO->lPC-1].lSourceLine != pDO->Run2Line )return 0;
+	  if(pDO->BreakNext==0){
+			if( pDO->Run2CallStack != -1 && pDO->Run2CallStack < pDO->CallStackDepth )return 0;
+			if( pDO->Run2Line && pDO->Nodes[pDO->lPC-1].lSourceLine != pDO->Run2Line )return 0;
+	  }else{
+			pDO->BreakNext = 0;
+	  }
   }
 
   pDO->StackListPointer = pDO->DbgStack;

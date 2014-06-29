@@ -68,6 +68,7 @@ typedef struct _DebuggerObject {
   int bLocalStart;
   long FunctionNode;
   long lPrevPC,lPC;
+  int BreakNext;
 } DebuggerObject, *pDebuggerObject;
 
 long __stdcall GetCurrentDebugLine(pDebuggerObject pDO);

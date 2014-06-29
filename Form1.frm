@@ -446,6 +446,7 @@ Private Declare Function run_script Lib "sb_engine" (ByVal lpLibFileName As Stri
 Private Declare Sub GetErrorString Lib "sb_engine" (ByVal iErrorCode As Long, ByVal buf As String, ByVal sz As Long)
 Private Declare Sub SetCallBacks Lib "sb_engine" (ByVal msgProc As Long, ByVal dbgCmdProc As Long, ByVal hostResolverProc As Long, ByVal lineInputfunc As Long)
 
+
 Dim loadedFile As String
 Dim hsbLib As Long
 Public lastEIP As Long
@@ -515,7 +516,11 @@ End Sub
 Private Sub lvVars_DblClick()
 
     If selVariable Is Nothing Then Exit Sub
-    If selVariable.SubItems(2) <> "array" Then Exit Sub
+    
+    If selVariable.SubItems(2) <> "array" Then
+        mnuVarSetValue_Click
+        Exit Sub
+    End If
     
     Dim c As Collection
     Dim varName As String
@@ -612,7 +617,7 @@ Private Sub mnuVarSetValue_Click()
     If Left(Value, 1) = """" Then Value = Mid(Value, 2)
     If Right(Value, 1) = """" Then Value = Mid(Value, 1, Len(Value) - 1)
     
-    newVal = InputBox("Modify variable " & name, , Value)
+    newVal = InputBox("Modify variable " & v.name, , Value)
     If Len(newVal) > 0 And newVal <> Value Then
         SetVariable v, newVal
         RefreshVariables
@@ -836,6 +841,8 @@ Private Sub tbarDebug_ButtonClick(ByVal Button As MSComctlLib.Button)
         Case "Run to Cursor":     RunToLine scivb.CurrentLine + 1
         Case "Toggle Breakpoint": ToggleBreakPoint
         Case "Clear All Breakpoints": RemoveAllBreakpoints
+        Case "Break":                 dbg_Break hDebugObject
+        
     End Select
     
 End Sub
