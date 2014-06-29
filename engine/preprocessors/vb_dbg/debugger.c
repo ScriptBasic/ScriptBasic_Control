@@ -1057,7 +1057,7 @@ int MyExecBefore(pExecuteObject pEo)
 
 
 
-int __stdcall dbg_SetLocalVariable(pDebuggerObject pDO, long index, int isLong, BSTR *bbuf)
+int __stdcall dbg_SetLocalVariable(pDebuggerObject pDO, long index, int isLong, char *buf)
 {
 #pragma EXPORT
 
@@ -1066,12 +1066,10 @@ int __stdcall dbg_SetLocalVariable(pDebuggerObject pDO, long index, int isLong, 
 	pFixSizeMemoryObject locals;
 	VARIABLE v = NULL;
 	int lVal;
-    char* buf;
 	int rv = 0;
     int size = 0;
 
-	if(bbuf==0) return 0;
-	buf = __B2C(*bbuf);
+	if(buf==0) return 1;
 	size = strlen(buf);
 
 	StackListPointer = pDO->StackListPointer;
@@ -1079,7 +1077,7 @@ int __stdcall dbg_SetLocalVariable(pDebuggerObject pDO, long index, int isLong, 
 	{
 			/* In this case the debug call stack was already created to handle the function,
 			   but the LocalVariables still hold the value of the caller local variables.*/
-			if( pDO->StackListPointer->up == NULL || pDO->StackListPointer->up->pUF == NULL ) goto cleanup;
+			if( pDO->StackListPointer->up == NULL || pDO->StackListPointer->up->pUF == NULL ) return 1;
 			StackListPointer = StackListPointer->up;
 	}
 
@@ -1088,7 +1086,7 @@ int __stdcall dbg_SetLocalVariable(pDebuggerObject pDO, long index, int isLong, 
 
 	locals = StackListPointer->LocalVariables;
 	//index = index - locals->ArrayLowLimit;
-    if( index < 0 || index > pUF->cLocalVariables) goto cleanup;
+    if( index < 0 || index > pUF->cLocalVariables) return 1;
 
 	v = locals->Value.aValue[index];
 	if( v != NULL )
@@ -1100,18 +1098,15 @@ int __stdcall dbg_SetLocalVariable(pDebuggerObject pDO, long index, int isLong, 
 	 if(isLong){
 		 lVal = atol(buf);
 		 locals->Value.aValue[index] = memory_NewLong(pDO->pEo->pMo);
-		 if( locals->Value.aValue[index] == NULL ){ rv= SCRIBA_ERROR_MEMORY_LOW; goto cleanup;}
+		 if( locals->Value.aValue[index] == NULL )return SCRIBA_ERROR_MEMORY_LOW;
 		 locals->Value.aValue[index]->Value.lValue = lVal;
 	 }else{
 		 locals->Value.aValue[index] = memory_NewString(pDO->pEo->pMo, size);
-		 if( locals->Value.aValue[index] == NULL ){ rv= SCRIBA_ERROR_MEMORY_LOW; goto cleanup;}
+		 if( locals->Value.aValue[index] == NULL ) return SCRIBA_ERROR_MEMORY_LOW;
 		 memcpy(locals->Value.aValue[index]->Value.pValue, buf, size);  
 	 }
 	 
 	 rv = SCRIBA_ERROR_SUCCESS;
-
-cleanup:
-	 free(buf);
 	 return rv;
 }
 
@@ -1128,27 +1123,25 @@ int __stdcall dbg_getVarVal(pDebuggerObject pDO, char* varName, char* buf, int *
 	return SPrintVarByName(pDO,pDO->pEo, varName, buf, &bufsz);
 }
 
-int __stdcall dbg_SetAryValByPointer(pDebuggerObject pDO, VARIABLE v, int index, int isLong, BSTR* bbuf)
+int __stdcall dbg_SetAryValByPointer(pDebuggerObject pDO, VARIABLE v, int index, int isLong, char* buf)
 {
 #pragma EXPORT
 	VARIABLE v2 = NULL;
 	int low, high, i;
-   	char* buf;
 	int rv = 0;
     int size = 0;
 	int lVal=0;
 
 	if(v==NULL) return;
-	if(TYPE(v) != VTYPE_ARRAY) return 0;
-	if(bbuf==0) return;
+	if(TYPE(v) != VTYPE_ARRAY) return 1;
+	if(buf==0) return;
 
 	low = ARRAYLOW(v);
 	high = ARRAYHIGH(v);
 
 	index = index - low;
-	if(index < 0 || index > high ) return 0;
+	if(index < 0 || index > high ) return 1;
 	
-	buf = __B2C(*bbuf);
 	size = strlen(buf);
 
 	v2 = v->Value.aValue[index];  
@@ -1161,18 +1154,15 @@ int __stdcall dbg_SetAryValByPointer(pDebuggerObject pDO, VARIABLE v, int index,
 	 if(isLong){
 		 lVal = atol(buf);
 		 v->Value.aValue[index] = memory_NewLong(pDO->pEo->pMo);
-		 if( v->Value.aValue[index] == NULL ){ rv= SCRIBA_ERROR_MEMORY_LOW; goto cleanup;}
+		 if( v->Value.aValue[index] == NULL ) return SCRIBA_ERROR_MEMORY_LOW; 
 		 v->Value.aValue[index]->Value.lValue = lVal;
 	 }else{
 		 v->Value.aValue[index] = memory_NewString(pDO->pEo->pMo, size);
-		 if( v->Value.aValue[index] == NULL ){ rv= SCRIBA_ERROR_MEMORY_LOW; goto cleanup;}
+		 if( v->Value.aValue[index] == NULL )return SCRIBA_ERROR_MEMORY_LOW; 
 		 memcpy(v->Value.aValue[index]->Value.pValue, buf, size);  
 	 }
 	 
 	 rv = SCRIBA_ERROR_SUCCESS;
-
-cleanup:
-	 free(buf);
 	 return rv;
 }
 

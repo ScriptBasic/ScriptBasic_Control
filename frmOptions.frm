@@ -90,7 +90,7 @@ Private Sub cmdSave_Click()
     Call SaveMySetting("includeDir", includeDir)
     Call SaveMySetting("moduleDir", moduleDir)
     InitIntellisense includeDir
-    SetConfig includeDir, moduleDir
+    SetDefaultDirs includeDir, moduleDir
     Unload Me
 End Sub
 

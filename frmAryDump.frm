@@ -56,8 +56,8 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-'int __stdcall dbg_SetAryValByPointer(pDebuggerObject pDO, VARIABLE v, int index, int isLong, BSTR* bbuf)
-Private Declare Function dbg_SetAryValByPointer Lib "sb_engine" (ByVal hDebug As Long, ByVal pAry As Long, ByVal Index As Long, ByVal isLong As Long, ByVal bstrValue As Long) As Long
+'int __stdcall dbg_SetAryValByPointer(pDebuggerObject pDO, VARIABLE v, int index, int isLong, char* bbuf)
+Private Declare Function dbg_SetAryValByPointer Lib "sb_engine" (ByVal hDebug As Long, ByVal pAry As Long, ByVal Index As Long, ByVal isLong As Long, ByVal strValue As String) As Long
 
 Dim selVariable As ListItem
 Dim g_varName As String
@@ -168,7 +168,7 @@ Private Sub mnuModifyValue_Click()
         If Err.Number = 0 Then isNumeric = 1
     End If
         
-    dbg_SetAryValByPointer hDebugObject, pAryPtr, v.Index, isNumeric, VarPtr(newVal)
+    dbg_SetAryValByPointer hDebugObject, pAryPtr, v.Index, isNumeric, newVal
      
     'If InStr(g_varName, "[") > 0 Then
         'its not the top level array var, but a recirsive one..

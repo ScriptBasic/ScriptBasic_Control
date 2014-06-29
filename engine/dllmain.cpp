@@ -54,24 +54,21 @@ int __stdcall GetErrorString(unsigned int iErrorCode, char* buf, int bufSz){
    
 }
 
-int __stdcall sbSetGlobalVariable(pSbProgram pProgram, int isLong, BSTR* bvarName, BSTR* bbuf){
+int __stdcall sbSetGlobalVariable(pSbProgram pProgram, int isLong, char* varName, char* buf){
 #pragma EXPORT
 
 	int serial, rv;
 	
-	if(bvarName==0 || bbuf==0) return 0;
-
-	std::string varName = __B2S(*bvarName);
-	std::string buf = __B2S(*bbuf);
+	if(varName==0 || buf==0) return 0;
  	
-	serial = scriba_LookupVariableByName(pProgram, (char*)varName.c_str() );
+	serial = scriba_LookupVariableByName(pProgram, varName);
 	if(serial==0) return 0;
 
 	if(isLong==1){
-		long lVal = atol( buf.c_str() );
+		long lVal = atol( buf );
 		rv = scriba_SetVariable(pProgram,serial, SBT_LONG, lVal, 0, 0, 0);
 	}else{
-		rv = scriba_SetVariable(pProgram,serial, SBT_STRING, 0, 0, (char*)buf.c_str(), buf.length() );
+		rv = scriba_SetVariable(pProgram,serial, SBT_STRING, 0, 0, buf, strlen(buf) );
 	}
 
 	return rv;

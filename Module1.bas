@@ -6,15 +6,15 @@ Public Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 Public Declare Function GetCurrentDebugLine Lib "sb_engine" (ByVal hDebug As Long) As Long
 
 'get a variables value from its name
-Private Declare Function dbg_getVarVal Lib "sb_engine" (ByVal hDebug As Long, ByRef varName As Byte, ByRef lpBuf As Byte, ByRef bufSz As Long) As Long
+Private Declare Function dbg_getVarVal Lib "sb_engine" (ByVal hDebug As Long, ByVal varName As String, ByRef lpBuf As Byte, ByRef bufSz As Long) As Long
 
 'enumerate global and local variable names (uses vbstdOut callback)
 Private Declare Sub dbg_EnumVars Lib "sb_engine" (ByVal hDebug As Long)
 
-Private Declare Sub dbg_EnumAryVarsByName Lib "sb_engine" (ByVal hDebug As Long, ByRef varName As Byte)
+Private Declare Sub dbg_EnumAryVarsByName Lib "sb_engine" (ByVal hDebug As Long, ByVal varName As String)
 Private Declare Sub dbg_EnumAryVarsByPointer Lib "sb_engine" (ByVal hDebug As Long, ByVal pVar As Long)
 
-Private Declare Function dbg_VarTypeFromName Lib "sb_engine" (ByVal hDebug As Long, ByRef varName As Byte) As Long
+Private Declare Function dbg_VarTypeFromName Lib "sb_engine" (ByVal hDebug As Long, ByVal varName As String) As Long
 
 Public Declare Function dbg_LineCount Lib "sb_engine" (ByVal hDebug As Long) As Long
 
@@ -24,21 +24,21 @@ Private Declare Function dbg_isBpSet Lib "sb_engine" (ByVal hDebug As Long, ByVa
 Private Declare Sub dbg_EnumCallStack Lib "sb_engine" (ByVal hDebug As Long)
 Private Declare Sub dbg_RunToLine Lib "sb_engine" (ByVal hDebug As Long, ByVal lineNo As Long)
 
-Private Declare Sub SetDefaultDirs Lib "sb_engine" (ByRef incDir As Byte, ByRef modDir As Byte)
+Public Declare Sub SetDefaultDirs Lib "sb_engine" (ByVal incDir As String, ByVal modDir As String)
 
 'scripts that use import directive internally turn into one long flat script file. for debugging
 'we must dump them to file and then load them for display so line numbers line up..
-Private Declare Sub dbg_WriteFlatSourceFile Lib "sb_engine" (ByVal hDebug As Long, ByRef fpath As Byte)
+Private Declare Sub dbg_WriteFlatSourceFile Lib "sb_engine" (ByVal hDebug As Long, ByVal fpath As String)
 Private Declare Function dbg_SourceLineCount Lib "sb_engine" (ByVal hDebug As Long) As Long
 '
 'int __stdcall sbSetGlobalVariable(pSbProgram pProgram, int isLong, BSTR* bvarName, BSTR* bbuf){
-Private Declare Function sbSetGlobalVariable Lib "sb_engine" (ByVal hProgram As Long, ByVal isLong As Long, ByVal bstrVarName As Long, ByVal bstrValue As Long) As Long
+Private Declare Function sbSetGlobalVariable Lib "sb_engine" (ByVal hProgram As Long, ByVal isLong As Long, ByVal strVarName As String, ByVal strValue As String) As Long
 
 'int __stdcall dbg_SetLocalVariable(pDebuggerObject pDO, long index, int isLong, BSTR *bbuf)
-Private Declare Function dbg_SetLocalVariable Lib "sb_engine" (ByVal hDebug As Long, ByVal Index As Long, ByVal isLong As Long, ByVal bstrValue As Long) As Long
+Private Declare Function dbg_SetLocalVariable Lib "sb_engine" (ByVal hDebug As Long, ByVal Index As Long, ByVal isLong As Long, ByVal strValue As String) As Long
 
 'VARIABLE __stdcall dbg_VariableFromName(pDebuggerObject pDO, char *pszName)
-Private Declare Function dbg_VariableFromName Lib "sb_engine" (ByVal hDebug As Long, ByVal strName As Long) As Long
+Private Declare Function dbg_VariableFromName Lib "sb_engine" (ByVal hDebug As Long, ByVal strName As String) As Long
 
 
 Public hProgram As Long
@@ -86,13 +86,8 @@ Enum Debug_Commands
 End Enum
 
 Function VariableFromName(name As String) As Long
-    Dim b() As Byte
-    
     If Len(name) = 0 Then Exit Function
-    
-    b() = StrConv(name & Chr(0), vbUnicode)
-    VariableFromName = dbg_VariableFromName(hDebugObject, VarPtr(b(0)))
-    
+    VariableFromName = dbg_VariableFromName(hDebugObject, name)
 End Function
 
 Function SetVariable(v As CVariable, ByVal Value As String) As Boolean
@@ -117,9 +112,9 @@ Function SetVariable(v As CVariable, ByVal Value As String) As Boolean
     End If
     
     If v.isGlobal Then
-        SetVariable = sbSetGlobalVariable(hProgram, isNumeric, VarPtr(name), VarPtr(Value))
+        SetVariable = sbSetGlobalVariable(hProgram, isNumeric, name, Value)
     Else
-        SetVariable = dbg_SetLocalVariable(hDebugObject, v.Index, isNumeric, VarPtr(Value))
+        SetVariable = dbg_SetLocalVariable(hDebugObject, v.Index, isNumeric, Value)
     End If
     
 End Function
@@ -128,11 +123,9 @@ End Function
 Function LoadFlatFile() As Boolean
     
     Dim tmp As String
-    Dim b() As Byte
     
     tmp = GetFreeFileName(Environ("temp"))
-    b() = StrConv(tmp & Chr(0), vbFromUnicode)
-    dbg_WriteFlatSourceFile hDebugObject, b(0)
+    dbg_WriteFlatSourceFile hDebugObject, tmp
     
     If FileExists(tmp) Then
         frmMain.hasImports = True
@@ -172,10 +165,7 @@ End Function
 Public Function VariableType(varName As String) As String
     
     Dim x  As sb_VarTypes
-    Dim v() As Byte
-    
-    v() = StrConv(varName & Chr(0), vbFromUnicode)
-    x = dbg_VarTypeFromName(hDebugObject, v(0))
+    x = dbg_VarTypeFromName(hDebugObject, varName)
     VariableType = VariableTypeToString(x)
     
 End Function
@@ -199,25 +189,13 @@ Public Sub DebuggerCmd(cmd As Debug_Commands)
     readyToReturn = True
 End Sub
 
-Public Sub SetConfig(includeDir As String, moduleDir As String)
-    
-    Dim i() As Byte, m() As Byte
-    
-    i() = StrConv(includeDir & Chr(0), vbFromUnicode)
-    m() = StrConv(moduleDir & Chr(0), vbFromUnicode)
-     
-    SetDefaultDirs i(0), m(0)
-    
-End Sub
 
 Public Function EnumArrayVariables(varNameOrPointer As Variant) As Collection
     
-    Dim v() As Byte
     Set variables = Nothing
     
     If TypeName(varNameOrPointer) = "String" Then
-        v() = StrConv(varNameOrPointer & Chr(0), vbFromUnicode)
-        dbg_EnumAryVarsByName hDebugObject, v(0) 'this goes into syncronous set of callbacks
+        dbg_EnumAryVarsByName hDebugObject, CStr(varNameOrPointer)
     Else
         dbg_EnumAryVarsByPointer hDebugObject, CLng(varNameOrPointer) 'this goes into syncronous set of callbacks
     End If
@@ -236,17 +214,15 @@ End Function
 
 Public Function GetVariableValue(varName As String) As String
     
-    Dim v() As Byte
     Dim buf() As Byte
     Dim sz As Long
     Dim ret As Long
     Dim i As Long
     
     sz = 1024
-    v() = StrConv(varName & Chr(0), vbFromUnicode)
     ReDim buf(sz)
      
-    ret = dbg_getVarVal(hDebugObject, v(0), buf(0), sz)
+    ret = dbg_getVarVal(hDebugObject, varName, buf(0), sz)
     
     If ret = 0 Then
         GetVariableValue = StrConv(buf, vbUnicode)

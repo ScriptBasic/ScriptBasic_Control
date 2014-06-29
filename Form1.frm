@@ -944,7 +944,7 @@ Private Sub Form_Load()
     includeDir = GetMySetting("includeDir", App.path & "\include\")
     moduleDir = GetMySetting("moduleDir", App.path & "\modules\")
     InitIntellisense includeDir
-    SetConfig includeDir, moduleDir
+    SetDefaultDirs includeDir, moduleDir
 
     SetCallBacks AddressOf vb_stdout, AddressOf GetDebuggerCommand, AddressOf HostResolver, AddressOf VbLineInput
     
