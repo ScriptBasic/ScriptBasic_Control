@@ -20,9 +20,7 @@ realprintf real_printf = printf;
 #define IS_SB_ENGINE 1
 #include "vb.h"
 
-
-
-extern "C" void*  vb_dbg_preproc; 
+extern "C" int vb_dbg_preproc(pPrepext pEXT,long *pCmd, void *p);
 
 #define EXPORT comment(linker, "/EXPORT:"__FUNCTION__"="__FUNCDNAME__)
 extern LPWSTR __C2W(char *szString);
@@ -74,32 +72,6 @@ int __stdcall sbSetGlobalVariable(pSbProgram pProgram, int isLong, char* varName
 	return rv;
  
 }
-
-/*
-int __stdcall sbSetVariableByPointer(pSbProgram pProgram, int isLong, VARIABLE v, BSTR* bbuf){
-#pragma EXPORT
-
-	int serial, rv;
-	
-	if(bvarName==0 || bbuf==0) return 0;
-
-	std::string varName = __B2S(*bvarName);
-	std::string buf = __B2S(*bbuf);
- 	
-	serial = scriba_LookupVariableByName(pProgram, (char*)varName.c_str() );
-	if(serial==0) return 0;
-
-	if(isLong==1){
-		long lVal = atol( buf.c_str() );
-		rv = scriba_SetVariable(pProgram,serial, SBT_LONG, lVal, 0, 0, 0);
-	}else{
-		rv = scriba_SetVariable(pProgram,serial, SBT_STRING, 0, 0, (char*)buf.c_str(), buf.length() );
-	}
-
-	return rv;
- 
-}
-*/
 
 int __stdcall run_script(char* fPath, int use_debugger)
 {

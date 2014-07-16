@@ -13,6 +13,14 @@ Begin VB.Form frmOptions
    ScaleWidth      =   8175
    ShowInTaskbar   =   0   'False
    StartUpPosition =   2  'CenterScreen
+   Begin VB.CommandButton cmdAbout 
+      Caption         =   "About Scivb"
+      Height          =   375
+      Left            =   180
+      TabIndex        =   7
+      Top             =   1170
+      Width           =   1320
+   End
    Begin VB.CommandButton cmdSave 
       Caption         =   "Save"
       Height          =   375
@@ -75,6 +83,10 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+Private Sub cmdAbout_Click()
+    frmMain.scivb.ShowAbout
+End Sub
+
 Private Sub cmdBrowse_Click(Index As Integer)
     Dim path  As String
     path = dlg.FolderDialog()

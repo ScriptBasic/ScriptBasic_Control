@@ -417,6 +417,12 @@ Begin VB.Form frmMain
          Caption         =   "Options"
       End
    End
+   Begin VB.Menu mnuEdit 
+      Caption         =   "Edit"
+      Begin VB.Menu mnuFind 
+         Caption         =   "Find"
+      End
+   End
    Begin VB.Menu mnuCallStackPopup 
       Caption         =   "mnuCallStackPopup"
       Begin VB.Menu mnuExecuteTillReturn 
@@ -496,7 +502,6 @@ Private Sub RefreshCallStack()
     
 End Sub
 
-
 Private Sub lvCallStack_ItemClick(ByVal Item As MSComctlLib.ListItem)
     scivb.GotoLine CLng(Item.Text)
     Set selCallStackItem = Item
@@ -550,6 +555,10 @@ Private Sub mnuExecuteTillReturn_Click()
 End Sub
 
  
+Private Sub mnuFind_Click()
+    scivb.ShowFindReplace
+End Sub
+
 Private Sub mnuNewFile_Click()
 
     If scivb.isDirty Then
@@ -655,6 +664,25 @@ Private Sub sciext_MouseDwellStart(lline As Long, Position As Long)
     
         
 End Sub
+
+'Private Sub sciext_NewLine()
+'    On Error Resume Next
+'    Dim l As Long, lText As String, tmp() As String
+'
+'    l = scivb.CurrentLine - 1
+'    lText = scivb.GetLineText(l)
+'    lText = Trim(Replace(lText, vbTab, Empty))
+'    If Len(lText) = 0 Then Exit Sub
+'
+'    tmp() = Split(LCase(lText), " ")
+'    If tmp(0) = "function" Or tmp(0) = "sub" Then
+'        'lets scan forward to either next function/sub, or see if a matching end function/sub already exists
+'        'if not exists, then we can auto close the function block for them and record the function name for autocomplete..
+'        'this means that when opening a new document..we would also have to conduct teh func name scan to build initial autocomplete list
+'        'todo
+'    End If
+'
+'End Sub
 
 Private Sub scivb_AutoCompleteEvent(className As String)
     'Debug.Print className

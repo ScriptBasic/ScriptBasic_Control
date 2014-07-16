@@ -24,6 +24,11 @@ Features include:
       - variable modification
       - run to line
  
+Status:
+   - standalone debugger and vb usable script engine is complete.
+      switching over to dll/ocx control will be completed next time I 
+      need this functionality embedded in another app. (hard part done)
+
 Notes:
 
   - auto complete/intellisense has several scopes. hit ctrl+space to trigger.
@@ -57,3 +62,17 @@ Notes:
      on the entry will jump to that line in the IDE (if one was given by SB engine)
 
    - changes to scripts are automatically saved each time they are executed.
+
+   - special hot keys:
+
+              ctrl-f - find/replace
+              ctrl-g - goto line
+              ctrl-z - undo
+              ctrl-y - redo
+
+              F2     - set breakpoint
+              F5     - go
+              F7     - single step
+              F9     - step out
+              F8     - step over
+ 

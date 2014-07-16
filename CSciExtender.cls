@@ -17,12 +17,15 @@ Option Explicit
 Public Event MarginClick(lline As Long, Position As Long, margin As Long, modifiers As Long)
 Public Event MouseDwellStart(lline As Long, Position As Long)
 Public Event MouseDwellEnd(lline As Long, Position As Long)
+Public Event NewLine()
+
 'Public Event UpdateUI()
 
+Private WithEvents owner As SciSimple
+Attribute owner.VB_VarHelpID = -1
 Private WithEvents sc As clsSubClass
 Attribute sc.VB_VarHelpID = -1
 Private ucHwnd As Long
-Private owner As SciSimple
 Private Declare Sub CopyMemory Lib "kernel32.dll" Alias "RtlMoveMemory" (Destination As Any, Source As Any, ByVal length As Long)
 
 Private Type POINTAPI
@@ -106,6 +109,12 @@ End Function
 
 Private Sub Class_Terminate()
     sc.DetatchMessage ucHwnd, WM_NOTIFY
+End Sub
+
+Private Sub owner_KeyDown(KeyCode As Long, Shift As Long)
+    If KeyCode = 13 Then
+        RaiseEvent NewLine
+    End If
 End Sub
 
 Private Sub sc_MessageReceived(hwnd As Long, wMsg As Long, wParam As Long, lParam As Long, Cancel As Boolean)
