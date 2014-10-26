@@ -1,0 +1,71 @@
+
+ScriptBasic Debugger
+<br>
+
+Script Basic is robust, GPL, cross platform
+scripting engine using the Basic language written by
+ Peter Verhás.
+<br>
+
+Wikipedia has a very good overview of the engine,
+and capabilities:
+<br>
+
+<a href="http://en.wikipedia.org/wiki/ScriptBasic" target="_blank">http://en.wikipedia.org/wiki/ScriptBasic</a>
+<br>
+
+I was looking for a basic scripting engine that I could
+embed in my VB6 apps in place of the MS script control.
+I also wanted one that had debugger support so that users
+had debug functionality when scripting my apps.
+<br>
+
+There were four stages to see if I could use ScriptBasic for
+this use
+<br>
+
+1) create a vb6 usable version of the script basic engine - complete
+2) write a debugger GUI and integrate it with the engine - complete
+3) write a COM extension to let scripts access VB6 objects - complete
+4) wrap all the components together into an ocx control - not started
+<br>
+
+All of the hard stuff is complete, and came out really well. The
+debugger supports single step, step over, breakpoints, run time variable
+inspection, call stack, syntax highlighting, and all the GUI features
+you would expect from a modern debugger.
+<br>
+
+You can see a demo of it in action here:
+<br>
+
+<a href="https://www.youtube.com/watch?v=KQMvAA_bGdU&list=UUhIoXVvn4ViA3AL4FJW8Yzw" target="_blank">https://www.youtube.com/watch?v=KQMvAA_bGdU&list=UUhIoXVvn4ViA3AL4FJW8Yzw</a>
+<br>
+
+Due to tendonitius issues in my arms, I am no longer working on it, but
+it is a significant codebase that I still wanted to share with others in 
+case you have a need for a similar capabilities in your apps. 
+<br>
+
+The standalone debugger, script engine and COM extension are all complete
+and quite useful on their own. Being able to embed it all would be the ultimate
+feature, but it is really a complete app in what it is already.
+<br>
+
+I am posting this so people are aware of the project, and maybe pass the torch
+on to other developers who would have the same vision for how awesome the final
+goal could be.
+<br>
+
+You can download all of the source and precompiled binaries from the git hub
+repo here:
+<br>
+
+<a href="https://github.com/dzzie/ScriptBasic_Control" target="_blank">https://github.com/dzzie/ScriptBasic_Control</a>
+<br>
+
+ScriptBasic also has a user forum here:
+<br>
+
+< href="http://www.scriptbasic.org/forum/" target="_blank">http://www.scriptbasic.org/forum/</a>
+

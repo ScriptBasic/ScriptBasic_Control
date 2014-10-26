@@ -1,0 +1,103 @@
+import COM.bas
+
+'on error resume next
+
+filename = "c:\\warehouse.xls"
+
+if FileExists(filename) then
+	print "File already exists deleting: ", filename,"\n"
+	delete filename
+end if 
+
+oExcelApp = com::CreateObject("Excel.Application")
+
+if oExcelApp = 0 then 
+    print "Failed to create Excel Object do you have it installed?"
+    end
+end if 
+
+'vbs: Set ExcelWorkbook = ExcelApp.Workbooks.Add
+oWorkBook = com::CallByName(oExcelApp, "Workbooks", vbGet)
+
+if oWorkBook = 0 then 
+    print "Failed to create Workbook"
+    end
+end if 
+
+oExcelWorkbook = com::CallByName(oWorkBook, "Add")
+
+'vbs: Set ExcelSheet = ExcelWorkbook.Worksheets(1)
+oExcelSheet = com::CallByName(oExcelWorkbook, "Worksheets", vbGet, 1)
+
+if oExcelSheet = 0 then 
+    print "Failed to get oExcelSheet"
+    end
+end if 
+
+print "Adding cells...\n"
+
+oRange =  com::CallByName(oExcelSheet, "Range", vbGet, "G3")
+
+if oRange = 0 then 
+    print "Failed to get oRange"
+    end
+end if 
+
+com::CallByName(oRange, "Value", vbLet, "123")
+com::ReleaseObject(oRange)
+
+oRange =  com::CallByName(oExcelSheet, "Range", vbGet, "B1:B5")
+
+if oRange = 0 then 
+    print "Failed to get oRange"
+    end
+end if 
+
+' Place BOLD border around range
+CONST XlBorderWeight_xlMedium = -4138
+com::CallByName(oRange, "BorderAround", vbMethod,1,XlBorderWeight_xlMedium,3)
+
+'if oBorder = 0 then 
+'    print "Failed to get border"
+'    end
+'end if 
+
+'com::CallByName(oBorder, "Weight", vbLet, XlBorderWeight_xlMedium)
+'com::ReleaseObject(oBorder)
+
+oInterior = com::CallByName(oRange, "Interior", vbGet)
+
+if oInterior = 0 then 
+    print "Failed to get oInterior"
+    end
+end if 
+
+com::CallByName(oInterior, "ColorIndex", vbLet, "38")
+com::CallByName(oInterior, "Pattern", vbLet, "xlSolid")
+
+com::ReleaseObject(oRange)
+com::ReleaseObject(oInterior)
+
+for i=0 to 10
+   for j=0 to 10
+		'vbs: ExcelSheet.Cells(i, j).Value = "test-" & i & "-" & j
+		oCell = com::CallByName(oExcelSheet, "Cells", vbGet, i, j)
+		com::CallByName(oCell, "Value", vbLet, "test-" & i & "-" & j)
+		com::ReleaseObject(oCell)
+	next
+next
+
+print "Saving document as:", filename, "\n"
+
+com::CallByName(oExcelWorkbook, "SaveAs", vbMethod, filename)
+com::CallByName(oExcelWorkbook, "Close")
+com::CallByName(oExcelApp, "Quit")
+
+print "Releasing objects from memory...\n"
+
+com::ReleaseObject(oExcelSheet)
+com::ReleaseObject(oExcelWorkbook)
+com::ReleaseObject(oWorkBook)
+com::ReleaseObject(oExcelApp)
+
+print "Script complete!\n"

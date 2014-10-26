@@ -1,0 +1,30 @@
+import com.bas
+
+'test using an activex exe 
+
+obj = com::CreateObject("VB6Exe.Sample") 
+
+'Sample function prototypes
+'	longTest(v As Long)
+'	intTest(v As Integer)
+'	ByteTest(v As Byte)
+'	GetString(prompt As String, title, def) As String
+'	ShowUI() As Long
+
+if obj = 0 then 
+	print "CreateObject failed!\n"
+else
+
+    print "TypeName obj = ", com::TypeName(obj), "\n"
+   
+    sDate = com::CallByName(obj, "SelectDate")
+    if len(sDate) = 0 then 
+    	print "User pressed cancel for date selection\n"
+    else
+    	print "Date: ", sDate, "\n"
+    end if 
+    
+    com::ReleaseObject(obj)
+    print "anndddd were done!\n"
+    
+end if 
