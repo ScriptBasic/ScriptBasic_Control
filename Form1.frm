@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{FBE17B58-A1F0-4B91-BDBD-C9AB263AC8B0}#78.0#0"; "scivb_lite.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{2668C1EA-1D34-42E2-B89F-6B92F3FF627B}#5.0#0"; "scivb2.ocx"
 Begin VB.Form frmMain 
    Caption         =   "Script Basic IDE"
    ClientHeight    =   9870
@@ -21,10 +21,19 @@ Begin VB.Form frmMain
    ScaleHeight     =   9870
    ScaleWidth      =   13905
    StartUpPosition =   3  'Windows Default
+   Begin sci2.SciSimple scivb 
+      Height          =   5775
+      Left            =   90
+      TabIndex        =   7
+      Top             =   720
+      Width           =   13740
+      _ExtentX        =   24236
+      _ExtentY        =   10186
+   End
    Begin MSComctlLib.ListView lvErrors 
       Height          =   1050
       Left            =   4500
-      TabIndex        =   6
+      TabIndex        =   5
       Top             =   5850
       Width           =   1860
       _ExtentX        =   3281
@@ -74,7 +83,7 @@ Begin VB.Form frmMain
    Begin MSComctlLib.ListView lvVars 
       Height          =   1050
       Left            =   11745
-      TabIndex        =   5
+      TabIndex        =   4
       Top             =   5895
       Width           =   1860
       _ExtentX        =   3281
@@ -122,7 +131,7 @@ Begin VB.Form frmMain
    Begin MSComctlLib.ListView lvCallStack 
       Height          =   1185
       Left            =   9810
-      TabIndex        =   3
+      TabIndex        =   2
       Top             =   5850
       Width           =   1815
       _ExtentX        =   3201
@@ -162,18 +171,9 @@ Begin VB.Form frmMain
       Left            =   6525
       MultiLine       =   -1  'True
       ScrollBars      =   2  'Vertical
-      TabIndex        =   2
+      TabIndex        =   1
       Top             =   5760
       Width           =   3165
-   End
-   Begin SCIVB_LITE.SciSimple scivb 
-      Height          =   5865
-      Left            =   90
-      TabIndex        =   0
-      Top             =   630
-      Width           =   13650
-      _ExtentX        =   24077
-      _ExtentY        =   10345
    End
    Begin MSComctlLib.ImageList ilToolbar 
       Left            =   10305
@@ -236,7 +236,7 @@ Begin VB.Form frmMain
    Begin MSComctlLib.Toolbar tbarDebug 
       Height          =   330
       Left            =   180
-      TabIndex        =   1
+      TabIndex        =   0
       Top             =   225
       Width           =   3870
       _ExtentX        =   6826
@@ -355,7 +355,7 @@ Begin VB.Form frmMain
    Begin MSComctlLib.TabStrip ts 
       Height          =   3120
       Left            =   180
-      TabIndex        =   4
+      TabIndex        =   3
       Top             =   6615
       Width           =   13650
       _ExtentX        =   24077
@@ -395,7 +395,7 @@ Begin VB.Form frmMain
       Caption         =   "Status: Idle"
       Height          =   375
       Left            =   4185
-      TabIndex        =   7
+      TabIndex        =   6
       Top             =   270
       Width           =   4560
    End
@@ -441,8 +441,6 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-Dim WithEvents sciext As CSciExtender
-Attribute sciext.VB_VarHelpID = -1
 
 Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryA" (ByVal lpLibFileName As String) As Long
 Private Declare Function FreeLibrary Lib "kernel32" (ByVal hLibModule As Long) As Long
@@ -634,23 +632,23 @@ Private Sub mnuVarSetValue_Click()
     
 End Sub
 
-Private Sub sciext_MarginClick(lline As Long, Position As Long, margin As Long, modifiers As Long)
+Private Sub scivb_MarginClick(lline As Long, Position As Long, margin As Long, modifiers As Long)
     'Debug.Print "MarginClick: line,pos,margin,modifiers", lLine, Position, margin, modifiers
     ToggleBreakPoint lline
 End Sub
 
-Private Sub sciext_MouseDwellEnd(lline As Long, Position As Long)
+Private Sub scivb_MouseDwellEnd(lline As Long, Position As Long)
    If running Then tmrHideCallTip.Enabled = True
 End Sub
 
-Private Sub sciext_MouseDwellStart(lline As Long, Position As Long)
+Private Sub scivb_MouseDwellStart(lline As Long, Position As Long)
     'Debug.Print "MouseDwell: " & lLine & " CurWord: " & sciext.WordUnderMouse(Position)
     
     Dim li As ListItem
     Dim curWord As String
     
     If running Then
-         curWord = sciext.WordUnderMouse(Position)
+         curWord = scivb.WordUnderMouse(Position)
          For Each li In lvVars.ListItems
             If LCase(li.SubItems(1)) = LCase(curWord) Then 'they have moused over a variable..
                 Set selVariable = li
@@ -692,7 +690,7 @@ Private Sub scivb_AutoCompleteEvent(className As String)
     Dim curpos As Long
     
     'first lets see if this is an import/include statement
-    prevWord = LCase(sciext.WordUnderMouse(scivb.SelStart - Len(className) - 1, True))
+    prevWord = LCase(scivb.WordUnderMouse(scivb.SelStart - Len(className) - 1, True))
     If prevWord = "include" Or prevWord = "import" Then
         matches() = GetAutoCompleteStringForIncludes(className)
         If Not AryIsEmpty(matches) Then
@@ -906,7 +904,7 @@ Private Sub ExecuteScript(Optional withDebugger As Boolean)
     lvErrors.ListItems.Clear
     ts.Tabs(1).Selected = True
     
-    sciext.LockEditor
+    scivb.LockEditor
     If scivb.isDirty Then scivb.SaveFile loadedFile
     
     running = True
@@ -925,7 +923,7 @@ Private Sub ExecuteScript(Optional withDebugger As Boolean)
     SetToolBarIcons
     
     ClearUIBreakpoints
-    sciext.LockEditor False
+    scivb.LockEditor False
     scivb.DeleteMarker lastEIP, 1
     lvVars.ListItems.Clear
     lvCallStack.ListItems.Clear
@@ -1015,9 +1013,6 @@ Private Sub Form_Load()
     'LoadFile App.path & "\scripts\importNT.sb"
     scivb.ReadOnly = False
 
-    Set sciext = New CSciExtender
-    sciext.Init scivb
-
 End Sub
 
 Sub LoadFile(fpath As String)
@@ -1089,7 +1084,7 @@ End Function
 
 'we use a timer for this to give them a chance to click on the calltip to edit the variable..
 Private Sub tmrHideCallTip_Timer()
-    If sciext.isMouseOverCallTip() Then Exit Sub
+    If scivb.isMouseOverCallTip() Then Exit Sub
     tmrHideCallTip.Enabled = False
     scivb.StopCallTip
     Set selVariable = Nothing

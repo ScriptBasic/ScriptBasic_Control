@@ -4,6 +4,9 @@ along with a an integrated IDE + debugger.
 
 http://en.wikipedia.org/wiki/ScriptBasic
 
+Video Demo: 
+https://www.youtube.com/watch?v=KQMvAA_bGdU&list=UUhIoXVvn4ViA3AL4FJW8Yzw
+
 Features include:
 
  VB6 access class to ScriptBasic Engine 

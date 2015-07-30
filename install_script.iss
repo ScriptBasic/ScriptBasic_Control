@@ -19,7 +19,7 @@ Name: {app}\scripts
 Source: dependancies\calltips.txt; DestDir: {app}\dependancies\
 Source: dependancies\MSCOMCTL.OCX; DestDir: {win}\system32\; Flags: regserver
 Source: dependancies\SciLexer.dll; DestDir: {app}\dependancies\
-Source: dependancies\scivb_lite.ocx; DestDir: {app}\dependancies\; Flags: regserver
+Source: dependancies\scivb2.ocx; DestDir: {app}\dependancies\; Flags: regserver
 Source: dependancies\spSubclass.dll; DestDir: {app}\dependancies\; Flags: regserver
 Source: dependancies\VB.bin; DestDir: {app}\dependancies\
 Source: engine\sb_engine.dll; DestDir: {app}

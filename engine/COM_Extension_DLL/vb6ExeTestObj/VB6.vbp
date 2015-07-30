@@ -1,4 +1,4 @@
-Type=OleDll
+Type=OleExe
 Class=Sample; Sample.cls
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\WINDOWS\system32\stdole2.tlb#OLE Automation
 Form=Form1.frm
@@ -10,12 +10,10 @@ IconForm="Form1"
 Startup="(None)"
 HelpFile=""
 Title="VB6"
-ExeName32="VB6_Example.dll"
-Path32=".."
 Command32=""
-Name="VB6"
+Name="VB6Exe"
 HelpContextID="0"
-CompatibleMode="0"
+CompatibleMode="1"
 CompatibleEXE32="..\VB6_Example.dll"
 MajorVer=1
 MinorVer=0
@@ -38,10 +36,9 @@ Unattended=0
 Retained=0
 ThreadPerObject=0
 MaxNumberOfThreads=1
-DebugStartupOption=0
 
 [MS Transaction Server]
 AutoRefresh=1
 
 [fastBuild]
-fullPath=D:\_code\ScriptBasic_Control\engine\COM_Extension_DLL\VB6_Example.dll
+fullPath=D:\_code\ScriptBasic_Control\engine\COM_Extension_DLL\VB6Exe_Example.exe
